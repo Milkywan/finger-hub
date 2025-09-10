@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Admin: Kelola Pengguna</title>
+    <!-- Pastikan Anda memiliki common-auth.js untuk autentikasi dan logout -->
+    <script type="module" src="./common-auth.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 1000px; /* Lebarkan sedikit untuk tabel user */
+            box-shadow: 0 10px 30px rgba(0,0,0,.4);
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 26px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        input[type="text"] {
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 300px;
+        }
+        input[type="text"]::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary { background: #4f46e5; color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-info { background: #3b82f6; color: #fff; }
+        .btn-info:hover { background: #2563eb; }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .status-message.success { background-color: #10b981; color: white; }
+        .status-message.error { background-color: #ef4444; color: white; }
+        .status-message.info { background-color: #60a5fa; color: white; }
+
+        .data-table-container {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 500px; /* Batasi tinggi tabel */
+            overflow-y: auto; /* Aktifkan scroll vertikal */
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+        }
+        th, td {
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 13px;
+            word-wrap: break-word; /* Agar teks panjang tidak merusak layout */
+        }
+        th {
+            background: rgba(255,255,255,0.2);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        td select, td input[type="checkbox"] {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        td select option {
+            background: #4f46e5; /* Background options dropdown */
+            color: white;
+        }
+        td button {
+            margin: 2px;
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+        footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+        footer a { color: #fff; }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            input[type="text"] {
+                max-width: none;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kelola Pengguna</h1>
+
+        <div class="controls">
+            <input type="text" id="searchUserInput" placeholder="Cari berdasarkan username/email...">
+            <button class="btn btn-primary" id="searchUserBtn">Cari</button>
+            <button class="btn btn-info" id="refreshUsersBtn">Refresh Data</button>
+            <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+        </div>
+
+        <div class="status-message" id="statusMessage">Memuat daftar pengguna...</div>
+
+        <div class="data-table-container">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Peran</th>
+                        <th>Disetujui</th>
+                        <th>Terdaftar Sejak</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data pengguna akan dimuat di sini -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
+    </footer>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import {
+            collection,
+            doc,
+            getDocs,
+            query,
+            where,
+            orderBy,
+            updateDoc,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // Untuk pengecekan otorisasi
+
+        const usersTableBody = document.querySelector('#usersTable tbody');
+        const statusMessage = document.getElementById('statusMessage');
+        const searchUserInput = document.getElementById('searchUserInput');
+        const searchUserBtn = document.getElementById('searchUserBtn');
+        const refreshUsersBtn = document.getElementById('refreshUsersBtn');
+
+        let allUsersData = []; // Untuk menyimpan data pengguna yang dimuat
+
+        // --- Fungsi Helper ---
+        function setStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+        }
+
+        // --- Autorisasi Halaman (Penting untuk keamanan) ---
+        // Ini adalah contoh implementasi otorisasi halaman.
+        // Asumsi common-auth.js mungkin sudah menangani redirect dasar.
+        // Di sini kita cek ulang peran setelah user terautentikasi.
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef); // Asumsi getDoc diimport
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    // Hanya admin dan super_admin yang bisa akses halaman ini
+                    if (userData.role !== "admin" && userData.role !== "super_admin") {
+                        alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
+                        window.location.href = "home.html"; // Redirect ke home jika tidak berhak
+                    } else {
+                        // Pengguna memiliki izin, mulai muat data
+                        loadUsers();
+                    }
+                } else {
+                    alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
+                    window.location.href = "home.html";
+                }
+            } else {
+                window.location.href = "index.html"; // Redirect ke halaman login jika belum login
+            }
+        });
+        // --- Akhir Autorisasi Halaman ---
+
+
+        async function loadUsers(searchTerm = '') {
+            setStatus("Memuat daftar pengguna...", 'info');
+            usersTableBody.innerHTML = ''; // Bersihkan tabel sebelumnya
+            allUsersData = []; // Reset data pengguna
+
+            try {
+                let q = collection(db, "users");
+                if (searchTerm) {
+                    // Cari berdasarkan username atau email
+                    // Firestore tidak mendukung OR query secara langsung antar field yang berbeda
+                    // Jadi, kita bisa query berdasarkan awalan username/email
+                    // Atau, lebih baik, ambil semua dan filter di klien jika jumlah user tidak terlalu banyak.
+                    // Untuk contoh ini, kita akan ambil semua (jika tidak ada search term) atau
+                    // coba filter dasar berdasarkan username
+                    q = query(q, 
+                        where("username", ">=", searchTerm), 
+                        where("username", "<=", searchTerm + '\uf8ff')
+                    );
+                    // Untuk email juga, perlu query terpisah atau gabungkan.
+                    // Jika jumlah pengguna sangat banyak, sebaiknya gunakan Cloud Functions untuk pencarian indeks penuh.
+                }
+                
+                q = query(q, orderBy("createdAt", "desc")); // Urutkan berdasarkan tanggal pendaftaran terbaru
+
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    setStatus("Tidak ada pengguna ditemukan.", 'info');
+                    return;
+                }
+
+                querySnapshot.forEach(doc => {
+                    allUsersData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                renderUsersTable(allUsersData);
+                setStatus(`Berhasil memuat ${allUsersData.length} pengguna.`, 'success');
+
+            } catch (error) {
+                setStatus(`Gagal memuat pengguna: ${error.message}`, 'error');
+                console.error("Error loading users:", error);
+            }
+        }
+
+        function renderUsersTable(users) {
+            usersTableBody.innerHTML = '';
+            users.forEach(user => {
+                const row = usersTableBody.insertRow();
+                row.setAttribute('data-uid', user.id); // Simpan UID di atribut baris
+
+                const usernameCell = row.insertCell();
+                usernameCell.textContent = user.username || 'N/A';
+
+                const emailCell = row.insertCell();
+                emailCell.textContent = user.email || 'N/A';
+
+                const roleCell = row.insertCell();
+                // Dropdown untuk peran
+                const roleSelect = document.createElement('select');
+                roleSelect.id = `role-${user.id}`;
+                ['user', 'admin', 'super_admin'].forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role;
+                    option.textContent = role.charAt(0).toUpperCase() + role.slice(1); // Kapitalisasi
+                    if (user.role === role) {
+                        option.selected = true;
+                    }
+                    roleSelect.appendChild(option);
+                });
+                roleSelect.addEventListener('change', (e) => updateField(user.id, 'role', e.target.value));
+                roleCell.appendChild(roleSelect);
+
+                const approvedCell = row.insertCell();
+                // Checkbox untuk status disetujui
+                const approvedCheckbox = document.createElement('input');
+                approvedCheckbox.type = 'checkbox';
+                approvedCheckbox.id = `approved-${user.id}`;
+                approvedCheckbox.checked = user.approved === true; // Pastikan boolean true/false
+                approvedCheckbox.addEventListener('change', (e) => updateField(user.id, 'approved', e.target.checked));
+                approvedCell.appendChild(approvedCheckbox);
+
+                const createdAtCell = row.insertCell();
+                createdAtCell.textContent = user.createdAt ? new Date(user.createdAt.toDate()).toLocaleString() : 'N/A';
+
+                const actionCell = row.insertCell();
+                // Tombol Hapus
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Hapus';
+                deleteBtn.className = 'btn btn-danger';
+                deleteBtn.onclick = () => deleteUser(user.id, user.username || user.email);
+                actionCell.appendChild(deleteBtn);
+            });
+        }
+
+        async function updateField(uid, fieldName, value) {
+            try {
+                const userDocRef = doc(db, "users", uid);
+                await updateDoc(userDocRef, {
+                    [fieldName]: value
+                });
+                setStatus(`Pengguna ${uid} - Bidang '${fieldName}' berhasil diperbarui menjadi '${value}'.`, 'success');
+            } catch (error) {
+                setStatus(`Gagal memperbarui pengguna ${uid}: ${error.message}`, 'error');
+                console.error("Error updating user field:", error);
+            }
+        }
+
+        async function deleteUser(uid, displayIdentifier) {
+            if (confirm(`Anda yakin ingin menghapus pengguna '${displayIdentifier}'? Ini akan menghapus dokumen profil pengguna dari Firestore.`)) {
+                try {
+                    const userDocRef = doc(db, "users", uid);
+                    await deleteDoc(userDocRef);
+                    setStatus(`Pengguna '${displayIdentifier}' berhasil dihapus.`, 'success');
+                    // Hapus baris dari tabel
+                    const rowToRemove = document.querySelector(`tr[data-uid="${uid}"]`);
+                    if (rowToRemove) {
+                        rowToRemove.remove();
+                    }
+                    // Ingatkan tentang akun Auth
+                    alert("Perhatian: Ini hanya menghapus dokumen profil pengguna dari Firestore. Akun autentikasi Firebase pengguna (email/password) masih ada. Untuk menghapus sepenuhnya, perlu dihapus melalui Firebase Console atau Cloud Functions.");
+                } catch (error) {
+                    setStatus(`Gagal menghapus pengguna '${displayIdentifier}': ${error.message}`, 'error');
+                    console.error("Error deleting user:", error);
+                }
+            }
+        }
+
+        // --- Event Listeners untuk Kontrol ---
+        searchUserBtn.addEventListener('click', () => {
+            const searchTerm = searchUserInput.value.trim();
+            loadUsers(searchTerm);
+        });
+
+        searchUserInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                searchUserBtn.click();
+            }
+        });
+
+        refreshUsersBtn.addEventListener('click', () => {
+            searchUserInput.value = ''; // Hapus search term
+            loadUsers(); // Muat ulang semua user
+        });
+
+        // Catatan: common-auth.js diharapkan menangani redirect awal jika belum login atau tidak punya izin.
+        // Jika common-auth.js tidak ada, Anda perlu memindahkan onAuthStateChanged ke global script.
+        // Fungsi loadUsers() akan dipanggil setelah otorisasi di onAuthStateChanged berhasil.
+    </script>
+</body>
+</html>
