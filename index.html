@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Fingerprint Data Hub</title>
+<style>
+    body {
+        background: url("images/lion.jpg") no-repeat center center fixed;
+        background-size: cover;
+        font-family: Arial, sans-serif;
+        color: white;
+        text-align: center;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+    }
+    .container {
+        background: rgba(0, 0, 0, 0.7);
+        padding: 30px;
+        border-radius: 10px;
+        display: inline-block;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    }
+    h1 {
+        margin-top: 0;
+        font-size: 22px;
+    }
+    label {
+        display: block;
+        margin: 10px 0 6px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    .row {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+    }
+    button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-secondary { background: #f59e0b; color: #fff; }
+    .msg {
+        min-height: 20px;
+        margin-top: 12px;
+        font-size: 14px;
+    }
+    .msg.error { color: #f87171; }
+    .msg.ok { color: #86efac; }
+    .hint { font-size: 12px; margin-top: 8px; }
+    .hint a { color: #FF0000;}
+    .hidden { display: none; }
+    .link-btn {
+        background: none;
+        border: none;
+        color: #60a5fa;
+        cursor: pointer;
+        padding: 0;
+        font-size: 12px;
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div id="loginForm">
+        <h1>Login — Fingerprint Data Hub</h1>
+        <label for="login-username">Username</label>
+        <input id="login-username" placeholder="cth: irwan" autocomplete="username"/>
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" placeholder="••••••" autocomplete="current-password"/>
+        <div class="row">
+            <button id="loginBtn" class="btn-primary">Masuk</button>
+        </div>
+        <div class="hint"><button id="forgotPasswordBtn" class="link-btn" type="button">Lupa password?</button></div>
+        <div id="loginMessage" class="msg"></div>
+        <div class="hint">Belum punya akun? <a href="#" onclick="showRegister()">Daftar Sekarang</a></div>
+    </div>
+
+    <div id="registerForm" class="hidden">
+        <h1>Daftar — Finger Downloader</h1>
+        <label for="reg-username">Username (tanpa spasi)</label>
+        <input id="reg-username" placeholder="cth: irwan"/>
+        <label for="reg-email">Email</label>
+        <input id="reg-email" type="email" placeholder="cth: irwan@gmail.com"/>
+        <label for="reg-password">Password</label>
+        <input id="reg-password" type="password" placeholder="••••••"/>
+        <div class="row">
+            <button id="registerBtn" class="btn-secondary">Daftar</button>
+        </div>
+        <div id="registerMessage" class="msg"></div>
+        <div class="hint">Sudah punya akun? <a href="#" onclick="showLogin()">Login</a></div>
+    </div>
+
+    <footer>
+        <div class="hint"><br>© 2025 by <a href="https://irwanss.web.app/" target="_blank" rel="noopener" style="color:#60a5fa;">IrwanS</a></div>
+    </footer>
+</div>
+
+<script type="module">
+import { auth, db } from "./firebase-config.js";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  query,
+  collection,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+window.showRegister = () => {
+    document.getElementById("loginForm").classList.add("hidden");
+    document.getElementById("registerForm").classList.remove("hidden");
+};
+window.showLogin = () => {
+    document.getElementById("registerForm").classList.add("hidden");
+    document.getElementById("loginForm").classList.remove("hidden");
+};
+const loginPasswordInput = document.getElementById("login-password");
+const loginBtn = document.getElementById("loginBtn"); 
+
+loginPasswordInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        loginBtn.click(); 
+    }
+});
+loginBtn.addEventListener("click", async () => {
+    const username = document.getElementById("login-username").value.trim();
+    const password = document.getElementById("login-password").value;
+    const msgEl = document.getElementById("loginMessage");
+    msgEl.textContent = "";
+    try {
+        if (!username || !password) throw new Error("Isi username & password.");
+        const q = query(collection(db, "users"), where("username", "==", username));
+        const snap = await getDocs(q);
+        if (snap.empty) throw new Error("Username tidak ditemukan.");
+        const userData = snap.docs[0].data();
+        const email = userData.email;
+        await signInWithEmailAndPassword(auth, email, password);
+        
+        // --- START MODIFIKASI UNTUK ROLE ---
+        // Simpan peran pengguna di localStorage
+        // Default ke 'user' jika field 'role' tidak ada
+        localStorage.setItem("userRole", userData.role || "user"); 
+        // --- END MODIFIKASI UNTUK ROLE ---
+
+        if (userData.approved !== true) throw new Error("Akun belum di-approve admin.");
+        localStorage.setItem("loginTime", Date.now());
+        msgEl.textContent = "Login sukses. Mengarahkan...";
+        msgEl.className = "msg ok";
+        setTimeout(() => window.location.href = "home.html", 800);
+    } catch (e) {
+        msgEl.textContent = e.message || "Login gagal.";
+        msgEl.className = "msg error";
+    }
+});
+
+registerBtn.addEventListener("click", async () => {
+    const username = document.getElementById("reg-username").value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+    const msgEl = document.getElementById("registerMessage");
+    msgEl.textContent = "";
+    try {
+        if (!username || !email || !password) throw new Error("Isi semua field.");
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = cred.user.uid;
+        await setDoc(doc(db, "pendaftar", uid), {
+            username,
+            email,
+            password, // PERHATIAN: MENYIMPAN PASSWORD DI FIRESTORE BUKAN PRAKTIK KEAMANAN YANG BAIK! HAPUS INI.
+            createdAt: serverTimestamp()
+        });
+        await setDoc(doc(db, "users", uid), {
+            username,
+            email,
+            approved: false,
+            role: "user", // --- TAMBAHKAN ROLE DEFAULT SAAT PENDAFTARAN ---
+            createdAt: serverTimestamp()
+        });
+        await signOut(auth);
+        msgEl.textContent = "Pendaftaran berhasil. Tunggu approval admin.";
+        msgEl.className = "msg ok";
+    } catch (e) {
+        msgEl.textContent = e.message || "Pendaftaran gagal.";
+        msgEl.className = "msg error";
+    }
+});
+
+forgotPasswordBtn.addEventListener("click", async () => {
+    const email = prompt("Masukkan email untuk reset password:");
+    if (!email) return;
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert("Link reset password sudah dikirim ke " + email + "\n\n📌 Jika email tidak masuk di Inbox, coba periksa folder Junk atau Spam.");
+    } catch (e) {
+        alert("Gagal mengirim reset password: " + (e.message || e));
+    }
+});
+</script>
+<script type="module" src="analytics.js"></script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Admin: Unggah & Kelola Data Karyawan</title>
+    <!-- Pastikan Anda memiliki common-auth.js untuk autentikasi dan logout -->
+    <script type="module" src="./common-auth.js"></script>
+    <!-- PASTIKAN PATH INI BENAR KE FILE XLSX.FULL.MIN.JS ANDA -->
+    <script src="./xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.4);
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 26px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        input[type="file"] {
+            display: block; /* Agar input file menempati baris baru */
+            width: 100%; /* Lebar penuh */
+            max-width: 300px; /* Batasi lebar agar tidak terlalu panjang */
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        /* Style untuk input file agar lebih terlihat */
+        input[type="file"]::-webkit-file-upload-button {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+        }
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background: #d97706;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary { background: #4f46e5; color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-secondary { background: #f59e0b; color: #fff; }
+        .btn-secondary:hover { background: #d97706; }
+        .btn-info { background: #3b82f6; color: #fff; }
+        .btn-info:hover { background: #2563eb; }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .status-message.success { background-color: #10b981; color: white; }
+        .status-message.error { background-color: #ef4444; color: white; }
+        .status-message.info { background-color: #60a5fa; color: white; }
+
+        .data-preview {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+        }
+        th, td {
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 13px;
+        }
+        th {
+            background: rgba(255,255,255,0.2);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+        footer a { color: #fff; }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            input[type="file"] {
+                max-width: none;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Unggah & Kelola Data Karyawan</h1>
+
+        <div class="controls">
+            <input type="file" id="excelFile" accept=".xlsx, .xls">
+            <button class="btn btn-secondary" id="previewBtn">Preview Data</button>
+            <button class="btn btn-primary" id="uploadToFirestoreBtn">Unggah ke Firestore</button>
+            <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+        </div>
+
+        <div class="status-message" id="statusMessage">Pilih file Excel (.xlsx/.xls) dan klik Preview Data.</div>
+
+        <div class="data-preview">
+            <table id="dataTable">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
+    </footer>
+
+    <script type="module">
+        // --- BARIS PENTING INI AGAR LIBRARY XLSX TERDETEKSI DALAM MODUL ---
+        const XLSX = window.XLSX; 
+        if (!XLSX) {
+            console.error("SheetJS (xlsx.full.min.js) tidak dimuat dengan benar. Pastikan path-nya benar dan dimuat sebelum script ini.");
+            setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
+        }
+
+        // Impor Firebase SDK
+        import { db } from "./firebase-config.js";
+        import {
+            collection,
+            doc,
+            writeBatch, // Untuk operasi bulk (Batch Writes)
+            setDoc
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const excelFile = document.getElementById('excelFile');
+        const previewBtn = document.getElementById('previewBtn');
+        const uploadToFirestoreBtn = document.getElementById('uploadToFirestoreBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const dataTableHead = document.querySelector('#dataTable thead');
+        const dataTableBody = document.querySelector('#dataTable tbody');
+
+        let excelData = []; // Untuk menyimpan data Excel yang sudah diparsing
+
+        // --- Fungsi Helper ---
+        function setStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+        }
+
+        function clearTable() {
+            dataTableHead.innerHTML = '';
+            dataTableBody.innerHTML = '';
+        }
+
+        function displayTable(data) {
+            clearTable();
+            if (data.length === 0) {
+                setStatus("Tidak ada data untuk ditampilkan.");
+                return;
+            }
+
+            // Header
+            const headers = Object.keys(data[0]);
+            let headerRow = '<tr>';
+            headers.forEach(header => {
+                headerRow += `<th>${header}</th>`;
+            });
+            headerRow += '</tr>';
+            dataTableHead.innerHTML = headerRow;
+
+            // Body
+            data.forEach(row => {
+                let dataRow = '<tr>';
+                headers.forEach(header => {
+                    dataRow += `<td>${row[header] !== undefined ? row[header] : ''}</td>`;
+                });
+                dataRow += '</tr>';
+                dataTableBody.innerHTML += dataRow;
+            });
+            setStatus(`Preview berhasil. Ditemukan ${data.length} baris data.`, 'success');
+        }
+
+        // --- Event Listeners ---
+
+        previewBtn.addEventListener('click', () => {
+            const file = excelFile.files[0];
+            if (!file) {
+                setStatus("Pilih file Excel terlebih dahulu.", 'error');
+                return;
+            }
+
+            // Pastikan XLSX sudah tersedia
+            if (typeof XLSX === 'undefined') {
+                setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
+                return;
+            }
+
+            setStatus("Membaca file Excel...", 'info');
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0]; // Ambil sheet pertama
+                    const worksheet = workbook.Sheets[sheetName];
+                    
+                    // Konversi sheet ke array of JSON objects
+                    // header: 1 berarti baris pertama adalah header
+                    // raw: true agar tidak mengkonversi tipe data (misal tanggal ke format aneh)
+                    excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true }); 
+                    
+                    // Asumsikan baris pertama adalah header, dan baris sisanya adalah data
+                    const headers = excelData[0];
+                    const rows = excelData.slice(1);
+                    
+                    // Format ulang menjadi array of objects dengan kunci header
+                    excelData = rows.map(row => {
+                        let obj = {};
+                        headers.forEach((header, index) => {
+                            // Trim string values and convert numbers/booleans where applicable
+                            let value = row[index];
+                            if (typeof value === 'string') {
+                                value = value.trim();
+                            } else if (typeof value === 'number' && !isNaN(value)) {
+                                // Penanganan Tanggal: Jika ada kolom tanggal di Excel yang dibaca sebagai angka,
+                                // ini adalah serial number Excel. Anda mungkin perlu mengubahnya menjadi format
+                                // tanggal yang bisa diterima Firestore atau JS Date object.
+                                // Untuk contoh sederhana ini, kita biarkan saja sebagai angka.
+                                // Jika Excel Anda menggunakan format tanggal standar, XLSX.utils.format_cell bisa membantu.
+                            }
+                            obj[header] = value;
+                        });
+                        return obj;
+                    });
+                    
+                    displayTable(excelData);
+
+                } catch (error) {
+                    setStatus(`Gagal membaca file Excel: ${error.message}. Pastikan format file benar dan library Excel dimuat.`, 'error');
+                    console.error(error);
+                }
+            };
+            reader.onerror = (error) => {
+                setStatus(`Terjadi kesalahan saat membaca file: ${error}`, 'error');
+                console.error(error);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        uploadToFirestoreBtn.addEventListener('click', async () => {
+            if (excelData.length === 0) {
+                setStatus("Tidak ada data untuk diunggah. Silakan preview data terlebih dahulu.", 'error');
+                return;
+            }
+
+            setStatus(`Mengunggah ${excelData.length} baris data ke Firestore...`, 'info');
+            uploadToFirestoreBtn.disabled = true; // Nonaktifkan tombol saat mengunggah
+
+            const collectionRef = collection(db, "employees_mapping"); // Koleksi target di Firestore
+            const batchSize = 400; // Ukuran batch, <= 500 untuk Firestore
+            let totalSuccess = 0;
+            let totalError = 0;
+
+            try {
+                for (let i = 0; i < excelData.length; i += batchSize) {
+                    const batch = writeBatch(db);
+                    const currentBatchData = excelData.slice(i, i + batchSize);
+                    let batchSuccess = 0;
+                    let batchError = 0;
+
+                    currentBatchData.forEach(row => {
+                        // Pastikan ada field unik untuk dijadikan ID dokumen, misal 'NIK' atau 'ID NumberMesin'
+                        const nik = row['NIK']; // Sesuaikan dengan nama kolom NIK di Excel Anda
+                        const idNumberMesin = row['ID NumberMesin']; // Atau ini bisa jadi ID
+
+                        let docId = null;
+                        if (nik && String(nik).trim() !== '') {
+                            docId = String(nik).trim();
+                        } else if (idNumberMesin && String(idNumberMesin).trim() !== '') {
+                            docId = String(idNumberMesin).trim();
+                            console.warn(`Menggunakan 'ID NumberMesin' (${docId}) sebagai ID dokumen karena NIK kosong.`);
+                        }
+                        
+                        if (docId) {
+                            const dataToSave = { ...row };
+                            delete dataToSave['No']; // Contoh: hapus kolom 'No'
+                            
+                            batch.set(doc(collectionRef, docId), dataToSave); 
+                            batchSuccess++;
+                        } else {
+                            console.warn("Baris dilewati karena NIK dan ID NumberMesin kosong:", row);
+                            batchError++;
+                        }
+                    });
+
+                    await batch.commit();
+                    totalSuccess += batchSuccess;
+                    totalError += batchError;
+                    setStatus(`Batch ${Math.ceil((i + batchSize) / batchSize)} berhasil diunggah. Sukses: ${totalSuccess}, Dilewati: ${totalError}.`, 'info');
+                }
+                
+                setStatus(`Semua data berhasil diunggah! Total ${totalSuccess} baris sukses, ${totalError} dilewati.`, 'success');
+                excelData = []; // Kosongkan data setelah berhasil diunggah
+                clearTable();
+
+            } catch (error) {
+                setStatus(`Terjadi kesalahan saat mengunggah data: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                uploadToFirestoreBtn.disabled = false; // Aktifkan kembali tombol
+            }
+        });
+
+        // Autorisasi halaman (Contoh, pastikan ini ada di common-auth.js atau di sini)
+        // Saya asumsikan common-auth.js akan melakukan ini:
+        // 1. Mengimpor auth dari firebase-config.js
+        // 2. Menggunakan onAuthStateChanged untuk mendeteksi status autentikasi.
+        // 3. Mengambil user.uid
+        // 4. Mengambil dokumen user dari koleksi 'users' di Firestore
+        // 5. Memeriksa userData.role
+        // 6. Jika role bukan 'admin' atau 'super_admin', redirect ke home.html
+        // 7. Jika tidak ada user (belum login), redirect ke index.html
+        // Jika common-auth.js sudah melakukan ini, Anda tidak perlu kode ini lagi di sini.
+        // onAuthStateChanged(auth, async (user) => { ... });
+    </script>
+</body>
+</html>

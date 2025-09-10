@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <script type="module" src="./common-auth.js"></script>
+  <title>Fingerprint Data Hub — Menu Utama</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #9333ea);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      width: 90%;
+    }
+    h1 {
+      margin-bottom: 30px;
+      font-size: 26px;
+      font-weight: 600;
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 20px;
+    }
+    .menu-card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+    .menu-card:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+    }
+    footer a { color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Selamat Fingerprint Data Hub</h1>
+    <div class="menu-grid" id="mainMenuGrid"> <!-- TAMBAHKAN ID DI SINI -->
+      <div class="menu-card" onclick="goPage('flask.html')">📥 Download Data Finger</div>
+      <div class="menu-card" onclick="goPage('excel_to_json.html')">📄 List Mesin → JSON</div>
+      <div class="menu-card" onclick="goPage('convert-csv.html')">🔄 Data Finger → CSV/TXT</div>
+      <!-- Menu admin akan ditambahkan di sini oleh JavaScript -->
+      <div class="menu-card" onclick="logout()">🚪 Logout</div>
+    </div>
+    <footer>
+      © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
+    </footer>
+  </div>
+
+  <script type="module">
+    // Fungsi untuk navigasi halaman (sudah ada, kita definisikan ulang di sini)
+    window.goPage = (page) => {
+        window.location.href = page;
+    };
+
+    // Fungsi logout (asumsikan ada di common-auth.js atau definisikan di sini jika belum)
+    // Jika logout ada di common-auth.js dan Anda ingin menggunakannya, pastikan di-export/import.
+    // Untuk contoh ini, saya akan definisikan sederhana di sini:
+    import { auth } from "./firebase-config.js"; // Import auth dari firebase-config
+    import { signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // Import signOut
+
+    window.logout = async () => {
+        try {
+            await signOut(auth);
+            localStorage.removeItem("userRole"); // Hapus role saat logout
+            localStorage.removeItem("loginTime"); // Hapus waktu login juga
+            window.location.href = "index.html"; // Kembali ke halaman login
+        } catch (error) {
+            console.error("Error logging out:", error);
+            alert("Gagal logout. Silakan coba lagi.");
+        }
+    };
+
+    // --- START MODIFIKASI UNTUK ROLE ---
+    const userRole = localStorage.getItem("userRole");
+    const mainMenuGrid = document.getElementById("mainMenuGrid");
+
+    if (userRole === "admin" || userRole === "super_admin") {
+        // Buat elemen menu untuk Admin
+        const adminMenuUpload = document.createElement("div");
+        adminMenuUpload.className = "menu-card";
+        adminMenuUpload.onclick = () => goPage('admin_upload_data.html'); // Ganti dengan halaman admin yang sesuai
+        adminMenuUpload.textContent = "⬆️ Upload & Kelola Data";
+        mainMenuGrid.insertBefore(adminMenuUpload, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
+
+        const adminMenuUsers = document.createElement("div");
+        adminMenuUsers.className = "menu-card";
+        adminMenuUsers.onclick = () => goPage('admin_manage_users.html'); // Ganti dengan halaman manajemen user
+        adminMenuUsers.textContent = "👥 Kelola Pengguna";
+        mainMenuGrid.insertBefore(adminMenuUsers, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
+    }
+
+    if (userRole === "super_admin") {
+        // Tambahkan menu khusus Super Admin
+        const superAdminMenuSettings = document.createElement("div");
+        superAdminMenuSettings.className = "menu-card";
+        superAdminMenuSettings.onclick = () => goPage('superadmin_settings.html'); // Ganti dengan halaman pengaturan super admin
+        superAdminMenuSettings.textContent = "⚙️ Pengaturan Sistem";
+        mainMenuGrid.insertBefore(superAdminMenuSettings, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
+    }
+    // --- END MODIFIKASI UNTUK ROLE ---
+
+  </script>
+</body>
+</html>
