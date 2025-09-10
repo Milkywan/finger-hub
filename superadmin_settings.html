@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Super Admin: Pengaturan Sistem</title>
+    <!-- Pastikan Anda memiliki common-auth.js untuk autentikasi dan logout -->
+    <script type="module" src="./common-auth.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px; /* Lebar yang cukup untuk form pengaturan */
+            box-shadow: 0 10px 30px rgba(0,0,0,.4);
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 26px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .form-group input[type="date"],
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            box-sizing: border-box;
+        }
+        /* Style untuk input date placeholder */
+        input[type="date"]::-webkit-inner-spin-button,
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* Untuk membuat ikon kalender putih */
+        }
+        input[type="date"] {
+            color-scheme: dark; /* Untuk tampilan kalender gelap di beberapa browser */
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px; /* Jarak dari form group */
+            justify-content: center;
+            align-items: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary { background: #4f46e5; color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-info { background: #3b82f6; color: #fff; }
+        .btn-info:hover { background: #2563eb; }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .status-message.success { background-color: #10b981; color: white; }
+        .status-message.error { background-color: #ef4444; color: white; }
+        .status-message.info { background-color: #60a5fa; color: white; }
+
+        footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+        footer a { color: #fff; }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pengaturan Sistem</h1>
+
+        <div class="form-group">
+            <label for="offlineExpiryDateInput">Tanggal Kedaluwarsa Offline (YYYY-MM-DD)</label>
+            <input type="date" id="offlineExpiryDateInput">
+            <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Tanggal ini digunakan oleh aplikasi desktop saat offline.</small>
+        </div>
+
+        <!-- Anda bisa menambahkan form-group lain di sini untuk pengaturan lainnya -->
+        <!--
+        <div class="form-group">
+            <label for="anotherSetting">Pengaturan Lain</label>
+            <input type="text" id="anotherSetting" placeholder="Nilai pengaturan...">
+        </div>
+        -->
+
+        <div class="controls">
+            <button class="btn btn-primary" id="saveSettingsBtn">Simpan Pengaturan</button>
+            <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+        </div>
+
+        <div class="status-message" id="statusMessage">Memuat pengaturan...</div>
+    </div>
+
+    <footer>
+        © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
+    </footer>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import {
+            doc,
+            getDoc,
+            setDoc, // Menggunakan setDoc untuk membuat/memperbarui dokumen pengaturan
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        const offlineExpiryDateInput = document.getElementById('offlineExpiryDateInput');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // --- Konstanta untuk lokasi dokumen pengaturan ---
+        const SETTINGS_DOC_REF = doc(db, "settings", "app_config"); // Koleksi 'settings', dokumen 'app_config'
+
+        // --- Fungsi Helper ---
+        function setStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+        }
+
+        // --- Autorisasi Halaman ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    // Hanya super_admin yang bisa akses halaman ini
+                    if (userData.role !== "super_admin") {
+                        alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
+                        window.location.href = "home.html"; // Redirect jika tidak berhak
+                    } else {
+                        // Pengguna memiliki izin, muat pengaturan
+                        loadSettings();
+                    }
+                } else {
+                    alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
+                    window.location.href = "home.html";
+                }
+            } else {
+                window.location.href = "index.html"; // Redirect ke halaman login jika belum login
+            }
+        });
+
+        // --- Fungsi untuk Memuat Pengaturan ---
+        async function loadSettings() {
+            setStatus("Memuat pengaturan sistem...", 'info');
+            try {
+                const settingsSnap = await getDoc(SETTINGS_DOC_REF);
+                if (settingsSnap.exists()) {
+                    const settings = settingsSnap.data();
+                    // Set nilai ke input field
+                    if (settings.OFFLINE_EXPIRY_DATE) {
+                        offlineExpiryDateInput.value = settings.OFFLINE_EXPIRY_DATE; // Format YYYY-MM-DD
+                    }
+                    setStatus("Pengaturan berhasil dimuat.", 'success');
+                } else {
+                    setStatus("Dokumen pengaturan belum ada. Menggunakan nilai default.", 'info');
+                    // Jika belum ada, Anda bisa set nilai default di sini atau biarkan kosong
+                    offlineExpiryDateInput.value = ''; // Biarkan kosong
+                }
+            } catch (error) {
+                setStatus(`Gagal memuat pengaturan: ${error.message}`, 'error');
+                console.error("Error loading settings:", error);
+            }
+        }
+
+        // --- Fungsi untuk Menyimpan Pengaturan ---
+        saveSettingsBtn.addEventListener('click', async () => {
+            const newOfflineExpiryDate = offlineExpiryDateInput.value;
+
+            if (!newOfflineExpiryDate) {
+                setStatus("Tanggal kedaluwarsa offline tidak boleh kosong.", 'error');
+                return;
+            }
+
+            // Validasi format tanggal (browser input type="date" sudah bantu, tapi validasi ekstra tidak ada salahnya)
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(newOfflineExpiryDate)) {
+                setStatus("Format tanggal tidak valid. Gunakan YYYY-MM-DD.", 'error');
+                return;
+            }
+
+            setStatus("Menyimpan pengaturan...", 'info');
+            saveSettingsBtn.disabled = true; // Nonaktifkan tombol saat menyimpan
+
+            try {
+                await setDoc(SETTINGS_DOC_REF, {
+                    OFFLINE_EXPIRY_DATE: newOfflineExpiryDate,
+                    lastUpdated: new Date().toISOString() // Tambahkan timestamp update
+                }, { merge: true }); // Gunakan merge:true agar tidak menimpa field lain jika ada
+
+                setStatus("Pengaturan berhasil disimpan!", 'success');
+            } catch (error) {
+                setStatus(`Gagal menyimpan pengaturan: ${error.message}`, 'error');
+                console.error("Error saving settings:", error);
+            } finally {
+                saveSettingsBtn.disabled = false; // Aktifkan kembali tombol
+            }
+        });
+    </script>
+</body>
+</html>
