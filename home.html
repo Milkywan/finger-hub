@@ -95,23 +95,24 @@
     const userRole = localStorage.getItem("userRole");
     const mainMenuGrid = document.getElementById("mainMenuGrid");
 
-    if (userRole === "admin" || userRole === "super_admin") {
+    if (userRole === "admin") {
         // Buat elemen menu untuk Admin
         const adminMenuUpload = document.createElement("div");
         adminMenuUpload.className = "menu-card";
         adminMenuUpload.onclick = () => goPage('admin_upload_data.html'); // Ganti dengan halaman admin yang sesuai
         adminMenuUpload.textContent = "⬆️ Upload & Kelola Data";
         mainMenuGrid.insertBefore(adminMenuUpload, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
+    }
+
+    if (userRole === "super_admin") {
 
         const adminMenuUsers = document.createElement("div");
         adminMenuUsers.className = "menu-card";
         adminMenuUsers.onclick = () => goPage('admin_manage_users.html'); // Ganti dengan halaman manajemen user
         adminMenuUsers.textContent = "👥 Kelola Pengguna";
         mainMenuGrid.insertBefore(adminMenuUsers, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
-    }
-
-    if (userRole === "super_admin") {
-        // Tambahkan menu khusus Super Admin
+  
+      // Tambahkan menu khusus Super Admin
         const superAdminMenuSettings = document.createElement("div");
         superAdminMenuSettings.className = "menu-card";
         superAdminMenuSettings.onclick = () => goPage('superadmin_settings.html'); // Ganti dengan halaman pengaturan super admin
