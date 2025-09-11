@@ -26,7 +26,8 @@ window.logout = async () => {
 };
 
 // --- RENDER HEADER (NAVIGASI) ---
-function renderHeader(userRole, currentPageTitle) {
+// Ditambahkan parameter userName dan userRole
+function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
     const headerPlaceholder = document.getElementById('header-placeholder');
     if (!headerPlaceholder) return;
 
@@ -55,7 +56,12 @@ function renderHeader(userRole, currentPageTitle) {
                 <a href="convert-csv.html" class="${currentPageTitle === 'Absensi → CSV/TXT' ? 'active' : ''}">Absensi → CSV/TXT</a>
                 <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
             </div>
-            <div class="menu2" onclick="window.logout()">Logout</div>
+            <div class="right-nav-items">
+                <div class="user-info">
+                    <span>Halo, ${userName} (<span style="text-transform: capitalize;">${userRole}</span>)</span>
+                </div>
+                <div class="menu2" onclick="window.logout()">Logout</div>
+            </div>
         </nav>
     `;
     headerPlaceholder.innerHTML = headerHTML;
@@ -112,7 +118,7 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
   
         const superAdminMenuSettings = document.createElement("div");
         superAdminMenuSettings.className = "menu-card";
-        superAdminMenuSettings.onclick = () => window.goPage('admin-settings.html');
+        superAdminMenuSettings.onclick = () => window.goPage('admin-settings.html'); // Pastikan ini mengarah ke admin-settings.html
         superAdminMenuSettings.textContent = "⚙️ Pengaturan Sistem";
         mainMenuGrid.appendChild(superAdminMenuSettings);
     }
@@ -128,11 +134,6 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
 
 // --- MAIN INITIALIZER FUNCTION ---
 // Fungsi ini dipanggil dari setiap halaman HTML
-// Parameters:
-//   - pageTitle: Judul halaman saat ini (misal: "Kelola Pengguna", "Unggah Data Karyawan", "Menu Utama")
-//   - mainContentId: ID dari div container utama halaman yang akan disembunyikan/ditampilkan setelah otorisasi
-//   - requiredRole: Peran minimum yang dibutuhkan untuk mengakses halaman ini (misal: "user", "admin", "super_admin")
-//   - homeMenuGridId: Jika halaman adalah home.html, berikan ID dari div menu gridnya (misal: "mainMenuGrid")
 export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuGridId = null) {
     const mainContentElement = document.getElementById(mainContentId);
     if (!mainContentElement) {
@@ -148,51 +149,44 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
             const userDocRef = doc(db, "users", user.uid);
             try {
                 const userDocSnap = await getDoc(userDocRef);
+                let userData = {};
+                let userRole = 'user'; // Default role
+                let userName = user.email; // Default name
+
                 if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    const userRole = userData.role || 'user'; // Default ke 'user' jika tidak ada peran
+                    userData = userDocSnap.data();
+                    userRole = userData.role || 'user';
+                    userName = userData.username || user.email; // Prioritaskan username dari Firestore
                     localStorage.setItem('userRole', userRole); // Simpan peran di localStorage
-
-                    // Pengecekan otorisasi untuk halaman saat ini
-                    let authorized = false;
-                    if (requiredRole === "user") {
-                        authorized = true; // Semua user bisa akses halaman ini
-                    } else if (requiredRole === "admin" && (userRole === "admin" || userRole === "super_admin")) {
-                        authorized = true;
-                    } else if (requiredRole === "super_admin" && userRole === "super_admin") {
-                        authorized = true;
-                    }
-
-                    if (authorized) {
-                        renderHeader(userRole, pageTitle);
-                        renderFooter();
-                        if (homeMenuGridId) { // Jika halaman home.html
-                            renderHomeMenuItems(userRole, homeMenuGridId);
-                        }
-                        mainContentElement.style.display = 'block'; // Tampilkan konten
-                    } else {
-                        alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
-                        window.location.href = "home.html"; // Redirect ke home jika tidak berhak
-                    }
                 } else {
-                    console.warn("Dokumen pengguna tidak ditemukan di Firestore, menganggap peran 'user'.");
+                    console.warn("Dokumen pengguna tidak ditemukan di Firestore. Menggunakan peran default 'user' dan email sebagai nama.");
                     localStorage.setItem('userRole', 'user');
-                    // Jika data pengguna tidak ada tapi terautentikasi, perlakukan sebagai user dan render dasar
-                    renderHeader('user', pageTitle);
+                }
+
+                // Pengecekan otorisasi untuk halaman saat ini
+                let authorized = false;
+                if (requiredRole === "user") { // Halaman untuk semua user
+                    authorized = true;
+                } else if (requiredRole === "admin" && (userRole === "admin" || userRole === "super_admin")) { // Halaman untuk admin & super_admin
+                    authorized = true;
+                } else if (requiredRole === "super_admin" && userRole === "super_admin") { // Halaman khusus super_admin
+                    authorized = true;
+                }
+
+                if (authorized) {
+                    renderHeader(userRole, pageTitle, userName); // Meneruskan userName dan userRole
                     renderFooter();
-                    if (homeMenuGridId) {
-                        renderHomeMenuItems('user', homeMenuGridId);
+                    if (homeMenuGridId) { // Jika halaman adalah home.html
+                        renderHomeMenuItems(userRole, homeMenuGridId);
                     }
-                    if (requiredRole === "user") {
-                        mainContentElement.style.display = 'block';
-                    } else {
-                        alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
-                        window.location.href = "home.html";
-                    }
+                    mainContentElement.style.display = 'block'; // Tampilkan konten
+                } else {
+                    alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
+                    window.location.href = "home.html"; // Redirect ke home jika tidak berhak
                 }
             } catch (error) {
-                console.error("Error fetching user role:", error);
-                alert("Terjadi kesalahan saat memeriksa izin. Silakan coba lagi.");
+                console.error("Error fetching user data or rendering page:", error);
+                alert("Terjadi kesalahan saat memeriksa izin atau memuat data. Silakan coba lagi.");
                 window.location.href = "index.html"; // Kembali ke login jika ada error
             }
         } else {
