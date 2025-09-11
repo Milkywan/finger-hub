@@ -95,7 +95,7 @@
     const userRole = localStorage.getItem("userRole");
     const mainMenuGrid = document.getElementById("mainMenuGrid");
 
-    if (userRole === "admin") {
+    if (userRole === "admin" || userRole === "super_admin") {
         // Buat elemen menu untuk Admin
         const adminMenuUpload = document.createElement("div");
         adminMenuUpload.className = "menu-card";
@@ -124,3 +124,4 @@
   </script>
 </body>
 </html>
+
