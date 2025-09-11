@@ -3,7 +3,7 @@
 import { auth, db } from "./firebase-config.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // <--- Perbaikan typo di sini juga
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // <--- PASTIKAN SUDAH BENAR SEKARANG!
 
 // --- GLOBAL FUNCTIONS ---
 
@@ -149,13 +149,7 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
     }
 
     // LOGOUT CARD TIDAK LAGI DITAMBAHKAN DI SINI, KARENA SUDAH ADA DI HEADER
-    // const logoutMenuCard = document.createElement("div");
-    // logoutMenuCard.className = "menu-card";
-    // logoutMenuCard.onclick = () => window.logout();
-    // logoutMenuCard.textContent = "🚪 Logout";
-    // mainMenuGrid.appendChild(logoutMenuCard);
 } // <--- PASTIKAN KURUNG KURAWAL INI ADA DAN TIDAK TERKOMENTAR!
-  // Itulah yang menyebabkan masalah sebelumnya.
 
 // --- MAIN INITIALIZER FUNCTION ---
 // Fungsi ini dipanggil dari setiap halaman HTML
