@@ -11,7 +11,7 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #4f46e5, #9333ea);
             color: white;
-            min-height: 100vh;
+            min-height: 10vh; /* Mengurangi tinggi minimum untuk demo */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -150,8 +150,9 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Kelola Pengguna</h1>
+    <!-- Menambahkan id dan menyembunyikan secara default -->
+    <div class="container" id="adminContainer" style="display: none;">
+        <h1>Kelola Pengguna REVISI</h1>
 
         <div class="controls">
             <input type="text" id="searchUserInput" placeholder="Cari berdasarkan username/email...">
@@ -195,15 +196,17 @@
             where,
             orderBy,
             updateDoc,
-            deleteDoc
+            deleteDoc,
+            getDoc // <--- PENTING: getDoc ditambahkan di sini!
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // Untuk pengecekan otorisasi
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
         const usersTableBody = document.querySelector('#usersTable tbody');
         const statusMessage = document.getElementById('statusMessage');
         const searchUserInput = document.getElementById('searchUserInput');
         const searchUserBtn = document.getElementById('searchUserBtn');
         const refreshUsersBtn = document.getElementById('refreshUsersBtn');
+        const adminContainer = document.getElementById('adminContainer'); // <--- Ambil elemen container
 
         let allUsersData = []; // Untuk menyimpan data pengguna yang dimuat
 
@@ -213,27 +216,30 @@
             statusMessage.className = `status-message ${type}`;
         }
 
-        // --- Autorisasi Halaman (Penting untuk keamanan) ---
-        // Ini adalah contoh implementasi otorisasi halaman.
-        // Asumsi common-auth.js mungkin sudah menangani redirect dasar.
-        // Di sini kita cek ulang peran setelah user terautentikasi.
+        // --- Autorisasi Halaman ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDocRef = doc(db, "users", user.uid);
-                const userDocSnap = await getDoc(userDocRef); // Asumsi getDoc diimport
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    // Hanya admin dan super_admin yang bisa akses halaman ini
-                    if (userData.role !== "admin" && userData.role !== "super_admin") {
-                        alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
-                        window.location.href = "home.html"; // Redirect ke home jika tidak berhak
+                try {
+                    const userDocSnap = await getDoc(userDocRef); // Sekarang getDoc seharusnya berfungsi
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        // Hanya admin dan super_admin yang bisa akses halaman ini
+                        if (userData.role === "admin" || userData.role === "super_admin") {
+                            adminContainer.style.display = 'block'; // <--- Tampilkan container jika otorisasi berhasil
+                            loadUsers();
+                        } else {
+                            alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
+                            window.location.href = "home.html"; // Redirect jika tidak berhak
+                        }
                     } else {
-                        // Pengguna memiliki izin, mulai muat data
-                        loadUsers();
+                        alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
+                        window.location.href = "home.html";
                     }
-                } else {
-                    alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
-                    window.location.href = "home.html";
+                } catch (error) {
+                    console.error("Error saat otorisasi:", error);
+                    alert("Terjadi kesalahan saat memeriksa izin. Silakan coba lagi.");
+                    window.location.href = "index.html"; // Kembali ke login atau home jika ada error
                 }
             } else {
                 window.location.href = "index.html"; // Redirect ke halaman login jika belum login
@@ -249,19 +255,17 @@
 
             try {
                 let q = collection(db, "users");
+                // Implementasi pencarian dasar:
+                // Untuk pencarian yang lebih canggih (OR query, fuzzy search),
+                // pertimbangkan Cloud Functions dan pencarian indeks penuh (misal, Algolia, Meilisearch).
                 if (searchTerm) {
-                    // Cari berdasarkan username atau email
-                    // Firestore tidak mendukung OR query secara langsung antar field yang berbeda
-                    // Jadi, kita bisa query berdasarkan awalan username/email
-                    // Atau, lebih baik, ambil semua dan filter di klien jika jumlah user tidak terlalu banyak.
-                    // Untuk contoh ini, kita akan ambil semua (jika tidak ada search term) atau
-                    // coba filter dasar berdasarkan username
+                    // Ini akan mencari username yang *dimulai* dengan searchTerm
+                    // Untuk mencari email juga, Anda bisa melakukan dua query terpisah
+                    // dan menggabungkan hasilnya (atau Cloud Functions).
                     q = query(q, 
                         where("username", ">=", searchTerm), 
                         where("username", "<=", searchTerm + '\uf8ff')
                     );
-                    // Untuk email juga, perlu query terpisah atau gabungkan.
-                    // Jika jumlah pengguna sangat banyak, sebaiknya gunakan Cloud Functions untuk pencarian indeks penuh.
                 }
                 
                 q = query(q, orderBy("createdAt", "desc")); // Urutkan berdasarkan tanggal pendaftaran terbaru
@@ -385,10 +389,6 @@
             searchUserInput.value = ''; // Hapus search term
             loadUsers(); // Muat ulang semua user
         });
-
-        // Catatan: common-auth.js diharapkan menangani redirect awal jika belum login atau tidak punya izin.
-        // Jika common-auth.js tidak ada, Anda perlu memindahkan onAuthStateChanged ke global script.
-        // Fungsi loadUsers() akan dipanggil setelah otorisasi di onAuthStateChanged berhasil.
     </script>
 </body>
 </html>
