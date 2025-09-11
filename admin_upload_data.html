@@ -10,32 +10,87 @@
     <script src="./xlsx.full.min.js"></script>
 
     <style>
+        /* --- GLOBAL STYLES (Diambil dari skrip Download Absensi Mesin) --- */
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #4f46e5, #9333ea);
             color: white;
-            min-height: 100vh;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
+            min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
+        }
+        
+        /* --- NAVIGASI (Diambil dari skrip Download Absensi Mesin) --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            z-index: 10; /* Pastikan nav di atas konten lain jika ada */
         }
-        .container {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 10px;
+        nav .brand { font-weight: bold; font-size: 1.2rem; }
+        nav .menu a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+            transition: color .3s;
+        }
+        nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+        nav .menu2 { /* Untuk tombol Logout */
+            color: white;
+            cursor: pointer;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.3s, transform 0.2s;
+            font-weight: bold;
+        }
+        nav .menu2:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        /* --- WRAPPER KONTEN UTAMA (Baru untuk flexbox layout) --- */
+        .main-content-wrapper {
+            flex: 1; /* Agar mengambil sisa ruang vertikal */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        /* --- CONTAINER UTAMA / CARD (Menggabungkan dari kedua skrip) --- */
+        /* Sekarang #adminUploadContainer yang akan memiliki gaya seperti .card */
+        .container { /* General container style, applied to #adminUploadContainer */
+            background: rgba(255,255,255,0.1); /* Latar belakang transparan */
+            padding: 2rem; /* Padding lebih besar */
+            border-radius: 1rem; /* Border radius lebih besar */
             width: 100%;
-            max-width: 900px;
-            box-shadow: 0 10px 30px rgba(0,0,0,.4);
-            margin-bottom: 20px;
+            max-width: 900px; /* Pertahankan lebar untuk halaman upload */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
+            backdrop-filter: blur(8px); /* Efek blur */
+            animation: fadeIn .8s ease; /* Animasi fade in */
         }
-        h1 {
+        @keyframes fadeIn { /* Animasi fade in */
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- HEADINGS --- */
+        h2 { /* Mengganti h1 menjadi h2 untuk konsistensi */
+            text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
-            text-align: center;
             font-size: 26px;
         }
+
+        /* --- FORM CONTROLS --- */
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -45,18 +100,17 @@
             align-items: center;
         }
         input[type="file"] {
-            display: block; /* Agar input file menempati baris baru */
-            width: 100%; /* Lebar penuh */
-            max-width: 300px; /* Batasi lebar agar tidak terlalu panjang */
-            padding: 10px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.1);
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            padding: .75rem; /* Padding baru */
+            border: none; /* Hilangkan border */
+            border-radius: .5rem; /* Border radius baru */
+            background: rgba(255,255,255,0.15); /* Latar belakang transparan */
             color: white;
             box-sizing: border-box;
             cursor: pointer;
         }
-        /* Style untuk input file agar lebih terlihat */
         input[type="file"]::-webkit-file-upload-button {
             background: #f59e0b;
             color: white;
@@ -69,20 +123,32 @@
         input[type="file"]::-webkit-file-upload-button:hover {
             background: #d97706;
         }
-        .btn {
-            padding: 10px 20px;
+
+        /* --- BUTTONS --- */
+        .btn { /* Gaya dasar tombol */
+            width: auto; /* Otomatis menyesuaikan konten */
+            padding: .75rem; /* Padding baru */
+            margin-top: .75rem; /* Margin baru */
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
+            border-radius: .5rem; /* Border radius baru */
+            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: transform .2s, box-shadow .2s;
+            font-size: 15px; /* Pertahankan ukuran font */
         }
+        .btn:hover { /* Efek hover baru */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        /* Specific button colors */
         .btn-primary { background: #4f46e5; color: #fff; }
         .btn-primary:hover { background: #4338ca; }
-        .btn-secondary { background: #f59e0b; color: #fff; }
+        .btn-secondary { background: #f59e0b; color: #fff; } /* Warna khusus untuk tombol preview */
         .btn-secondary:hover { background: #d97706; }
         .btn-info { background: #3b82f6; color: #fff; }
         .btn-info:hover { background: #2563eb; }
+
+        /* --- STATUS MESSAGE --- */
         .status-message {
             margin-top: 15px;
             padding: 10px;
@@ -94,6 +160,7 @@
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
 
+        /* --- DATA PREVIEW TABLE --- */
         .data-preview {
             margin-top: 20px;
             background: rgba(255,255,255,0.1);
@@ -121,16 +188,24 @@
             top: 0;
             z-index: 1;
         }
-        footer {
-            margin-top: 40px;
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
-            text-align: center;
-        }
-        footer a { color: #fff; }
 
-        /* Media Queries for Responsiveness */
+        /* --- FOOTER (Diambil dari skrip Download Absensi Mesin) --- */
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: .9rem;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+        }
+        footer a { color: white; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* --- Media Queries for Responsiveness --- */
         @media (max-width: 768px) {
+            nav { padding: 1rem; flex-direction: column; }
+            nav .menu { margin-top: 10px; }
+            nav .menu a { margin: 0.5rem 0.5rem; display: inline-block; }
+            nav .menu2 { margin-top: 10px; }
             .controls {
                 flex-direction: column;
                 align-items: stretch;
@@ -145,29 +220,49 @@
     </style>
 </head>
 <body>
-    <!-- Menambahkan id dan menyembunyikan secara default -->
-    <div class="container" id="adminUploadContainer" style="display: none;">
-        <h1>Unggah & Kelola Data Karyawan REVISI</h1>
-
-        <div class="controls">
-            <input type="file" id="excelFile" accept=".xlsx, .xls">
-            <button class="btn btn-secondary" id="previewBtn">Preview Data</button>
-            <button class="btn btn-primary" id="uploadToFirestoreBtn">Unggah ke Firestore</button>
-            <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+    <!-- --- NAVIGASI (Disalin dari skrip Download Absensi Mesin) --- -->
+    <nav>
+        <div class="brand">🦁 Internal Tools</div>
+        <div class="menu">
+            <a href="home.html">Home</a>
+            <a href="admin-users.html">Kelola Pengguna</a>
+            <a href="#" class="active">Unggah Data Karyawan</a>
+            <a href="excel_to_json.html">Mesin → JSON</a>
+            <a href="convert-csv.html">Absensi → CSV/TXT</a>
+            <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
         </div>
+        <!-- Pastikan common-auth.js menyediakan fungsi window.logout() -->
+        <div class="menu2" onclick="window.logout()">Logout</div>
+    </nav>
 
-        <div class="status-message" id="statusMessage">Pilih file Excel (.xlsx/.xls) dan klik Preview Data.</div>
+    <!-- --- WRAPPER KONTEN UTAMA (Baru) --- -->
+    <div class="main-content-wrapper">
+        <!-- CONTAINER UTAMA / CARD: Memiliki id dan disembunyikan secara default -->
+        <div class="container" id="adminUploadContainer" style="display: none;">
+            <h2>Unggah & Kelola Data Karyawan REVISI</h2> <!-- Mengganti h1 menjadi h2 -->
 
-        <div class="data-preview">
-            <table id="dataTable">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div class="controls">
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+                <button class="btn btn-secondary" id="previewBtn">Preview Data</button>
+                <button class="btn btn-primary" id="uploadToFirestoreBtn">Unggah ke Firestore</button>
+                <!-- Tombol kembali ke home, bisa disesuaikan dengan link nav di atas -->
+                <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+            </div>
+
+            <div class="status-message" id="statusMessage">Pilih file Excel (.xlsx/.xls) dan klik Preview Data.</div>
+
+            <div class="data-preview">
+                <table id="dataTable">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- --- FOOTER (Disalin dari skrip Download Absensi Mesin) --- -->
     <footer>
-        © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
+        &copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
     </footer>
 
     <script type="module">
@@ -179,15 +274,15 @@
         }
 
         // Impor Firebase SDK
-        import { auth, db } from "./firebase-config.js"; // <-- auth ditambahkan
+        import { auth, db } from "./firebase-config.js"; 
         import {
             collection,
             doc,
-            writeBatch, // Untuk operasi bulk (Batch Writes)
+            writeBatch, 
             setDoc,
-            getDoc // <-- PENTING: getDoc ditambahkan di sini!
+            getDoc 
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // <-- onAuthStateChanged ditambahkan
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; 
 
         const excelFile = document.getElementById('excelFile');
         const previewBtn = document.getElementById('previewBtn');
@@ -195,9 +290,9 @@
         const statusMessage = document.getElementById('statusMessage');
         const dataTableHead = document.querySelector('#dataTable thead');
         const dataTableBody = document.querySelector('#dataTable tbody');
-        const adminUploadContainer = document.getElementById('adminUploadContainer'); // <-- Ambil elemen container
+        const adminUploadContainer = document.getElementById('adminUploadContainer'); 
 
-        let excelData = []; // Untuk menyimpan data Excel yang sudah diparsing
+        let excelData = []; 
 
         // --- Fungsi Helper ---
         function setStatus(message, type = 'info') {
@@ -248,11 +343,10 @@
                         const userData = userDocSnap.data();
                         // Hanya admin dan super_admin yang bisa akses halaman ini
                         if (userData.role === "admin" || userData.role === "super_admin") {
-                            adminUploadContainer.style.display = 'block'; // <-- Tampilkan container jika otorisasi berhasil
-                            // Sekarang Anda bisa memanggil fungsi inisialisasi lain jika ada, atau biarkan event listener bekerja
+                            adminUploadContainer.style.display = 'block'; 
                         } else {
                             alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
-                            window.location.href = "home.html"; // Redirect jika tidak berhak
+                            window.location.href = "home.html"; 
                         }
                     } else {
                         alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
@@ -261,10 +355,10 @@
                 } catch (error) {
                     console.error("Error saat otorisasi:", error);
                     alert("Terjadi kesalahan saat memeriksa izin. Silakan coba lagi.");
-                    window.location.href = "index.html"; // Kembali ke login atau home jika ada error
+                    window.location.href = "index.html"; 
                 }
             } else {
-                window.location.href = "index.html"; // Redirect ke halaman login jika belum login
+                window.location.href = "index.html"; 
             }
         });
         // --- Akhir Autorisasi Halaman ---
@@ -291,12 +385,10 @@
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0]; // Ambil sheet pertama
+                    const sheetName = workbook.SheetNames[0]; 
                     const worksheet = workbook.Sheets[sheetName];
                     
                     // Konversi sheet ke array of JSON objects
-                    // header: 1 berarti baris pertama adalah header
-                    // raw: true agar tidak mengkonversi tipe data (misal tanggal ke format aneh)
                     excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true }); 
                     
                     // Asumsikan baris pertama adalah header, dan baris sisanya adalah data
@@ -307,17 +399,10 @@
                     excelData = rows.map(row => {
                         let obj = {};
                         headers.forEach((header, index) => {
-                            // Trim string values and convert numbers/booleans where applicable
                             let value = row[index];
                             if (typeof value === 'string') {
                                 value = value.trim();
-                            } else if (typeof value === 'number' && !isNaN(value)) {
-                                // Penanganan Tanggal: Jika ada kolom tanggal di Excel yang dibaca sebagai angka,
-                                // ini adalah serial number Excel. Anda mungkin perlu mengubahnya menjadi format
-                                // tanggal yang bisa diterima Firestore atau JS Date object.
-                                // Untuk contoh sederhana ini, kita biarkan saja sebagai angka.
-                                // Jika Excel Anda menggunakan format tanggal standar, XLSX.utils.format_cell bisa membantu.
-                            }
+                            } 
                             obj[header] = value;
                         });
                         return obj;
@@ -344,10 +429,10 @@
             }
 
             setStatus(`Mengunggah ${excelData.length} baris data ke Firestore...`, 'info');
-            uploadToFirestoreBtn.disabled = true; // Nonaktifkan tombol saat mengunggah
+            uploadToFirestoreBtn.disabled = true; 
 
-            const collectionRef = collection(db, "employees_mapping"); // Koleksi target di Firestore
-            const batchSize = 400; // Ukuran batch, <= 500 untuk Firestore
+            const collectionRef = collection(db, "employees_mapping"); 
+            const batchSize = 400; 
             let totalSuccess = 0;
             let totalError = 0;
 
@@ -359,9 +444,8 @@
                     let batchError = 0;
 
                     currentBatchData.forEach(row => {
-                        // Pastikan ada field unik untuk dijadikan ID dokumen, misal 'NIK' atau 'ID NumberMesin'
-                        const nik = row['NIK']; // Sesuaikan dengan nama kolom NIK di Excel Anda
-                        const idNumberMesin = row['ID NumberMesin']; // Atau ini bisa jadi ID
+                        const nik = row['NIK']; 
+                        const idNumberMesin = row['ID NumberMesin']; 
 
                         let docId = null;
                         if (nik && String(nik).trim() !== '') {
@@ -373,7 +457,7 @@
                         
                         if (docId) {
                             const dataToSave = { ...row };
-                            delete dataToSave['No']; // Contoh: hapus kolom 'No'
+                            delete dataToSave['No']; 
                             
                             batch.set(doc(collectionRef, docId), dataToSave); 
                             batchSuccess++;
@@ -390,14 +474,14 @@
                 }
                 
                 setStatus(`Semua data berhasil diunggah! Total ${totalSuccess} baris sukses, ${totalError} dilewati.`, 'success');
-                excelData = []; // Kosongkan data setelah berhasil diunggah
+                excelData = []; 
                 clearTable();
 
             } catch (error) {
                 setStatus(`Terjadi kesalahan saat mengunggah data: ${error.message}`, 'error');
                 console.error(error);
             } finally {
-                uploadToFirestoreBtn.disabled = false; // Aktifkan kembali tombol
+                uploadToFirestoreBtn.disabled = false; 
             }
         });
     </script>
