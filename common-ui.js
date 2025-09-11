@@ -148,6 +148,13 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
         mainMenuGrid.appendChild(superAdminMenuSettings);
     }
 
+        // Tambahkan tombol Logout sebagai elemen terakhir
+        const logoutMenuCard = document.createElement("div");
+        logoutMenuCard.className = "menu-card";
+        logoutMenuCard.onclick = () => window.logout();
+        logoutMenuCard.textContent = "🚪 Logout";
+        mainMenuGrid.appendChild(logoutMenuCard);
+    }
   
 
 
@@ -218,4 +225,5 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
         }
     });
 }
+
 
