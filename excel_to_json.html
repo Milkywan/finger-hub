@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Konversi Mesin → JSON</title>
-  <script type="module" src="./common-auth.js"></script>
+  <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
+  <!-- PASTIKAN XLSX INI DIMUAT SEBELUM SCRIPT MODULE DI BAWAH -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
+    /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -15,48 +17,76 @@
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+      flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
+      min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
     }
+    
+    /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
     nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(8px);
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        padding: 1rem 2rem;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(8px);
+        z-index: 10;
     }
-  nav .brand { font-weight: bold; font-size: 1.2rem; }
-  nav .menu a {
-    color: white; text-decoration: none; margin-left: 1rem; transition: color .3s;
-  }
-  nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
-  nav .menu2 {
-    color: white;
-    cursor: pointer;
-    margin-left: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    transition: background 0.3s, transform 0.2s;
-    font-weight: bold;
-  }
-  nav .menu2:hover {
-    background: rgba(255,255,255,0.2);
-    transform: translateY(-2px);
-  }
-    .container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
+    nav .brand { font-weight: bold; font-size: 1.2rem; }
+    nav .menu { 
+        display: flex; 
+        align-items: center;
+        flex-grow: 1; 
+        justify-content: center; 
     }
-    .card {
+    nav .menu a {
+        color: white; 
+        text-decoration: none; 
+        margin: 0 1rem; 
+        transition: color .3s;
+    }
+    nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+
+    /* Gaya untuk info user dan tombol logout di header */
+    .right-nav-items {
+        display: flex;
+        align-items: center;
+        gap: 1rem; 
+    }
+    .user-info {
+        font-size: 0.9rem; 
+        color: rgba(255, 255, 255, 0.8);
+        white-space: nowrap; 
+    }
+    nav .menu2 { /* Untuk tombol Logout */
+        color: white;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: rgba(255,255,255,0.1);
+        transition: background 0.3s, transform 0.2s;
+        font-weight: bold;
+    }
+    nav .menu2:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+    }
+
+    /* --- WRAPPER KONTEN UTAMA --- */
+    .main-content-wrapper {
+        flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+    }
+
+    /* --- CARD KONTEN SPESIFIK HALAMAN INI --- */
+    /* Nama class 'card' diubah menjadi 'container' untuk konsistensi dengan pola admin pages */
+    .container { /* Menggantikan .card di HTML asli */
       background: rgba(255,255,255,0.1);
       padding: 2rem;
       border-radius: 1rem;
-      max-width: 800px;
+      max-width: 800px; /* Pertahankan lebar yang sesuai untuk halaman ini */
       width: 100%;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       animation: fadeIn .8s ease;
@@ -66,6 +96,7 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
     h1 { margin-top: 0; }
     .dropzone {
       border: 2px dashed #a5b4fc;
@@ -74,6 +105,7 @@
       text-align: center;
       cursor: pointer;
       transition: background .3s, transform .2s;
+      margin-bottom: 1rem; /* Tambahkan sedikit margin bawah */
     }
     .dropzone.dragover {
       background: rgba(165,180,252,0.1);
@@ -107,6 +139,13 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
+    /* Gaya untuk status box */
+    #status {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
     footer {
       text-align: center;
       padding: 1rem;
@@ -116,25 +155,41 @@
     }
     footer a { color: white; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+
+    /* --- Media Queries for Responsiveness (Konsisten di semua halaman) --- */
+    @media (max-width: 768px) {
+        nav { 
+            padding: 1rem; 
+            flex-direction: column; 
+            align-items: flex-start; 
+        }
+        nav .brand { margin-bottom: 10px; } 
+        nav .menu { 
+            width: 100%; 
+            flex-wrap: wrap; 
+            justify-content: flex-start; 
+            margin-bottom: 10px;
+        }
+        nav .menu a { margin: 0.5rem 0.5rem; } 
+        .right-nav-items {
+            width: 100%; 
+            justify-content: space-between; 
+            margin-top: 10px;
+        }
+    }
     @media (max-width: 600px) {
-      .card { padding: 1rem; }
+      .container { padding: 1rem; }
     }
   </style>
 </head>
 <body>
-  <nav>
-    <div class="brand">🦁 Internal Tools</div>
-    <div class="menu">
-      <a href="home.html">Home</a>
-      <a href="flask.html">Download Mesin</a>
-      <a href="#" class="active">Mesin → JSON</a>
-      <a href="convert-csv.html">Absensi → CSV/TXT</a>
-      <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
-    </div>
-    <div class="menu2" onclick="window.logout()">Logout</div>
-  </nav>
-  <div class="container">
-    <div class="card">
+  <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+  <div id="header-placeholder"></div> 
+
+  <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+  <div class="main-content-wrapper">
+    <!-- Konten halaman spesifik (sekarang menggunakan id "pageContainer" dan class "container") -->
+    <div class="container" id="pageContainer">
       <h1>Excel → JSON Converter</h1>
       <p>Konversi daftar <strong>Mesin Fingerprint</strong> ke format JSON siap pakai.</p>
       <div class="dropzone" id="dropzone">Tarik & letakkan file Excel di sini atau klik untuk memilih</div>
@@ -150,8 +205,30 @@
       </div>
     </div>
   </div>
-  <footer>&copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</footer>
+
+  <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+  <div id="footer-placeholder"></div> 
+
   <script type="module">
+    // Import initPage dari common-ui.js
+    import { initPage } from "./common-ui.js";
+
+    // Panggil initPage saat DOM siap
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage(
+          "Mesin → JSON", // pageTitle (akan jadi active di navigasi)
+          "pageContainer",          // mainContentId (ID dari div container utama halaman ini)
+          "user"                    // requiredRole (semua user bisa akses)
+      );
+    });
+
+    // Pastikan XLSX global tersedia
+    const XLSX = window.XLSX;
+    if (!XLSX) {
+        console.error("SheetJS (xlsx.full.min.js) tidak dimuat dengan benar. Pastikan path-nya benar dan dimuat sebelum script ini.");
+        document.getElementById('status').innerHTML = '<div style="color:#ff8080;">Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.</div>';
+    }
+
     const q = s => document.querySelector(s);
     const statusBox = q('#status');
     const dropzone = q('#dropzone');
