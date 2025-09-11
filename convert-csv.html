@@ -4,49 +4,94 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Konversi Absensi → CSV/TXT</title>
-  <script type="module" src="./common-auth.js"></script>
+  <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
   <style>
+    /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #4f46e5, #9333ea);
       color: white;
-      margin: 0; padding: 0;
-      display: flex; flex-direction: column; min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
+      min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
     }
+    
+    /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
     nav {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1rem 2rem;
-      background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(8px);
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        padding: 1rem 2rem;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(8px);
+        z-index: 10;
     }
     nav .brand { font-weight: bold; font-size: 1.2rem; }
+    nav .menu { 
+        display: flex; 
+        align-items: center;
+        flex-grow: 1; 
+        justify-content: center; 
+    }
     nav .menu a {
-      color: white; text-decoration: none; margin-left: 1rem; transition: color .3s;
+        color: white; 
+        text-decoration: none; 
+        margin: 0 1rem; 
+        transition: color .3s;
     }
     nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
-    nav .menu2 {
-      color: white;
-      cursor: pointer;
-      margin-left: 1rem;
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      background: rgba(255,255,255,0.1);
-      transition: background 0.3s, transform 0.2s;
-      font-weight: bold;
+
+    /* Gaya untuk info user dan tombol logout di header */
+    .right-nav-items {
+        display: flex;
+        align-items: center;
+        gap: 1rem; 
+    }
+    .user-info {
+        font-size: 0.9rem; 
+        color: rgba(255, 255, 255, 0.8);
+        white-space: nowrap; 
+    }
+    nav .menu2 { /* Untuk tombol Logout */
+        color: white;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: rgba(255,255,255,0.1);
+        transition: background 0.3s, transform 0.2s;
+        font-weight: bold;
     }
     nav .menu2:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-2px);
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
     }
-    .container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; }
-    .card {
+
+    /* --- WRAPPER KONTEN UTAMA --- */
+    .main-content-wrapper {
+        flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+    }
+
+    /* --- CARD KONTEN SPESIFIK HALAMAN INI --- */
+    /* Nama class 'card' diubah menjadi 'container' untuk konsistensi dengan pola admin pages */
+    .container { /* Menggantikan .card di HTML asli */
       background: rgba(255,255,255,0.1);
-      padding: 2rem; border-radius: 1rem;
-      max-width: 800px; width: 100%;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 800px;
+      width: 100%;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      animation: fadeIn .8s ease; backdrop-filter: blur(8px);
+      animation: fadeIn .8s ease;
+      backdrop-filter: blur(8px);
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
     h1 { margin-top: 0; text-align: center; }
     textarea {
       width: 100%; height: 200px;
@@ -65,14 +110,6 @@
     button.primary { background: #10b981; color: #fff; }
     .upload-label { background: #3b82f6; color: #fff; display: inline-block; }
     button:hover, .upload-label:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
-    footer {
-      text-align: center; padding: 1rem; font-size: .9rem;
-      background: rgba(255,255,255,0.08); backdrop-filter: blur(8px);
-    }
-    footer a { color: white; text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
-    @media (max-width: 600px) { .card { padding: 1rem; } }
-    .drop-hover { outline: 2px dashed #a5b4fc; background: rgba(255,255,255,0.2); }
     .progress-container {
       margin-top: 1rem; background: rgba(255,255,255,0.2);
       border-radius: 0.5rem; overflow: hidden;
@@ -85,22 +122,51 @@
       text-align: center; margin-top: .5rem; font-size: .85rem;
       color: #e0e0e0; display: none;
     }
+
+    /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: .9rem;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+    }
+    footer a { color: white; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* --- Media Queries for Responsiveness (Konsisten di semua halaman) --- */
+    @media (max-width: 768px) {
+        nav { 
+            padding: 1rem; 
+            flex-direction: column; 
+            align-items: flex-start; 
+        }
+        nav .brand { margin-bottom: 10px; } 
+        nav .menu { 
+            width: 100%; 
+            flex-wrap: wrap; 
+            justify-content: flex-start; 
+            margin-bottom: 10px;
+        }
+        nav .menu a { margin: 0.5rem 0.5rem; } 
+        .right-nav-items {
+            width: 100%; 
+            justify-content: space-between; 
+            margin-top: 10px;
+        }
+    }
+    @media (max-width: 600px) { .container { padding: 1rem; } }
+    .drop-hover { outline: 2px dashed #a5b4fc; background: rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
-  <nav>
-    <div class="brand">🦁 Internal Tools</div>
-    <div class="menu">
-      <a href="home.html">Home</a>
-      <a href="flask.html">Download Mesin</a>
-      <a href="excel_to_json.html">Mesin → JSON</a>
-      <a href="#" class="active">Absensi → CSV/TXT</a>
-      <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
-    </div>
-     <div class="menu2" onclick="window.logout()">Logout</div>
-  </nav>
-  <div class="container">
-    <div class="card">
+  <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+  <div id="header-placeholder"></div> 
+
+  <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+  <div class="main-content-wrapper">
+    <!-- Konten halaman spesifik (sekarang menggunakan id "pageContainer" dan class "container") -->
+    <div class="container" id="pageContainer">
       <h1>Konversi Data Absensi</h1>
       <p style="text-align:center;">Tempel data absensi atau upload file di bawah ini:</p>
       <input type="file" id="fileInput" accept=".txt,.csv" style="display:none;" />
@@ -119,9 +185,22 @@
       <div class="progress-status">Sedang memproses...</div>
     </div>
   </div>
-  <footer>&copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a></footer>
+
+  <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+  <div id="footer-placeholder"></div> 
 
 <script type="module">
+    // Import initPage dari common-ui.js
+    import { initPage } from "./common-ui.js";
+
+    // Panggil initPage saat DOM siap
+    document.addEventListener('DOMContentLoaded', () => {
+      initPage(
+          "Absensi → CSV/TXT", // pageTitle (akan jadi active di navigasi)
+          "pageContainer",           // mainContentId (ID dari div container utama halaman ini)
+          "user"                     // requiredRole (semua user bisa akses)
+      );
+    });
 
     const statusMap = { "1": "C/Masuk", "2": "C/Keluar", "3": "Lembur Masuk", "4": "Lembur Keluar" };
     const fileInput = document.getElementById('fileInput');
