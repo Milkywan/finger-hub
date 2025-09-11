@@ -7,32 +7,87 @@
     <!-- Pastikan Anda memiliki common-auth.js untuk autentikasi dan logout -->
     <script type="module" src="./common-auth.js"></script>
     <style>
+        /* --- GLOBAL STYLES (Diambil dari skrip Download Absensi Mesin) --- */
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #4f46e5, #9333ea);
             color: white;
-            min-height: 10vh; /* Mengurangi tinggi minimum untuk demo */
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
+            min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
+        }
+        
+        /* --- NAVIGASI (Diambil dari skrip Download Absensi Mesin) --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            z-index: 10; /* Pastikan nav di atas konten lain jika ada */
         }
-        .container {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 10px;
+        nav .brand { font-weight: bold; font-size: 1.2rem; }
+        nav .menu a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+            transition: color .3s;
+        }
+        nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+        nav .menu2 { /* Untuk tombol Logout */
+            color: white;
+            cursor: pointer;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.3s, transform 0.2s;
+            font-weight: bold;
+        }
+        nav .menu2:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        /* --- WRAPPER KONTEN UTAMA (Baru untuk flexbox layout) --- */
+        .main-content-wrapper {
+            flex: 1; /* Agar mengambil sisa ruang vertikal */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        /* --- CONTAINER UTAMA / CARD (Menggabungkan dari kedua skrip) --- */
+        /* Sekarang #adminContainer yang akan memiliki gaya seperti .card */
+        .container { /* General container style, applied to #adminContainer */
+            background: rgba(255,255,255,0.1); /* Latar belakang transparan */
+            padding: 2rem; /* Padding lebih besar */
+            border-radius: 1rem; /* Border radius lebih besar */
             width: 100%;
-            max-width: 1000px; /* Lebarkan sedikit untuk tabel user */
-            box-shadow: 0 10px 30px rgba(0,0,0,.4);
-            margin-bottom: 20px;
+            max-width: 1000px; /* Pertahankan lebar untuk tabel pengguna */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
+            backdrop-filter: blur(8px); /* Efek blur */
+            animation: fadeIn .8s ease; /* Animasi fade in */
         }
-        h1 {
+        @keyframes fadeIn { /* Animasi fade in */
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- HEADINGS --- */
+        h2 { /* Mengganti h1 menjadi h2 untuk konsistensi */
+            text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
-            text-align: center;
             font-size: 26px;
         }
+
+        /* --- FORM CONTROLS --- */
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -42,33 +97,45 @@
             align-items: center;
         }
         input[type="text"] {
-            padding: 10px 12px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 8px;
-            font-size: 14px;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            box-sizing: border-box;
             width: 100%;
+            padding: .75rem; /* Padding baru */
+            margin-top: .5rem; /* Margin baru */
+            border-radius: .5rem; /* Border radius baru */
+            border: none;
+            background: rgba(255,255,255,0.15); /* Latar belakang transparan */
+            color: white; /* Warna teks putih */
+            box-sizing: border-box;
             max-width: 300px;
         }
         input[type="text"]::placeholder {
             color: rgba(255,255,255,0.6);
         }
-        .btn {
-            padding: 10px 20px;
+        
+        /* --- BUTTONS --- */
+        .btn { /* Gaya dasar tombol */
+            width: auto; /* Otomatis menyesuaikan konten */
+            padding: .75rem; /* Padding baru */
+            margin-top: .75rem; /* Margin baru */
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
+            border-radius: .5rem; /* Border radius baru */
+            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: transform .2s, box-shadow .2s;
+            font-size: 15px; /* Pertahankan ukuran font */
         }
+        .btn:hover { /* Efek hover baru */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        /* Specific button colors */
         .btn-primary { background: #4f46e5; color: #fff; }
         .btn-primary:hover { background: #4338ca; }
         .btn-danger { background: #ef4444; color: #fff; }
         .btn-danger:hover { background: #dc2626; }
         .btn-info { background: #3b82f6; color: #fff; }
         .btn-info:hover { background: #2563eb; }
+
+        /* --- STATUS MESSAGE --- */
         .status-message {
             margin-top: 15px;
             padding: 10px;
@@ -80,13 +147,14 @@
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
 
+        /* --- DATA TABLE --- */
         .data-table-container {
             margin-top: 20px;
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
             padding: 15px;
-            max-height: 500px; /* Batasi tinggi tabel */
-            overflow-y: auto; /* Aktifkan scroll vertikal */
+            max-height: 500px;
+            overflow-y: auto;
             border: 1px solid rgba(255,255,255,0.2);
         }
         table {
@@ -99,7 +167,7 @@
             padding: 8px 12px;
             text-align: left;
             font-size: 13px;
-            word-wrap: break-word; /* Agar teks panjang tidak merusak layout */
+            word-wrap: break-word;
         }
         th {
             background: rgba(255,255,255,0.2);
@@ -126,16 +194,24 @@
             font-size: 12px;
             border-radius: 6px;
         }
-        footer {
-            margin-top: 40px;
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
-            text-align: center;
-        }
-        footer a { color: #fff; }
 
-        /* Media Queries for Responsiveness */
+        /* --- FOOTER (Diambil dari skrip Download Absensi Mesin) --- */
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: .9rem;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+        }
+        footer a { color: white; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* --- Media Queries for Responsiveness --- */
         @media (max-width: 768px) {
+            nav { padding: 1rem; flex-direction: column; }
+            nav .menu { margin-top: 10px; }
+            nav .menu a { margin: 0.5rem 0.5rem; display: inline-block; }
+            nav .menu2 { margin-top: 10px; }
             .controls {
                 flex-direction: column;
                 align-items: stretch;
@@ -150,40 +226,61 @@
     </style>
 </head>
 <body>
-    <!-- Menambahkan id dan menyembunyikan secara default -->
-    <div class="container" id="adminContainer" style="display: none;">
-        <h1>Kelola Pengguna REVISI2</h1>
-
-        <div class="controls">
-            <input type="text" id="searchUserInput" placeholder="Cari berdasarkan username/email...">
-            <button class="btn btn-primary" id="searchUserBtn">Cari</button>
-            <button class="btn btn-info" id="refreshUsersBtn">Refresh Data</button>
-            <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+    <!-- --- NAVIGASI (Disalin dari skrip Download Absensi Mesin) --- -->
+    <nav>
+        <div class="brand">🦁 Internal Tools</div>
+        <div class="menu">
+            <a href="home.html">Home</a>
+            <a href="#" class="active">Kelola Pengguna</a>
+            <!-- Tambahkan link admin lain jika ada, contoh: -->
+            <a href="admin-upload-data.html">Unggah Data Karyawan</a> 
+            <a href="excel_to_json.html">Mesin → JSON</a>
+            <a href="convert-csv.html">Absensi → CSV/TXT</a>
+            <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
         </div>
+        <!-- Pastikan common-auth.js menyediakan fungsi window.logout() -->
+        <div class="menu2" onclick="window.logout()">Logout</div>
+    </nav>
 
-        <div class="status-message" id="statusMessage">Memuat daftar pengguna...</div>
+    <!-- --- WRAPPER KONTEN UTAMA (Baru) --- -->
+    <div class="main-content-wrapper">
+        <!-- CONTAINER UTAMA / CARD: Memiliki id dan disembunyikan secara default -->
+        <div class="container" id="adminContainer" style="display: none;">
+            <h2>Kelola Pengguna REVISI2</h2> <!-- Mengganti h1 menjadi h2 -->
 
-        <div class="data-table-container">
-            <table id="usersTable">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Peran</th>
-                        <th>Disetujui</th>
-                        <th>Terdaftar Sejak</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Data pengguna akan dimuat di sini -->
-                </tbody>
-            </table>
+            <div class="controls">
+                <input type="text" id="searchUserInput" placeholder="Cari berdasarkan username/email...">
+                <button class="btn btn-primary" id="searchUserBtn">Cari</button>
+                <button class="btn btn-info" id="refreshUsersBtn">Refresh Data</button>
+                <!-- Tombol kembali ke home, bisa disesuaikan dengan link nav di atas -->
+                <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+            </div>
+
+            <div class="status-message" id="statusMessage">Memuat daftar pengguna...</div>
+
+            <div class="data-table-container">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Peran</th>
+                            <th>Disetujui</th>
+                            <th>Terdaftar Sejak</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data pengguna akan dimuat di sini -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- --- FOOTER (Disalin dari skrip Download Absensi Mesin) --- -->
     <footer>
-        © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
+        &copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
     </footer>
 
     <script type="module">
@@ -197,7 +294,7 @@
             orderBy,
             updateDoc,
             deleteDoc,
-            getDoc // <--- PENTING: getDoc ditambahkan di sini!
+            getDoc 
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
@@ -206,9 +303,9 @@
         const searchUserInput = document.getElementById('searchUserInput');
         const searchUserBtn = document.getElementById('searchUserBtn');
         const refreshUsersBtn = document.getElementById('refreshUsersBtn');
-        const adminContainer = document.getElementById('adminContainer'); // <--- Ambil elemen container
+        const adminContainer = document.getElementById('adminContainer'); 
 
-        let allUsersData = []; // Untuk menyimpan data pengguna yang dimuat
+        let allUsersData = []; 
 
         // --- Fungsi Helper ---
         function setStatus(message, type = 'info') {
@@ -216,18 +313,17 @@
             statusMessage.className = `status-message ${type}`;
         }
 
-        // --- Autorisasi Halaman ---
+        // --- Autorisasi Halaman (Ini harus sama dengan yang sebelumnya, memastikan keamanan) ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDocRef = doc(db, "users", user.uid);
                 try {
-                    const userDocSnap = await getDoc(userDocRef); // Sekarang getDoc seharusnya berfungsi
+                    const userDocSnap = await getDoc(userDocRef); 
                     if (userDocSnap.exists()) {
                         const userData = userDocSnap.data();
-                        // Hanya admin dan super_admin yang bisa akses halaman ini
-                        // if (userData.role === "admin" || userData.role === "super_admin") {
+                        // HANYA super_admin yang bisa akses (sesuai revisi terakhir Anda)
                         if (userData.role === "super_admin") {
-                            adminContainer.style.display = 'block'; // <--- Tampilkan container jika otorisasi berhasil
+                            adminContainer.style.display = 'block'; // Tampilkan container jika otorisasi berhasil
                             loadUsers();
                         } else {
                             alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
@@ -240,7 +336,7 @@
                 } catch (error) {
                     console.error("Error saat otorisasi:", error);
                     alert("Terjadi kesalahan saat memeriksa izin. Silakan coba lagi.");
-                    window.location.href = "index.html"; // Kembali ke login atau home jika ada error
+                    window.location.href = "index.html"; 
                 }
             } else {
                 window.location.href = "index.html"; // Redirect ke halaman login jika belum login
@@ -251,25 +347,19 @@
 
         async function loadUsers(searchTerm = '') {
             setStatus("Memuat daftar pengguna...", 'info');
-            usersTableBody.innerHTML = ''; // Bersihkan tabel sebelumnya
-            allUsersData = []; // Reset data pengguna
+            usersTableBody.innerHTML = '';
+            allUsersData = [];
 
             try {
                 let q = collection(db, "users");
-                // Implementasi pencarian dasar:
-                // Untuk pencarian yang lebih canggih (OR query, fuzzy search),
-                // pertimbangkan Cloud Functions dan pencarian indeks penuh (misal, Algolia, Meilisearch).
                 if (searchTerm) {
-                    // Ini akan mencari username yang *dimulai* dengan searchTerm
-                    // Untuk mencari email juga, Anda bisa melakukan dua query terpisah
-                    // dan menggabungkan hasilnya (atau Cloud Functions).
                     q = query(q, 
                         where("username", ">=", searchTerm), 
                         where("username", "<=", searchTerm + '\uf8ff')
                     );
                 }
                 
-                q = query(q, orderBy("createdAt", "desc")); // Urutkan berdasarkan tanggal pendaftaran terbaru
+                q = query(q, orderBy("createdAt", "desc"));
 
                 const querySnapshot = await getDocs(q);
                 
@@ -295,7 +385,7 @@
             usersTableBody.innerHTML = '';
             users.forEach(user => {
                 const row = usersTableBody.insertRow();
-                row.setAttribute('data-uid', user.id); // Simpan UID di atribut baris
+                row.setAttribute('data-uid', user.id); 
 
                 const usernameCell = row.insertCell();
                 usernameCell.textContent = user.username || 'N/A';
@@ -304,13 +394,12 @@
                 emailCell.textContent = user.email || 'N/A';
 
                 const roleCell = row.insertCell();
-                // Dropdown untuk peran
                 const roleSelect = document.createElement('select');
                 roleSelect.id = `role-${user.id}`;
                 ['user', 'admin', 'super_admin'].forEach(role => {
                     const option = document.createElement('option');
                     option.value = role;
-                    option.textContent = role.charAt(0).toUpperCase() + role.slice(1); // Kapitalisasi
+                    option.textContent = role.charAt(0).toUpperCase() + role.slice(1);
                     if (user.role === role) {
                         option.selected = true;
                     }
@@ -320,11 +409,10 @@
                 roleCell.appendChild(roleSelect);
 
                 const approvedCell = row.insertCell();
-                // Checkbox untuk status disetujui
                 const approvedCheckbox = document.createElement('input');
                 approvedCheckbox.type = 'checkbox';
                 approvedCheckbox.id = `approved-${user.id}`;
-                approvedCheckbox.checked = user.approved === true; // Pastikan boolean true/false
+                approvedCheckbox.checked = user.approved === true; 
                 approvedCheckbox.addEventListener('change', (e) => updateField(user.id, 'approved', e.target.checked));
                 approvedCell.appendChild(approvedCheckbox);
 
@@ -332,7 +420,6 @@
                 createdAtCell.textContent = user.createdAt ? new Date(user.createdAt.toDate()).toLocaleString() : 'N/A';
 
                 const actionCell = row.insertCell();
-                // Tombol Hapus
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = 'Hapus';
                 deleteBtn.className = 'btn btn-danger';
@@ -360,12 +447,10 @@
                     const userDocRef = doc(db, "users", uid);
                     await deleteDoc(userDocRef);
                     setStatus(`Pengguna '${displayIdentifier}' berhasil dihapus.`, 'success');
-                    // Hapus baris dari tabel
                     const rowToRemove = document.querySelector(`tr[data-uid="${uid}"]`);
                     if (rowToRemove) {
                         rowToRemove.remove();
                     }
-                    // Ingatkan tentang akun Auth
                     alert("Perhatian: Ini hanya menghapus dokumen profil pengguna dari Firestore. Akun autentikasi Firebase pengguna (email/password) masih ada. Untuk menghapus sepenuhnya, perlu dihapus melalui Firebase Console atau Cloud Functions.");
                 } catch (error) {
                     setStatus(`Gagal menghapus pengguna '${displayIdentifier}': ${error.message}`, 'error');
@@ -387,10 +472,9 @@
         });
 
         refreshUsersBtn.addEventListener('click', () => {
-            searchUserInput.value = ''; // Hapus search term
-            loadUsers(); // Muat ulang semua user
+            searchUserInput.value = '';
+            loadUsers();
         });
     </script>
 </body>
 </html>
-
