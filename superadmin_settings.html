@@ -7,32 +7,86 @@
     <!-- Pastikan Anda memiliki common-auth.js untuk autentikasi dan logout -->
     <script type="module" src="./common-auth.js"></script>
     <style>
+        /* --- GLOBAL STYLES (Konsisten di semua halaman admin) --- */
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #4f46e5, #9333ea);
             color: white;
-            min-height: 100vh;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
+            min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
         }
-        .container {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 10px;
+        
+        /* --- NAVIGASI (Konsisten di semua halaman admin) --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+        nav .brand { font-weight: bold; font-size: 1.2rem; }
+        nav .menu a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+            transition: color .3s;
+        }
+        nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+        nav .menu2 { /* Untuk tombol Logout */
+            color: white;
+            cursor: pointer;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.3s, transform 0.2s;
+            font-weight: bold;
+        }
+        nav .menu2:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        /* --- WRAPPER KONTEN UTAMA (Konsisten di semua halaman admin) --- */
+        .main-content-wrapper {
+            flex: 1; /* Agar mengambil sisa ruang vertikal */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
+        .container { 
+            background: rgba(255,255,255,0.1); /* Latar belakang transparan */
+            padding: 2rem; /* Padding lebih besar */
+            border-radius: 1rem; /* Border radius lebih besar */
             width: 100%;
             max-width: 600px; /* Lebar yang cukup untuk form pengaturan */
-            box-shadow: 0 10px 30px rgba(0,0,0,.4);
-            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
+            backdrop-filter: blur(8px); /* Efek blur */
+            animation: fadeIn .8s ease; /* Animasi fade in */
         }
-        h1 {
+        @keyframes fadeIn { /* Animasi fade in */
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- HEADINGS (Konsisten di semua halaman admin) --- */
+        h2 { /* Mengganti h1 menjadi h2 untuk konsistensi */
+            text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
-            text-align: center;
             font-size: 26px;
         }
+
+        /* --- FORM ELEMENTS (Disesuaikan agar konsisten) --- */
         .form-group {
             margin-bottom: 15px;
             text-align: left;
@@ -45,11 +99,11 @@
         .form-group input[type="date"],
         .form-group input[type="text"] {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 8px;
+            padding: .75rem; /* Padding baru */
+            border: none; /* Hilangkan border */
+            border-radius: .5rem; /* Border radius baru */
             font-size: 14px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15); /* Latar belakang transparan */
             color: white;
             box-sizing: border-box;
         }
@@ -62,6 +116,7 @@
             color-scheme: dark; /* Untuk tampilan kalender gelap di beberapa browser */
         }
 
+        /* --- CONTROLS / BUTTONS (Konsisten di semua halaman admin) --- */
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -70,18 +125,27 @@
             justify-content: center;
             align-items: center;
         }
-        .btn {
-            padding: 10px 20px;
+        .btn { /* Gaya dasar tombol */
+            width: auto; /* Otomatis menyesuaikan konten */
+            padding: .75rem; /* Padding baru */
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
+            border-radius: .5rem; /* Border radius baru */
+            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: transform .2s, box-shadow .2s;
+            font-size: 15px;
         }
+        .btn:hover { /* Efek hover baru */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        /* Specific button colors */
         .btn-primary { background: #4f46e5; color: #fff; }
         .btn-primary:hover { background: #4338ca; }
         .btn-info { background: #3b82f6; color: #fff; }
         .btn-info:hover { background: #2563eb; }
+
+        /* --- STATUS MESSAGE (Konsisten di semua halaman admin) --- */
         .status-message {
             margin-top: 15px;
             padding: 10px;
@@ -93,15 +157,23 @@
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
 
+        /* --- FOOTER (Konsisten di semua halaman admin) --- */
         footer {
-            margin-top: 40px;
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
             text-align: center;
+            padding: 1rem;
+            font-size: .9rem;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
         }
-        footer a { color: #fff; }
+        footer a { color: white; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
 
+        /* --- Media Queries for Responsiveness (Konsisten di semua halaman admin) --- */
         @media (max-width: 768px) {
+            nav { padding: 1rem; flex-direction: column; }
+            nav .menu { margin-top: 10px; }
+            nav .menu a { margin: 0.5rem 0.5rem; display: inline-block; }
+            nav .menu2 { margin-top: 10px; }
             .controls {
                 flex-direction: column;
                 align-items: stretch;
@@ -113,33 +185,54 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Pengaturan Sistem</h1>
-
-        <div class="form-group">
-            <label for="offlineExpiryDateInput">Tanggal Kedaluwarsa Offline (YYYY-MM-DD)</label>
-            <input type="date" id="offlineExpiryDateInput">
-            <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Tanggal ini digunakan oleh aplikasi desktop saat offline.</small>
+    <!-- --- NAVIGASI (Konsisten di semua halaman admin) --- -->
+    <nav>
+        <div class="brand">🦁 Internal Tools</div>
+        <div class="menu">
+            <a href="home.html">Home</a>
+            <a href="admin-users.html">Kelola Pengguna</a>
+            <a href="admin-upload-data.html">Unggah Data Karyawan</a>
+            <a href="#" class="active">Pengaturan Sistem</a>
+            <a href="excel_to_json.html">Mesin → JSON</a>
+            <a href="convert-csv.html">Absensi → CSV/TXT</a>
+            <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
         </div>
+        <!-- Pastikan common-auth.js menyediakan fungsi window.logout() -->
+        <div class="menu2" onclick="window.logout()">Logout</div>
+    </nav>
 
-        <!-- Anda bisa menambahkan form-group lain di sini untuk pengaturan lainnya -->
-        <!--
-        <div class="form-group">
-            <label for="anotherSetting">Pengaturan Lain</label>
-            <input type="text" id="anotherSetting" placeholder="Nilai pengaturan...">
+    <!-- --- WRAPPER KONTEN UTAMA (Konsisten di semua halaman admin) --- -->
+    <div class="main-content-wrapper">
+        <!-- CONTAINER UTAMA / CARD: Memiliki id dan disembunyikan secara default -->
+        <div class="container" id="adminSettingsContainer" style="display: none;">
+            <h2>Pengaturan Sistem</h2> <!-- Mengganti h1 menjadi h2 -->
+
+            <div class="form-group">
+                <label for="offlineExpiryDateInput">Tanggal Kedaluwarsa Offline (YYYY-MM-DD)</label>
+                <input type="date" id="offlineExpiryDateInput">
+                <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Tanggal ini digunakan oleh aplikasi desktop saat offline.</small>
+            </div>
+
+            <!-- Anda bisa menambahkan form-group lain di sini untuk pengaturan lainnya -->
+            <!--
+            <div class="form-group">
+                <label for="anotherSetting">Pengaturan Lain</label>
+                <input type="text" id="anotherSetting" placeholder="Nilai pengaturan...">
+            </div>
+            -->
+
+            <div class="controls">
+                <button class="btn btn-primary" id="saveSettingsBtn">Simpan Pengaturan</button>
+                <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+            </div>
+
+            <div class="status-message" id="statusMessage">Memuat pengaturan...</div>
         </div>
-        -->
-
-        <div class="controls">
-            <button class="btn btn-primary" id="saveSettingsBtn">Simpan Pengaturan</button>
-            <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
-        </div>
-
-        <div class="status-message" id="statusMessage">Memuat pengaturan...</div>
     </div>
 
+    <!-- --- FOOTER (Konsisten di semua halaman admin) --- -->
     <footer>
-        © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
+        &copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
     </footer>
 
     <script type="module">
@@ -154,6 +247,7 @@
         const offlineExpiryDateInput = document.getElementById('offlineExpiryDateInput');
         const saveSettingsBtn = document.getElementById('saveSettingsBtn');
         const statusMessage = document.getElementById('statusMessage');
+        const adminSettingsContainer = document.getElementById('adminSettingsContainer'); // <-- Ambil elemen container
 
         // --- Konstanta untuk lokasi dokumen pengaturan ---
         const SETTINGS_DOC_REF = doc(db, "settings", "app_config"); // Koleksi 'settings', dokumen 'app_config'
@@ -164,29 +258,36 @@
             statusMessage.className = `status-message ${type}`;
         }
 
-        // --- Autorisasi Halaman ---
+        // --- Autorisasi Halaman (PENTING untuk keamanan) ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDocRef = doc(db, "users", user.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    // Hanya super_admin yang bisa akses halaman ini
-                    if (userData.role !== "super_admin") {
-                        alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
-                        window.location.href = "home.html"; // Redirect jika tidak berhak
+                try {
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        // Hanya super_admin yang bisa akses halaman ini
+                        if (userData.role === "super_admin") { // Periksa hanya super_admin
+                            adminSettingsContainer.style.display = 'block'; // <-- Tampilkan container jika otorisasi berhasil
+                            loadSettings();
+                        } else {
+                            alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
+                            window.location.href = "home.html"; // Redirect jika tidak berhak
+                        }
                     } else {
-                        // Pengguna memiliki izin, muat pengaturan
-                        loadSettings();
+                        alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
+                        window.location.href = "home.html";
                     }
-                } else {
-                    alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
-                    window.location.href = "home.html";
+                } catch (error) {
+                    console.error("Error saat otorisasi:", error);
+                    alert("Terjadi kesalahan saat memeriksa izin. Silakan coba lagi.");
+                    window.location.href = "index.html"; 
                 }
             } else {
                 window.location.href = "index.html"; // Redirect ke halaman login jika belum login
             }
         });
+        // --- Akhir Autorisasi Halaman ---
 
         // --- Fungsi untuk Memuat Pengaturan ---
         async function loadSettings() {
@@ -202,7 +303,6 @@
                     setStatus("Pengaturan berhasil dimuat.", 'success');
                 } else {
                     setStatus("Dokumen pengaturan belum ada. Menggunakan nilai default.", 'info');
-                    // Jika belum ada, Anda bisa set nilai default di sini atau biarkan kosong
                     offlineExpiryDateInput.value = ''; // Biarkan kosong
                 }
             } catch (error) {
@@ -220,7 +320,7 @@
                 return;
             }
 
-            // Validasi format tanggal (browser input type="date" sudah bantu, tapi validasi ekstra tidak ada salahnya)
+            // Validasi format tanggal
             if (!/^\d{4}-\d{2}-\d{2}$/.test(newOfflineExpiryDate)) {
                 setStatus("Format tanggal tidak valid. Gunakan YYYY-MM-DD.", 'error');
                 return;
