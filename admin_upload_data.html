@@ -4,13 +4,12 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Admin: Unggah & Kelola Data Karyawan</title>
-    <!-- Pastikan Anda memiliki common-auth.js untuk autentikasi dan logout -->
-    <script type="module" src="./common-auth.js"></script>
+    <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
     <!-- PASTIKAN PATH INI BENAR KE FILE XLSX.FULL.MIN.JS ANDA -->
     <script src="./xlsx.full.min.js"></script>
 
     <style>
-        /* --- GLOBAL STYLES (Diambil dari skrip Download Absensi Mesin) --- */
+        /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -19,32 +18,49 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
             min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
         }
         
-        /* --- NAVIGASI (Diambil dari skrip Download Absensi Mesin) --- */
+        /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
         nav {
-            display: flex;
-            justify-content: space-between;
+            display: flex; 
+            justify-content: space-between; 
             align-items: center;
             padding: 1rem 2rem;
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(8px);
-            z-index: 10; /* Pastikan nav di atas konten lain jika ada */
+            z-index: 10;
         }
         nav .brand { font-weight: bold; font-size: 1.2rem; }
+        nav .menu { 
+            display: flex; 
+            align-items: center;
+            flex-grow: 1; 
+            justify-content: center; 
+        }
         nav .menu a {
-            color: white;
-            text-decoration: none;
-            margin-left: 1rem;
+            color: white; 
+            text-decoration: none; 
+            margin: 0 1rem; 
             transition: color .3s;
         }
         nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+
+        /* Gaya untuk info user dan tombol logout di header */
+        .right-nav-items {
+            display: flex;
+            align-items: center;
+            gap: 1rem; 
+        }
+        .user-info {
+            font-size: 0.9rem; 
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap; 
+        }
         nav .menu2 { /* Untuk tombol Logout */
             color: white;
             cursor: pointer;
-            margin-left: 1rem;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             background: rgba(255,255,255,0.1);
@@ -56,17 +72,16 @@
             transform: translateY(-2px);
         }
 
-        /* --- WRAPPER KONTEN UTAMA (Baru untuk flexbox layout) --- */
+        /* --- WRAPPER KONTEN UTAMA --- */
         .main-content-wrapper {
-            flex: 1; /* Agar mengambil sisa ruang vertikal */
+            flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 2rem;
         }
 
-        /* --- CONTAINER UTAMA / CARD (Menggabungkan dari kedua skrip) --- */
-        /* Sekarang #adminUploadContainer yang akan memiliki gaya seperti .card */
+        /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
         .container { /* General container style, applied to #adminUploadContainer */
             background: rgba(255,255,255,0.1); /* Latar belakang transparan */
             padding: 2rem; /* Padding lebih besar */
@@ -189,7 +204,7 @@
             z-index: 1;
         }
 
-        /* --- FOOTER (Diambil dari skrip Download Absensi Mesin) --- */
+        /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
         footer {
             text-align: center;
             padding: 1rem;
@@ -220,33 +235,21 @@
     </style>
 </head>
 <body>
-    <!-- --- NAVIGASI (Disalin dari skrip Download Absensi Mesin) --- -->
-    <nav>
-        <div class="brand">🦁 Internal Tools</div>
-        <div class="menu">
-            <a href="home.html">Home</a>
-            <a href="admin_manage_users.html">Kelola Pengguna</a>
-            <a href="#" class="active">Unggah Data Karyawan</a>
-            <a href="excel_to_json.html">Mesin → JSON</a>
-            <a href="convert-csv.html">Absensi → CSV/TXT</a>
-            <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
-        </div>
-        <!-- Pastikan common-auth.js menyediakan fungsi window.logout() -->
-        <div class="menu2" onclick="window.logout()">Logout</div>
-    </nav>
+    <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+    <div id="header-placeholder"></div> 
 
-    <!-- --- WRAPPER KONTEN UTAMA (Baru) --- -->
+    <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
     <div class="main-content-wrapper">
-        <!-- CONTAINER UTAMA / CARD: Memiliki id dan disembunyikan secara default -->
-        <div class="container" id="adminUploadContainer" style="display: none;">
+        <!-- Konten halaman spesifik (sekarang menggunakan id "pageContainer" dan class "container") -->
+        <div class="container" id="adminUploadContainer">
             <h2>Unggah & Kelola Data Karyawan REVISI</h2> <!-- Mengganti h1 menjadi h2 -->
 
             <div class="controls">
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
                 <button class="btn btn-secondary" id="previewBtn">Preview Data</button>
                 <button class="btn btn-primary" id="uploadToFirestoreBtn">Unggah ke Firestore</button>
-                <!-- Tombol kembali ke home, bisa disesuaikan dengan link nav di atas -->
-                <button class="btn btn-info" onclick="window.location.href='home.html'">Kembali ke Menu Utama</button>
+                <!-- Tombol kembali ke home, sekarang pakai goPage() -->
+                <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button>
             </div>
 
             <div class="status-message" id="statusMessage">Pilih file Excel (.xlsx/.xls) dan klik Preview Data.</div>
@@ -260,12 +263,22 @@
         </div>
     </div>
 
-    <!-- --- FOOTER (Disalin dari skrip Download Absensi Mesin) --- -->
-    <footer>
-        &copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
-    </footer>
+    <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+    <div id="footer-placeholder"></div> 
 
     <script type="module">
+        // Import initPage dari common-ui.js
+        import { initPage } from "./common-ui.js";
+
+        // Panggil initPage saat DOM siap
+        document.addEventListener('DOMContentLoaded', () => {
+            initPage(
+                "Unggah Data Karyawan", // pageTitle (akan jadi active di navigasi)
+                "adminUploadContainer",  // mainContentId (ID dari div container utama halaman ini)
+                "admin"                  // requiredRole (hanya admin & super_admin bisa akses)
+            );
+        });
+
         // --- BARIS PENTING INI AGAR LIBRARY XLSX TERDETEKSI DALAM MODUL ---
         const XLSX = window.XLSX; 
         if (!XLSX) {
@@ -274,15 +287,14 @@
         }
 
         // Impor Firebase SDK
-        import { auth, db } from "./firebase-config.js"; 
+        // auth dan onAuthStateChanged tidak perlu diimpor/digunakan di sini karena sudah dihandle oleh initPage di common-ui.js
         import {
             collection,
             doc,
             writeBatch, 
-            setDoc,
-            getDoc 
+            setDoc
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; 
+        import { db } from "./firebase-config.js"; // Hanya db yang dibutuhkan di sini
 
         const excelFile = document.getElementById('excelFile');
         const previewBtn = document.getElementById('previewBtn');
@@ -290,7 +302,7 @@
         const statusMessage = document.getElementById('statusMessage');
         const dataTableHead = document.querySelector('#dataTable thead');
         const dataTableBody = document.querySelector('#dataTable tbody');
-        const adminUploadContainer = document.getElementById('adminUploadContainer'); 
+        // adminUploadContainer tidak perlu diakses di sini lagi, karena initPage yang mengelola display-nya
 
         let excelData = []; 
 
@@ -332,37 +344,6 @@
             });
             setStatus(`Preview berhasil. Ditemukan ${data.length} baris data.`, 'success');
         }
-
-        // --- Autorisasi Halaman (PENTING untuk keamanan) ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const userDocRef = doc(db, "users", user.uid);
-                try {
-                    const userDocSnap = await getDoc(userDocRef);
-                    if (userDocSnap.exists()) {
-                        const userData = userDocSnap.data();
-                        // Hanya admin dan super_admin yang bisa akses halaman ini
-                        if (userData.role === "admin" || userData.role === "super_admin") {
-                            adminUploadContainer.style.display = 'block'; 
-                        } else {
-                            alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
-                            window.location.href = "home.html"; 
-                        }
-                    } else {
-                        alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
-                        window.location.href = "home.html";
-                    }
-                } catch (error) {
-                    console.error("Error saat otorisasi:", error);
-                    alert("Terjadi kesalahan saat memeriksa izin. Silakan coba lagi.");
-                    window.location.href = "index.html"; 
-                }
-            } else {
-                window.location.href = "index.html"; 
-            }
-        });
-        // --- Akhir Autorisasi Halaman ---
-
 
         // --- Event Listeners ---
         previewBtn.addEventListener('click', () => {
@@ -487,4 +468,3 @@
     </script>
 </body>
 </html>
-
