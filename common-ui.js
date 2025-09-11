@@ -22,11 +22,36 @@ window.logout = async () => {
     } catch (error) {
         console.error("Error logging out:", error);
         alert("Gagal logout. Silakan coba lagi.");
+    } finally {
+        // Penting: Pastikan timer dihentikan saat logout (baik manual atau otomatis)
+        clearTimeout(inactivityTimer); 
     }
 };
 
+// --- INACTIVITY AUTO-LOGOUT LOGIC ---
+const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 menit dalam milidetik
+let inactivityTimer;
+
+function startInactivityTimer() {
+    clearTimeout(inactivityTimer); // Hapus timer yang ada sebelumnya
+    inactivityTimer = setTimeout(() => {
+        console.log("Deteksi inaktivitas, otomatis logout...");
+        window.logout(); // Panggil fungsi logout yang sudah ada
+    }, INACTIVITY_TIMEOUT_MS);
+}
+
+function resetInactivityTimer() {
+    startInactivityTimer(); // Cukup mulai ulang timer setiap kali ada aktivitas
+}
+
+// Tambahkan event listener global untuk mendeteksi aktivitas pengguna
+// Ini hanya perlu dilakukan sekali saat script dimuat
+document.addEventListener('mousemove', resetInactivityTimer);
+document.addEventListener('keypress', resetInactivityTimer);
+document.addEventListener('click', resetInactivityTimer);
+document.addEventListener('scroll', resetInactivityTimer); // Opsional, baik untuk halaman panjang
+
 // --- RENDER HEADER (NAVIGASI) ---
-// Ditambahkan parameter userName dan userRole
 function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
     const headerPlaceholder = document.getElementById('header-placeholder');
     if (!headerPlaceholder) return;
@@ -180,18 +205,22 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
                         renderHomeMenuItems(userRole, homeMenuGridId);
                     }
                     mainContentElement.style.display = 'block'; // Tampilkan konten
+                    startInactivityTimer(); // <<< MULAI TIMER INAKTIVITAS DI SINI!
                 } else {
                     alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
                     window.location.href = "home.html"; // Redirect ke home jika tidak berhak
+                    clearTimeout(inactivityTimer); // Hentikan timer jika tidak berhak dan redirect
                 }
             } catch (error) {
                 console.error("Error fetching user data or rendering page:", error);
                 alert("Terjadi kesalahan saat memeriksa izin atau memuat data. Silakan coba lagi.");
                 window.location.href = "index.html"; // Kembali ke login jika ada error
+                clearTimeout(inactivityTimer); // Hentikan timer jika ada error
             }
         } else {
             // Pengguna tidak terautentikasi, redirect ke halaman login
             window.location.href = "index.html";
+            clearTimeout(inactivityTimer); // Hentikan timer jika tidak ada user
         }
     });
 }
