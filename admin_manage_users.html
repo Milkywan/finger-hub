@@ -152,7 +152,7 @@
 <body>
     <!-- Menambahkan id dan menyembunyikan secara default -->
     <div class="container" id="adminContainer" style="display: none;">
-        <h1>Kelola Pengguna REVISI</h1>
+        <h1>Kelola Pengguna REVISI2</h1>
 
         <div class="controls">
             <input type="text" id="searchUserInput" placeholder="Cari berdasarkan username/email...">
@@ -225,7 +225,8 @@
                     if (userDocSnap.exists()) {
                         const userData = userDocSnap.data();
                         // Hanya admin dan super_admin yang bisa akses halaman ini
-                        if (userData.role === "admin" || userData.role === "super_admin") {
+                        // if (userData.role === "admin" || userData.role === "super_admin") {
+                        if (userData.role === "super_admin") {
                             adminContainer.style.display = 'block'; // <--- Tampilkan container jika otorisasi berhasil
                             loadUsers();
                         } else {
@@ -392,3 +393,4 @@
     </script>
 </body>
 </html>
+
