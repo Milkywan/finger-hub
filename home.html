@@ -3,24 +3,95 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <script type="module" src="./common-auth.js"></script>
   <title>Fingerprint Data Hub — Menu Utama</title>
   <style>
+    /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #4f46e5, #9333ea);
       color: white;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      text-align: center;
+      flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
+      min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
     }
+    
+    /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+    nav {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        padding: 1rem 2rem;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(8px);
+        z-index: 10;
+    }
+    nav .brand { font-weight: bold; font-size: 1.2rem; }
+    nav .menu { 
+        display: flex; 
+        align-items: center;
+        flex-grow: 1; 
+        justify-content: center; 
+    }
+    nav .menu a {
+        color: white; 
+        text-decoration: none; 
+        margin: 0 1rem; 
+        transition: color .3s;
+    }
+    nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+
+    /* Gaya untuk info user dan tombol logout di header */
+    .right-nav-items {
+        display: flex;
+        align-items: center;
+        gap: 1rem; 
+    }
+    .user-info {
+        font-size: 0.9rem; 
+        color: rgba(255, 255, 255, 0.8);
+        white-space: nowrap; 
+    }
+    nav .menu2 { /* Untuk tombol Logout */
+        color: white;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: rgba(255,255,255,0.1);
+        transition: background 0.3s, transform 0.2s;
+        font-weight: bold;
+    }
+    nav .menu2:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+    }
+
+    /* --- WRAPPER KONTEN UTAMA --- */
+    .main-content-wrapper {
+        flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+    }
+
+    /* --- CONTAINER HOME (sekarang menjadi semacam 'card' juga) --- */
     .container {
       max-width: 600px;
       width: 90%;
+      background: rgba(255,255,255,0.1); 
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      backdrop-filter: blur(8px);
+      animation: fadeIn .8s ease;
     }
+    @keyframes fadeIn { 
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     h1 {
       margin-bottom: 30px;
       font-size: 26px;
@@ -44,84 +115,72 @@
       transform: translateY(-4px) scale(1.02);
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
-    footer {
-      margin-top: 40px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.7);
+
+    /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+    footer { 
+        text-align: center; 
+        padding: 1rem; 
+        font-size: .9rem;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(8px);
     }
-    footer a { color: #fff; }
+    footer a { color: white; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* --- Media Queries for Responsiveness (Konsisten di semua halaman) --- */
+    @media (max-width: 768px) {
+        nav { 
+            padding: 1rem; 
+            flex-direction: column; 
+            align-items: flex-start; 
+        }
+        nav .brand { margin-bottom: 10px; } 
+        nav .menu { 
+            width: 100%; 
+            flex-wrap: wrap; 
+            justify-content: flex-start; 
+            margin-bottom: 10px;
+        }
+        nav .menu a { margin: 0.5rem 0.5rem; } 
+        .right-nav-items {
+            width: 100%; 
+            justify-content: space-between; 
+            margin-top: 10px;
+        }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Selamat Fingerprint Data Hub</h1>
-    <div class="menu-grid" id="mainMenuGrid"> <!-- TAMBAHKAN ID DI SINI -->
-      <div class="menu-card" onclick="goPage('flask.html')">📥 Download Data Finger</div>
-      <div class="menu-card" onclick="goPage('excel_to_json.html')">📄 List Mesin → JSON</div>
-      <div class="menu-card" onclick="goPage('convert-csv.html')">🔄 Data Finger → CSV/TXT</div>
-      <!-- Menu admin akan ditambahkan di sini oleh JavaScript -->
-      <div class="menu-card" onclick="logout()">🚪 Logout</div>
+  <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+  <div id="header-placeholder"></div> 
+
+  <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+  <div class="main-content-wrapper">
+    <div class="container" id="mainHomeContainer"> 
+      <h1>Selamat Fingerprint Data Hub</h1>
+      <div class="menu-grid" id="mainMenuGrid">
+        <!-- Menu card akan disuntikkan di sini oleh common-ui.js -->
+        <!-- Tombol Logout yang sebelumnya ada di sini akan dihilangkan, karena sudah di header -->
+      </div>
     </div>
-    <footer>
-      © 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a>
-    </footer>
   </div>
 
+  <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+  <div id="footer-placeholder"></div> 
+
   <script type="module">
-    // Fungsi untuk navigasi halaman (sudah ada, kita definisikan ulang di sini)
-    window.goPage = (page) => {
-        window.location.href = page;
-    };
+    // Import initPage dari common-ui.js
+    import { initPage } from "./common-ui.js";
 
-    // Fungsi logout (asumsikan ada di common-auth.js atau definisikan di sini jika belum)
-    // Jika logout ada di common-auth.js dan Anda ingin menggunakannya, pastikan di-export/import.
-    // Untuk contoh ini, saya akan definisikan sederhana di sini:
-    import { auth } from "./firebase-config.js"; // Import auth dari firebase-config
-    import { signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // Import signOut
-
-    window.logout = async () => {
-        try {
-            await signOut(auth);
-            localStorage.removeItem("userRole"); // Hapus role saat logout
-            localStorage.removeItem("loginTime"); // Hapus waktu login juga
-            window.location.href = "index.html"; // Kembali ke halaman login
-        } catch (error) {
-            console.error("Error logging out:", error);
-            alert("Gagal logout. Silakan coba lagi.");
-        }
-    };
-
-    // --- START MODIFIKASI UNTUK ROLE ---
-    const userRole = localStorage.getItem("userRole");
-    const mainMenuGrid = document.getElementById("mainMenuGrid");
-
-    if (userRole === "admin" || userRole === "super_admin") {
-        // Buat elemen menu untuk Admin
-        const adminMenuUpload = document.createElement("div");
-        adminMenuUpload.className = "menu-card";
-        adminMenuUpload.onclick = () => goPage('admin_upload_data.html'); // Ganti dengan halaman admin yang sesuai
-        adminMenuUpload.textContent = "⬆️ Upload & Kelola Data";
-        mainMenuGrid.insertBefore(adminMenuUpload, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
-    }
-
-    if (userRole === "super_admin") {
-
-        const adminMenuUsers = document.createElement("div");
-        adminMenuUsers.className = "menu-card";
-        adminMenuUsers.onclick = () => goPage('admin_manage_users.html'); // Ganti dengan halaman manajemen user
-        adminMenuUsers.textContent = "👥 Kelola Pengguna";
-        mainMenuGrid.insertBefore(adminMenuUsers, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
-  
-      // Tambahkan menu khusus Super Admin
-        const superAdminMenuSettings = document.createElement("div");
-        superAdminMenuSettings.className = "menu-card";
-        superAdminMenuSettings.onclick = () => goPage('superadmin_settings.html'); // Ganti dengan halaman pengaturan super admin
-        superAdminMenuSettings.textContent = "⚙️ Pengaturan Sistem";
-        mainMenuGrid.insertBefore(superAdminMenuSettings, mainMenuGrid.lastElementChild); // Sisipkan sebelum tombol Logout
-    }
-    // --- END MODIFIKASI UNTUK ROLE ---
-
+    // Panggil initPage saat DOM siap
+    document.addEventListener('DOMContentLoaded', () => {
+        initPage(
+            "Menu Utama",             // pageTitle
+            "mainHomeContainer",      // mainContentId
+            "user",                   // requiredRole (semua user bisa akses home)
+            "mainMenuGrid"            // homeMenuGridId (khusus untuk home.html, agar common-ui.js tahu mana grid menu yang perlu diisi)
+        );
+    });
   </script>
 </body>
 </html>
-
