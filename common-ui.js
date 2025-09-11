@@ -3,7 +3,7 @@
 import { auth, db } from "./firebase-config.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // <--- PASTIKAN SUDAH BENAR SEKARANG!
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; 
 
 // --- GLOBAL FUNCTIONS ---
 
@@ -58,21 +58,23 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
 
     let adminMenuLinks = '';
     let superAdminMenuLinks = '';
-    
-    // Admin dan Super Admin menu
-    if (userRole === "admin" || userRole === "super_admin") {
-        adminMenuLinks += `<a href="admin-upload-data.html" class="${currentPageTitle === 'Unggah Data Karyawan' ? 'active' : ''}">Unggah Data Karyawan</a>`;
-    }
+    let navMenuContent = ''; // Konten untuk div class="menu"
 
-    // Super Admin menu
-    if (userRole === "super_admin") {
-        superAdminMenuLinks += `<a href="admin-users.html" class="${currentPageTitle === 'Kelola Pengguna' ? 'active' : ''}">Kelola Pengguna</a>`;
-        superAdminMenuLinks += `<a href="admin-settings.html" class="${currentPageTitle === 'Pengaturan Sistem' ? 'active' : ''}">Pengaturan Sistem</a>`;
-    }
+    // Render link menu navigasi hanya jika bukan halaman utama
+    if (currentPageTitle !== 'Menu Utama') { // <--- KONDISI BARU DI SINI!
+        // Admin dan Super Admin menu
+        if (userRole === "admin" || userRole === "super_admin") {
+            adminMenuLinks += `<a href="admin-upload-data.html" class="${currentPageTitle === 'Unggah Data Karyawan' ? 'active' : ''}">Unggah Data Karyawan</a>`;
+        }
 
-    const headerHTML = `
-        <nav>
-            <div class="brand">🦁 Internal Tools</div>
+        // Super Admin menu
+        if (userRole === "super_admin") {
+            superAdminMenuLinks += `<a href="admin-users.html" class="${currentPageTitle === 'Kelola Pengguna' ? 'active' : ''}">Kelola Pengguna</a>`;
+            superAdminMenuLinks += `<a href="admin-settings.html" class="${currentPageTitle === 'Pengaturan Sistem' ? 'active' : ''}">Pengaturan Sistem</a>`;
+        }
+
+        // Susun konten div class="menu"
+        navMenuContent = `
             <div class="menu">
                 <a href="home.html" class="${currentPageTitle === 'Menu Utama' ? 'active' : ''}">Home</a>
                 ${superAdminMenuLinks}
@@ -81,6 +83,13 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
                 <a href="convert-csv.html" class="${currentPageTitle === 'Absensi → CSV/TXT' ? 'active' : ''}">Absensi → CSV/TXT</a>
                 <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
             </div>
+        `;
+    }
+
+    const headerHTML = `
+        <nav>
+            <div class="brand">🦁 Internal Tools</div>
+            ${navMenuContent}  <!-- Sisipkan konten menu navigasi secara kondisional -->
             <div class="right-nav-items">
                 <div class="user-info">
                     <span>Halo, ${userName} (<span style="text-transform: capitalize;">${userRole}</span>)</span>
@@ -147,8 +156,6 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
         superAdminMenuSettings.textContent = "⚙️ Pengaturan Sistem";
         mainMenuGrid.appendChild(superAdminMenuSettings);
     }
-
-    // LOGOUT CARD TIDAK LAGI DITAMBAHKAN DI SINI, KARENA SUDAH ADA DI HEADER
 } // <--- PASTIKAN KURUNG KURAWAL INI ADA DAN TIDAK TERKOMENTAR!
 
 // --- MAIN INITIALIZER FUNCTION ---
