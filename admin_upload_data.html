@@ -145,8 +145,9 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Unggah & Kelola Data Karyawan</h1>
+    <!-- Menambahkan id dan menyembunyikan secara default -->
+    <div class="container" id="adminUploadContainer" style="display: none;">
+        <h1>Unggah & Kelola Data Karyawan REVISI</h1>
 
         <div class="controls">
             <input type="file" id="excelFile" accept=".xlsx, .xls">
@@ -178,13 +179,15 @@
         }
 
         // Impor Firebase SDK
-        import { db } from "./firebase-config.js";
+        import { auth, db } from "./firebase-config.js"; // <-- auth ditambahkan
         import {
             collection,
             doc,
             writeBatch, // Untuk operasi bulk (Batch Writes)
-            setDoc
+            setDoc,
+            getDoc // <-- PENTING: getDoc ditambahkan di sini!
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; // <-- onAuthStateChanged ditambahkan
 
         const excelFile = document.getElementById('excelFile');
         const previewBtn = document.getElementById('previewBtn');
@@ -192,6 +195,7 @@
         const statusMessage = document.getElementById('statusMessage');
         const dataTableHead = document.querySelector('#dataTable thead');
         const dataTableBody = document.querySelector('#dataTable tbody');
+        const adminUploadContainer = document.getElementById('adminUploadContainer'); // <-- Ambil elemen container
 
         let excelData = []; // Untuk menyimpan data Excel yang sudah diparsing
 
@@ -234,8 +238,39 @@
             setStatus(`Preview berhasil. Ditemukan ${data.length} baris data.`, 'success');
         }
 
-        // --- Event Listeners ---
+        // --- Autorisasi Halaman (PENTING untuk keamanan) ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                try {
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        // Hanya admin dan super_admin yang bisa akses halaman ini
+                        if (userData.role === "admin" || userData.role === "super_admin") {
+                            adminUploadContainer.style.display = 'block'; // <-- Tampilkan container jika otorisasi berhasil
+                            // Sekarang Anda bisa memanggil fungsi inisialisasi lain jika ada, atau biarkan event listener bekerja
+                        } else {
+                            alert("Anda tidak memiliki izin untuk mengakses halaman ini.");
+                            window.location.href = "home.html"; // Redirect jika tidak berhak
+                        }
+                    } else {
+                        alert("Data pengguna tidak ditemukan. Anda tidak memiliki izin.");
+                        window.location.href = "home.html";
+                    }
+                } catch (error) {
+                    console.error("Error saat otorisasi:", error);
+                    alert("Terjadi kesalahan saat memeriksa izin. Silakan coba lagi.");
+                    window.location.href = "index.html"; // Kembali ke login atau home jika ada error
+                }
+            } else {
+                window.location.href = "index.html"; // Redirect ke halaman login jika belum login
+            }
+        });
+        // --- Akhir Autorisasi Halaman ---
 
+
+        // --- Event Listeners ---
         previewBtn.addEventListener('click', () => {
             const file = excelFile.files[0];
             if (!file) {
@@ -365,18 +400,6 @@
                 uploadToFirestoreBtn.disabled = false; // Aktifkan kembali tombol
             }
         });
-
-        // Autorisasi halaman (Contoh, pastikan ini ada di common-auth.js atau di sini)
-        // Saya asumsikan common-auth.js akan melakukan ini:
-        // 1. Mengimpor auth dari firebase-config.js
-        // 2. Menggunakan onAuthStateChanged untuk mendeteksi status autentikasi.
-        // 3. Mengambil user.uid
-        // 4. Mengambil dokumen user dari koleksi 'users' di Firestore
-        // 5. Memeriksa userData.role
-        // 6. Jika role bukan 'admin' atau 'super_admin', redirect ke home.html
-        // 7. Jika tidak ada user (belum login), redirect ke index.html
-        // Jika common-auth.js sudah melakukan ini, Anda tidak perlu kode ini lagi di sini.
-        // onAuthStateChanged(auth, async (user) => { ... });
     </script>
 </body>
 </html>
