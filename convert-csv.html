@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Konversi Absensi → CSV/TXT</title>
+  <script type="module" src="./common-auth.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #9333ea);
+      color: white;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+    nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(8px);
+    }
+    nav .brand { font-weight: bold; font-size: 1.2rem; }
+    nav .menu a {
+      color: white; text-decoration: none; margin-left: 1rem; transition: color .3s;
+    }
+    nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+    nav .menu2 {
+      color: white;
+      cursor: pointer;
+      margin-left: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.3s, transform 0.2s;
+      font-weight: bold;
+    }
+    nav .menu2:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+    .container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; }
+    .card {
+      background: rgba(255,255,255,0.1);
+      padding: 2rem; border-radius: 1rem;
+      max-width: 800px; width: 100%;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      animation: fadeIn .8s ease; backdrop-filter: blur(8px);
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    h1 { margin-top: 0; text-align: center; }
+    textarea {
+      width: 100%; height: 200px;
+      border: none; border-radius: 0.5rem;
+      padding: 1rem; margin-top: 1rem;
+      font-family: monospace; resize: none;
+      background: rgba(255,255,255,0.15); color: white;
+    }
+    .options { text-align: center; margin-top: 1rem; }
+    .options label { margin: 0 1rem; font-size: .95rem; }
+    button, .upload-label {
+      padding: 0.75rem 1.25rem; border: none; border-radius: 0.5rem;
+      cursor: pointer; font-weight: bold; margin: .5rem .25rem;
+      transition: background .3s, transform .2s, box-shadow .2s;
+    }
+    button.primary { background: #10b981; color: #fff; }
+    .upload-label { background: #3b82f6; color: #fff; display: inline-block; }
+    button:hover, .upload-label:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+    footer {
+      text-align: center; padding: 1rem; font-size: .9rem;
+      background: rgba(255,255,255,0.08); backdrop-filter: blur(8px);
+    }
+    footer a { color: white; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 600px) { .card { padding: 1rem; } }
+    .drop-hover { outline: 2px dashed #a5b4fc; background: rgba(255,255,255,0.2); }
+    .progress-container {
+      margin-top: 1rem; background: rgba(255,255,255,0.2);
+      border-radius: 0.5rem; overflow: hidden;
+      height: 16px; display: none;
+    }
+    .progress-bar {
+      height: 100%; width: 0%; background: #10b981; transition: width 0.3s ease;
+    }
+    .progress-status {
+      text-align: center; margin-top: .5rem; font-size: .85rem;
+      color: #e0e0e0; display: none;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">🦁 Internal Tools</div>
+    <div class="menu">
+      <a href="home.html">Home</a>
+      <a href="flask.html">Download Mesin</a>
+      <a href="excel_to_json.html">Mesin → JSON</a>
+      <a href="#" class="active">Absensi → CSV/TXT</a>
+      <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
+    </div>
+     <div class="menu2" onclick="window.logout()">Logout</div>
+  </nav>
+  <div class="container">
+    <div class="card">
+      <h1>Konversi Data Absensi</h1>
+      <p style="text-align:center;">Tempel data absensi atau upload file di bawah ini:</p>
+      <input type="file" id="fileInput" accept=".txt,.csv" style="display:none;" />
+      <div style="text-align:center;">
+        <label for="fileInput" class="upload-label">📂 Upload File</label>
+      </div>
+      <textarea id="inputData" placeholder="User ID: F0222000445, Nama: IrwanS, Waktu: 2025-05-22 06:50:44, Status: 1"></textarea>
+      <div class="options">
+        <label><input type="radio" name="mode" value="csv" checked> CSV (Excel)</label>
+        <label><input type="radio" name="mode" value="txt"> TXT (Notepad)</label>
+      </div>
+      <div style="text-align:center;">
+        <button class="primary" onclick="window.convertAndDownload()">⚙️ Konversi & Download</button>
+      </div>
+      <div class="progress-container"><div class="progress-bar"></div></div>
+      <div class="progress-status">Sedang memproses...</div>
+    </div>
+  </div>
+  <footer>&copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a></footer>
+
+<script type="module">
+
+    const statusMap = { "1": "C/Masuk", "2": "C/Keluar", "3": "Lembur Masuk", "4": "Lembur Keluar" };
+    const fileInput = document.getElementById('fileInput');
+    const textarea = document.getElementById('inputData');
+    const progressContainer = document.querySelector('.progress-container');
+    const progressBar = document.querySelector('.progress-bar');
+    const progressStatus = document.querySelector('.progress-status');
+
+    function updateProgress(percent, text) {
+      progressContainer.style.display = 'block';
+      progressStatus.style.display = 'block';
+      progressBar.style.width = percent + '%';
+      progressStatus.textContent = text + ` (${percent}%)`;
+    }
+
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onprogress = evt => {
+        if (evt.lengthComputable) {
+          const percent = Math.round((evt.loaded / evt.total) * 100);
+          updateProgress(percent, 'Membaca file');
+        }
+      };
+      reader.onloadstart = () => updateProgress(0, 'Membaca file');
+      reader.onload = evt => {
+        textarea.value = evt.target.result;
+        updateProgress(100, 'File berhasil dibaca ✔️');
+        setTimeout(() => {
+          progressContainer.style.display = 'none';
+          progressStatus.style.display = 'none';
+        }, 1000);
+      };
+      reader.readAsText(file);
+    });
+
+    textarea.addEventListener('dragover', e => { e.preventDefault(); textarea.classList.add('drop-hover'); });
+    textarea.addEventListener('dragleave', e => { textarea.classList.remove('drop-hover'); });
+    textarea.addEventListener('drop', e => {
+      e.preventDefault(); textarea.classList.remove('drop-hover');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onprogress = evt => {
+          if (evt.lengthComputable) {
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            updateProgress(percent, 'Membaca file');
+          }
+        };
+        reader.onloadstart = () => updateProgress(0, 'Membaca file');
+        reader.onload = evt => {
+          textarea.value = evt.target.result;
+          updateProgress(100, 'File berhasil dibaca ✔️');
+          setTimeout(() => {
+            progressContainer.style.display = 'none';
+            progressStatus.style.display = 'none';
+          }, 1000);
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    window.convertAndDownload = function() {
+      const rawText = textarea.value.trim();
+      if (!rawText) { alert('Tempel atau upload data dulu ya.'); return; }
+
+      updateProgress(10, 'Memulai konversi');
+      setTimeout(() => {
+        updateProgress(40, 'Memproses data...');
+        const lines = rawText.split('\n');
+        let csv = 'NIK,NAMA,Waktu,Status\n';
+
+        lines.forEach(line => {
+          const nik = (line.match(/User ID:\s*([^,]+)/) || [])[1]?.trim() || "";
+          const nama = (line.match(/Nama:\s*(.+?),\s*Waktu:/) || [])[1]?.trim() || "";
+          let waktu = (line.match(/Waktu:\s*([^,]+)/) || [])[1]?.trim() || "";
+          let status = (line.match(/Status:\s*(\d+)/) || [])[1]?.trim() || "";
+
+          if (waktu.match(/^\d{4}-\d{2}-\d{2}/)) {
+            const [datePart, timePart] = waktu.split(' ');
+            const [y, m, d] = datePart.split('-');
+            const [hh, mm] = timePart.split(':');
+            waktu = `${d}/${m}/${y} ${hh}:${mm}`;
+          }
+          status = statusMap[status] || "C/Masuk";
+
+          csv += `${nik},"${nama}",${waktu},${status}\n`;
+        });
+
+        setTimeout(() => {
+          updateProgress(70, 'Menyiapkan file...');
+          const mode = document.querySelector('input[name="mode"]:checked').value;
+          const type = (mode === 'csv') ? 'text/csv' : 'text/plain';
+          const ext = (mode === 'csv') ? 'csv' : 'txt';
+
+          setTimeout(() => {
+            updateProgress(100, 'Selesai ✔️');
+            const blob = new Blob([csv], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `data_absensi.${ext}`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+              progressStatus.style.display = 'none';
+            }, 1000);
+          }, 500);
+        }, 500);
+      }, 500);
+    };
+</script>
+</body>
+</html>

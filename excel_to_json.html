@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Konversi Mesin → JSON</title>
+  <script type="module" src="./common-auth.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #9333ea);
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+    }
+  nav .brand { font-weight: bold; font-size: 1.2rem; }
+  nav .menu a {
+    color: white; text-decoration: none; margin-left: 1rem; transition: color .3s;
+  }
+  nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+  nav .menu2 {
+    color: white;
+    cursor: pointer;
+    margin-left: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    transition: background 0.3s, transform 0.2s;
+    font-weight: bold;
+  }
+  nav .menu2:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+    .container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    .card {
+      background: rgba(255,255,255,0.1);
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      animation: fadeIn .8s ease;
+      backdrop-filter: blur(8px);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 { margin-top: 0; }
+    .dropzone {
+      border: 2px dashed #a5b4fc;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background .3s, transform .2s;
+    }
+    .dropzone.dragover {
+      background: rgba(165,180,252,0.1);
+      transform: scale(1.02);
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-family: monospace;
+      resize: none;
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+    button {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: .5rem;
+      margin-top: .5rem;
+      transition: background .3s, transform .2s, box-shadow .2s;
+    }
+    button.primary { background: #10b981; color: #fff; }
+    button.secondary { background: rgba(255,255,255,0.2); color: #fff; }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: .9rem;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+    }
+    footer a { color: white; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 600px) {
+      .card { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">🦁 Internal Tools</div>
+    <div class="menu">
+      <a href="home.html">Home</a>
+      <a href="flask.html">Download Mesin</a>
+      <a href="#" class="active">Mesin → JSON</a>
+      <a href="convert-csv.html">Absensi → CSV/TXT</a>
+      <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
+    </div>
+    <div class="menu2" onclick="window.logout()">Logout</div>
+  </nav>
+  <div class="container">
+    <div class="card">
+      <h1>Excel → JSON Converter</h1>
+      <p>Konversi daftar <strong>Mesin Fingerprint</strong> ke format JSON siap pakai.</p>
+      <div class="dropzone" id="dropzone">Tarik & letakkan file Excel di sini atau klik untuk memilih</div>
+      <div style="text-align:center;">
+        <button class="secondary" id="btnTemplate">⬇️ Download Template Excel</button>
+        <button class="primary" id="btnConvert">⚙️ Convert ke JSON</button>
+      </div>
+      <div id="status"></div>
+      <textarea id="json" placeholder="Hasil JSON akan muncul di sini…"></textarea>
+      <div style="text-align:center;">
+        <button class="secondary" id="btnCopy">📋 Copy</button>
+        <button class="primary" id="btnDownloadJSON">💾 Download JSON</button>
+      </div>
+    </div>
+  </div>
+  <footer>&copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</footer>
+  <script type="module">
+    const q = s => document.querySelector(s);
+    const statusBox = q('#status');
+    const dropzone = q('#dropzone');
+    const jsonArea = q('#json');
+    let selectedFile = null;
+
+    function setStatus(msg, type='ok') {
+      statusBox.innerHTML = `<div style="padding:.5rem;color:${type==='error'?'#ff8080':'#80ff80'}">${msg}</div>`;
+    }
+
+    function headerNormalize(h){return String(h||'').replace(/\s+/g,' ').replace(/[\u00A0]/g,' ').trim().toLowerCase()}
+    function validateRow(r){
+      if(!r)return false;
+      const n=String(r['Nama Mesin']??'').trim();
+      const i=String(r['IP Address']??'').trim();
+      const p=r['Port'];
+      if(!n||!i)return false;
+      const okIP=/^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/.test(i);
+      if(!okIP)return false;
+      const pn=Number(p);
+      if(!Number.isFinite(pn)||pn<=0||pn>65535)return false;
+      return true;
+    }
+    function rowsToJSON(rows){
+      const out={};
+      for(const r of rows){
+        if(!validateRow(r)) continue;
+        out[String(r['Nama Mesin']).trim()]={ip:String(r['IP Address']).trim(),port:Number(r['Port'])};
+      }
+      return out;
+    }
+
+    function handleFiles(files){
+      if(files && files[0]){
+        selectedFile = files[0];
+        setStatus(`File dipilih: ${selectedFile.name}`);
+      }
+    }
+
+    dropzone.addEventListener('click',()=>{
+      const input=document.createElement('input');
+      input.type='file';
+      input.accept='.xlsx,.xls,.csv';
+      input.onchange=e=>handleFiles(e.target.files);
+      input.click();
+    });
+
+    dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('dragover');});
+    dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop',e=>{
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    async function convert(){
+      if(!selectedFile){setStatus('Pilih file Excel terlebih dahulu.','error');return}
+      try{
+        const data=await selectedFile.arrayBuffer();
+        const wb=XLSX.read(data,{type:'array'});
+        const sheetName=wb.SheetNames[0];
+        const ws=wb.Sheets[sheetName];
+        let rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        if(!rows.length){setStatus('Sheet kosong atau tidak ada data.','error');return}
+        const wanted={'nama mesin':'Nama Mesin','ip address':'IP Address','port':'Port'};
+        rows=rows.map(o=>{
+          const m={};
+          for(const k of Object.keys(o)){
+            const norm=headerNormalize(k);
+            if(wanted[norm]) m[wanted[norm]]=o[k];
+          }
+          return m;
+        });
+        const valid=rows.filter(validateRow);
+        if(!valid.length){setStatus('Tidak ada baris valid.','error');return}
+        jsonArea.value=JSON.stringify(rowsToJSON(valid),null,4);
+        setStatus(`Berhasil mengonversi ${valid.length} baris dari sheet \"${sheetName}\".`);
+      }catch(e){console.error(e);setStatus('Gagal membaca file.','error');}
+    }
+
+    function downloadTemplate(){
+      const rows=[{'Nama Mesin':'HR110','IP Address':'10.30.39.189','Port':4370},{'Nama Mesin':'MO1','IP Address':'10.30.39.217','Port':4370}];
+      const ws=XLSX.utils.json_to_sheet(rows,{header:['Nama Mesin','IP Address','Port']});
+      ws['!cols']=[{wch:28},{wch:16},{wch:8}];
+      const wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'Template');
+      XLSX.writeFile(wb,'Template_Mesin_Fingerprint.xlsx');
+    }
+
+    function downloadJSON(){
+      const t=jsonArea.value.trim();
+      if(!t){setStatus('Tidak ada hasil JSON.','error');return}
+      const b=new Blob([t],{type:'application/json'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(b);
+      a.download='mesin_fingerprint.json';
+      a.click();
+    }
+
+    function copyJSON(){
+      const t=jsonArea.value;
+      if(!t){setStatus('Tidak ada teks.','error');return}
+      navigator.clipboard.writeText(t).then(()=>setStatus('JSON disalin.')).catch(()=>setStatus('Gagal menyalin.','error'));
+    }
+
+    q('#btnTemplate').addEventListener('click',downloadTemplate);
+    q('#btnConvert').addEventListener('click',convert);
+    q('#btnDownloadJSON').addEventListener('click',downloadJSON);
+    q('#btnCopy').addEventListener('click',copyJSON);
+  </script>
+</body>
+</html>

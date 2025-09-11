@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script type="module" src="./common-auth.js"></script>
+<title>Download Absensi Mesin</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    color: white;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column;
+    min-height: 100vh;
+  }
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+  }
+  nav .brand { font-weight: bold; font-size: 1.2rem; }
+  nav .menu a {
+    color: white; text-decoration: none; margin-left: 1rem; transition: color .3s;
+  }
+  nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+  nav .menu2 {
+    color: white;
+    cursor: pointer;
+    margin-left: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    transition: background 0.3s, transform 0.2s;
+    font-weight: bold;
+  }
+  nav .menu2:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+  .container {
+    flex: 1; display: flex; justify-content: center; align-items: center; padding: 2rem;
+  }
+  .card {
+    background: rgba(255,255,255,0.1);
+    padding: 2rem;
+    border-radius: 1rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    animation: fadeIn .8s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  h2 { text-align: center; margin-top: 0; }
+  input, select {
+    width: 100%; padding: .75rem; margin-top: .5rem;
+    border-radius: .5rem; border: none;
+    background: rgba(255,255,255,0.15); color: #333;
+  }
+  input[type="file"] { background: none; color: #ddd; }
+  button {
+    width: 100%; padding: .75rem; margin-top: .75rem;
+    border: none; border-radius: .5rem;
+    font-weight: bold; cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+  }
+  button.green { background: #10b981; color: white; }
+  button.blue { background: #3b82f6; color: white; }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  footer {
+    text-align: center; padding: 1rem; font-size: .9rem;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+  }
+  footer a { color: white; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+<script type="module">
+    let mesinList = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.loadMachinesDefault();
+    });
+
+    window.handleFileUpload = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          mesinList = JSON.parse(e.target.result);
+          window.isiDropdownMesin();
+          alert("Data mesin berhasil dimuat dari file JSON!");
+        } catch (err) {
+          alert("JSON tidak valid!");
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    window.loadMachinesDefault = async function() {
+      try {
+        const resp = await fetch('mesin.json');
+        mesinList = await resp.json();
+        window.isiDropdownMesin();
+      } catch (e) {
+        console.warn("Gagal load mesin.json (normal kalau tanpa server):", e);
+      }
+    };
+
+    window.isiDropdownMesin = function() {
+      const mesinSelect = document.getElementById("mesin");
+      mesinSelect.innerHTML = "";
+      Object.keys(mesinList).forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        mesinSelect.appendChild(opt);
+      });
+      if (Object.keys(mesinList).length === 0) {
+        let opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "-- Belum ada data --";
+        mesinSelect.appendChild(opt);
+      }
+    };
+
+    window.openNewWindow = function(url) {
+      window.open(url, '_blank');
+    };
+
+    window.downloadSatuMesin = function() {
+      if (window.checkExpiry()) { return; } 
+
+      const baseUrl = document.getElementById("base_url").value;
+      const mesin = document.getElementById("mesin").value;
+      if (!mesin) { alert("Pilih mesin dulu!"); return; }
+      let url = `${baseUrl}/lihat_absensi?mesin=${mesin}`;
+      window.openNewWindow(url);
+    };
+
+    window.downloadSemuaMesin = function() {
+      if (window.checkExpiry()) { return; } 
+
+      const baseUrl = document.getElementById("base_url").value;
+      if (!Object.keys(mesinList).length) { alert("Belum ada data mesin!"); return; }
+      Object.keys(mesinList).forEach(m => {
+        let url = `${baseUrl}/lihat_absensi?mesin=${m}`;
+        window.openNewWindow(url);
+      });
+    };
+  </script>
+</head>
+<body>
+  <nav>
+    <div class="brand">🦁 Internal Tools</div>
+    <div class="menu">
+      <a href="home.html">Home</a>
+      <a href="#" class="active">Download Mesin</a>
+      <a href="excel_to_json.html">Mesin → JSON</a>
+      <a href="convert-csv.html">Absensi → CSV/TXT</a>
+      <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
+    </div>
+    <div class="menu2" onclick="window.logout()">Logout</div>
+   </nav>
+  <div class="container">
+    <div class="card">
+      <h2>Download Absensi Mesin Fingerprint</h2>
+      <label>Pilih dan Upload File JSON Mesin :</label>
+      <input type="file" id="jsonFile" accept=".json" onchange="window.handleFileUpload(event)"><br>
+      <label>Base URL:</label>
+      <input type="text" id="base_url" value="http://10.30.32.16:5000/"><br>
+      <label>Pilih Mesin:</label>
+      <select id="mesin"><option value="">-- Belum ada data --</option></select><br>
+
+      <button class="green" onclick="window.downloadSatuMesin()">⬇️ Download Mesin Terpilih</button>
+      <button class="blue" onclick="window.downloadSemuaMesin()">⬇️ Download Semua Mesin</button>
+    </div>
+  </div>
+  <footer>&copy; 2025 by <a href="https://irwanss.web.app" target="_blank">IrwanS</a></footer>
+</body>
+</html>
