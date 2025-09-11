@@ -64,13 +64,13 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
     if (currentPageTitle !== 'Menu Utama') { // <--- KONDISI BARU DI SINI!
         // Admin dan Super Admin menu
         if (userRole === "admin" || userRole === "super_admin") {
-            adminMenuLinks += `<a href="admin-upload-data.html" class="${currentPageTitle === 'Unggah Data Karyawan' ? 'active' : ''}">Unggah Data Karyawan</a>`;
+            adminMenuLinks += `<a href="admin_upload_data.html" class="${currentPageTitle === 'Unggah Data Karyawan' ? 'active' : ''}">Unggah Data Karyawan</a>`;
         }
 
         // Super Admin menu
         if (userRole === "super_admin") {
-            superAdminMenuLinks += `<a href="admin-users.html" class="${currentPageTitle === 'Kelola Pengguna' ? 'active' : ''}">Kelola Pengguna</a>`;
-            superAdminMenuLinks += `<a href="admin-settings.html" class="${currentPageTitle === 'Pengaturan Sistem' ? 'active' : ''}">Pengaturan Sistem</a>`;
+            superAdminMenuLinks += `<a href="admin_manage_users.html" class="${currentPageTitle === 'Kelola Pengguna' ? 'active' : ''}">Kelola Pengguna</a>`;
+            superAdminMenuLinks += `<a href="superadmin_settings.html" class="${currentPageTitle === 'Pengaturan Sistem' ? 'active' : ''}">Pengaturan Sistem</a>`;
         }
 
         // Susun konten div class="menu"
@@ -138,7 +138,7 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
     if (userRole === "admin" || userRole === "super_admin") {
         const adminMenuUpload = document.createElement("div");
         adminMenuUpload.className = "menu-card";
-        adminMenuUpload.onclick = () => window.goPage('admin-upload-data.html');
+        adminMenuUpload.onclick = () => window.goPage('admin_upload_data.html');
         adminMenuUpload.textContent = "⬆️ Upload & Kelola Data";
         mainMenuGrid.appendChild(adminMenuUpload);
     }
@@ -146,13 +146,13 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
     if (userRole === "super_admin") {
         const adminMenuUsers = document.createElement("div");
         adminMenuUsers.className = "menu-card";
-        adminMenuUsers.onclick = () => window.goPage('admin-users.html');
+        adminMenuUsers.onclick = () => window.goPage('admin_manage_users.html');
         adminMenuUsers.textContent = "👥 Kelola Pengguna";
         mainMenuGrid.appendChild(adminMenuUsers);
   
         const superAdminMenuSettings = document.createElement("div");
         superAdminMenuSettings.className = "menu-card";
-        superAdminMenuSettings.onclick = () => window.goPage('admin-settings.html'); // Pastikan ini mengarah ke admin-settings.html
+        superAdminMenuSettings.onclick = () => window.goPage('superadmin_settings.html'); // Pastikan ini mengarah ke admin-settings.html
         superAdminMenuSettings.textContent = "⚙️ Pengaturan Sistem";
         mainMenuGrid.appendChild(superAdminMenuSettings);
     }
@@ -225,3 +225,4 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
         }
     });
 }
+
