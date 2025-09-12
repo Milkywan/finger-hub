@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Konversi Absensi → CSV/TXT</title>
+  <title>Konversi Xls → CSV/TXT</title>
   <!-- Sertakan library SheetJS di sini -->
   <script src="xlsx.full.min.js"></script> 
   <style>
@@ -250,7 +250,7 @@
     // Panggil initPage saat DOM siap
     document.addEventListener('DOMContentLoaded', () => {
       initPage(
-          "Absensi → CSV/TXT",     // pageTitle (akan jadi active di navigasi)
+          "Converter Xls",     // pageTitle (akan jadi active di navigasi)
           "rawConverterContainer", // mainContentId (ID dari div container utama halaman ini, bisa salah satu)
           "user"                   // requiredRole (semua user bisa akses)
       );
@@ -576,3 +576,4 @@
 </script>
 </body>
 </html>
+
