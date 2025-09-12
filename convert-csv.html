@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Konversi Absensi → CSV/TXT</title>
-  <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
   <style>
     /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
     * { box-sizing: border-box; }
@@ -78,26 +77,40 @@
         padding: 2rem;
     }
 
-    /* --- CARD KONTEN SPESIFIK HALAMAN INI --- */
-    /* Nama class 'card' diubah menjadi 'container' untuk konsistensi dengan pola admin pages */
-    .container { /* Menggantikan .card di HTML asli */
-      background: rgba(255,255,255,0.1);
-      padding: 2rem;
-      border-radius: 1rem;
-      max-width: 800px;
-      width: 100%;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      animation: fadeIn .8s ease;
-      backdrop-filter: blur(8px);
+    /* --- GRID LAYOUT UNTUK DUA CARD --- */
+    .converter-grid {
+        display: flex; /* Menggunakan flexbox untuk layout horizontal */
+        gap: 2rem; /* Jarak antar card */
+        width: 100%;
+        max-width: 1200px; /* Batasi lebar keseluruhan grid */
+        justify-content: center; /* Pusatkan grid di tengah */
+        flex-wrap: wrap; /* Izinkan wrapping pada layar kecil */
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    h1 { margin-top: 0; text-align: center; }
+    /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
+    .container { 
+        background: rgba(255,255,255,0.1); /* Latar belakang transparan */
+        padding: 2rem; /* Padding lebih besar */
+        border-radius: 1rem; /* Border radius lebih besar */
+        width: 100%; /* Default 100% untuk mobile */
+        max-width: 550px; /* Batasi lebar card tunggal */
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
+        backdrop-filter: blur(8px); /* Efek blur */
+        animation: fadeIn .8s ease; /* Animasi fade in */
+        flex: 1; /* Biarkan flexbox mengatur lebar */
+        min-width: 300px; /* Lebar minimum sebelum wrap */
+    }
+    @keyframes fadeIn { /* Animasi fade in */
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1, h2 { margin-top: 0; text-align: center; }
     textarea {
       width: 100%; height: 200px;
       border: none; border-radius: 0.5rem;
       padding: 1rem; margin-top: 1rem;
-      font-family: monospace; resize: none;
+      font-family: monospace; resize: vertical; /* Allow vertical resize */
       background: rgba(255,255,255,0.15); color: white;
     }
     .options { text-align: center; margin-top: 1rem; }
@@ -110,6 +123,7 @@
     button.primary { background: #10b981; color: #fff; }
     .upload-label { background: #3b82f6; color: #fff; display: inline-block; }
     button:hover, .upload-label:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+
     .progress-container {
       margin-top: 1rem; background: rgba(255,255,255,0.2);
       border-radius: 0.5rem; overflow: hidden;
@@ -118,10 +132,18 @@
     .progress-bar {
       height: 100%; width: 0%; background: #10b981; transition: width 0.3s ease;
     }
-    .progress-status {
-      text-align: center; margin-top: .5rem; font-size: .85rem;
-      color: #e0e0e0; display: none;
+    /* Status Message (Consistent with superadmin_settings.html) */
+    .status-message {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        text-align: center;
+        display: none; /* Defaultnya tersembunyi */
     }
+    .status-message.success { background-color: #10b981; color: white; display: block; }
+    .status-message.error { background-color: #ef4444; color: white; display: block; }
+    .status-message.info { background-color: #60a5fa; color: white; display: block; }
 
     /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
     footer {
@@ -154,6 +176,10 @@
             justify-content: space-between; 
             margin-top: 10px;
         }
+        .converter-grid {
+            flex-direction: column; /* Tumpuk card secara vertikal pada layar kecil */
+            align-items: center; /* Pusatkan card saat ditumpuk */
+        }
     }
     @media (max-width: 600px) { .container { padding: 1rem; } }
     .drop-hover { outline: 2px dashed #a5b4fc; background: rgba(255,255,255,0.2); }
@@ -165,24 +191,49 @@
 
   <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
   <div class="main-content-wrapper">
-    <!-- Konten halaman spesifik (sekarang menggunakan id "pageContainer" dan class "container") -->
-    <div class="container" id="pageContainer">
-      <h1>Konversi Data Absensi</h1>
-      <p style="text-align:center;">Tempel data absensi atau upload file di bawah ini:</p>
-      <input type="file" id="fileInput" accept=".txt,.csv" style="display:none;" />
-      <div style="text-align:center;">
-        <label for="fileInput" class="upload-label">📂 Upload File</label>
-      </div>
-      <textarea id="inputData" placeholder="User ID: F0222000445, Nama: IrwanS, Waktu: 2025-05-22 06:50:44, Status: 1"></textarea>
-      <div class="options">
-        <label><input type="radio" name="mode" value="csv" checked> CSV (Excel)</label>
-        <label><input type="radio" name="mode" value="txt"> TXT (Notepad)</label>
-      </div>
-      <div style="text-align:center;">
-        <button class="primary" onclick="window.convertAndDownload()">⚙️ Konversi & Download</button>
-      </div>
-      <div class="progress-container"><div class="progress-bar"></div></div>
-      <div class="progress-status">Sedang memproses...</div>
+    <!-- Grid utama untuk dua card converter -->
+    <div class="converter-grid">
+
+        <!-- Card 1: Konversi Data Absensi Mentah (Log-like) -->
+        <div class="container" id="rawConverterContainer">
+            <h2>Konversi Absensi (Log Mentah)</h2>
+            <p style="text-align:center;">Tempel data absensi dari log mesin atau upload file:</p>
+            <input type="file" id="rawFileInput" accept=".txt" style="display:none;" />
+            <div style="text-align:center;">
+              <label for="rawFileInput" class="upload-label">📂 Upload File Teks</label>
+            </div>
+            <textarea id="rawInputData" placeholder="User ID: F0222000445, Nama: IrwanS, Waktu: 2025-05-22 06:50:44, Status: 1"></textarea>
+            <div class="options">
+              <label><input type="radio" name="rawMode" value="csv" checked> CSV (Excel)</label>
+              <label><input type="radio" name="rawMode" value="txt"> TXT (Notepad)</label>
+            </div>
+            <div style="text-align:center;">
+              <button class="primary" onclick="window.convertRawAndDownload()">⚙️ Konversi & Download</button>
+            </div>
+            <div class="progress-container" id="rawProgressContainer"><div class="progress-bar" id="rawProgressBar"></div></div>
+            <div class="status-message" id="rawProgressStatus"></div>
+        </div>
+
+        <!-- Card 2: Konversi Data Absensi Tabel (CSV/Excel) -->
+        <div class="container" id="structuredConverterContainer">
+            <h2>Konversi Absensi (Tabel/CSV)</h2>
+            <p style="text-align:center;">Tempel data tabel (dari Excel/CSV) atau upload file:</p>
+            <input type="file" id="structuredFileInput" accept=".txt,.csv" style="display:none;" />
+            <div style="text-align:center;">
+              <label for="structuredFileInput" class="upload-label">📂 Upload File CSV/TXT</label>
+            </div>
+            <textarea id="structuredInputData" placeholder="No. ID	NIK	Nama	Waktu	Status&#10;T08250440	T08250440	Suhardi Hi Muhamad Yami	10/09/2025 06:45	C/Masuk"></textarea>
+            <div class="options">
+              <label><input type="radio" name="structuredMode" value="csv" checked> CSV (Excel)</label>
+              <label><input type="radio" name="structuredMode" value="txt"> TXT (Notepad)</label>
+            </div>
+            <div style="text-align:center;">
+              <button class="primary" onclick="window.convertStructuredAndDownload()">⚙️ Konversi & Download</button>
+            </div>
+            <div class="progress-container" id="structuredProgressContainer"><div class="progress-bar" id="structuredProgressBar"></div></div>
+            <div class="status-message" id="structuredProgressStatus"></div>
+        </div>
+
     </div>
   </div>
 
@@ -196,83 +247,111 @@
     // Panggil initPage saat DOM siap
     document.addEventListener('DOMContentLoaded', () => {
       initPage(
-          "Absensi → CSV/TXT", // pageTitle (akan jadi active di navigasi)
-          "pageContainer",           // mainContentId (ID dari div container utama halaman ini)
-          "user"                     // requiredRole (semua user bisa akses)
+          "Absensi → CSV/TXT",     // pageTitle (akan jadi active di navigasi)
+          "rawConverterContainer", // mainContentId (ID dari div container utama halaman ini, bisa salah satu)
+          "user"                   // requiredRole (semua user bisa akses)
       );
     });
 
-    const statusMap = { "1": "C/Masuk", "2": "C/Keluar", "3": "Lembur Masuk", "4": "Lembur Keluar" };
-    const fileInput = document.getElementById('fileInput');
-    const textarea = document.getElementById('inputData');
-    const progressContainer = document.querySelector('.progress-container');
-    const progressBar = document.querySelector('.progress-bar');
-    const progressStatus = document.querySelector('.progress-status');
-
-    function updateProgress(percent, text) {
-      progressContainer.style.display = 'block';
-      progressStatus.style.display = 'block';
-      progressBar.style.width = percent + '%';
-      progressStatus.textContent = text + ` (${percent}%)`;
+    // --- Helper Functions (Shared) ---
+    function setStatus(messageElement, message, type = 'info', timeout = 5000) {
+        messageElement.textContent = message;
+        messageElement.className = `status-message ${type}`;
+        if (timeout > 0) {
+            setTimeout(() => {
+                messageElement.className = 'status-message'; // Reset class untuk menyembunyikan
+                messageElement.textContent = '';
+            }, timeout);
+        }
     }
 
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onprogress = evt => {
-        if (evt.lengthComputable) {
-          const percent = Math.round((evt.loaded / evt.total) * 100);
-          updateProgress(percent, 'Membaca file');
-        }
-      };
-      reader.onloadstart = () => updateProgress(0, 'Membaca file');
-      reader.onload = evt => {
-        textarea.value = evt.target.result;
-        updateProgress(100, 'File berhasil dibaca ✔️');
-        setTimeout(() => {
-          progressContainer.style.display = 'none';
-          progressStatus.style.display = 'none';
-        }, 1000);
-      };
-      reader.readAsText(file);
-    });
+    function setupDragDrop(textareaElement, fileInputElement, progressContainer, progressBar, statusMessageElement, fileHandler) {
+        // Function to update progress bar (specific to this card)
+        const updateCardProgress = (percent, text) => {
+            progressContainer.style.display = 'block';
+            statusMessageElement.style.display = 'block';
+            progressBar.style.width = percent + '%';
+            statusMessageElement.textContent = text + ` (${percent}%)`;
+        };
 
-    textarea.addEventListener('dragover', e => { e.preventDefault(); textarea.classList.add('drop-hover'); });
-    textarea.addEventListener('dragleave', e => { textarea.classList.remove('drop-hover'); });
-    textarea.addEventListener('drop', e => {
-      e.preventDefault(); textarea.classList.remove('drop-hover');
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onprogress = evt => {
-          if (evt.lengthComputable) {
-            const percent = Math.round((evt.loaded / evt.total) * 100);
-            updateProgress(percent, 'Membaca file');
-          }
-        };
-        reader.onloadstart = () => updateProgress(0, 'Membaca file');
-        reader.onload = evt => {
-          textarea.value = evt.target.result;
-          updateProgress(100, 'File berhasil dibaca ✔️');
-          setTimeout(() => {
-            progressContainer.style.display = 'none';
-            progressStatus.style.display = 'none';
-          }, 1000);
-        };
-        reader.readAsText(file);
+        fileInputElement.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) {
+                setStatus(statusMessageElement, 'Tidak ada file yang dipilih.', 'info');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onprogress = evt => {
+                if (evt.lengthComputable) {
+                    const percent = Math.round((evt.loaded / evt.total) * 100);
+                    updateCardProgress(percent, 'Membaca file');
+                }
+            };
+            reader.onloadstart = () => updateCardProgress(0, 'Membaca file');
+            reader.onload = evt => {
+                textareaElement.value = evt.target.result;
+                updateCardProgress(100, 'File berhasil dibaca ✔️');
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    statusMessageElement.style.display = 'none';
+                }, 1000);
+                setStatus(statusMessageElement, 'File berhasil dibaca!', 'success');
+            };
+            reader.readAsText(file);
+        });
+
+        textareaElement.addEventListener('dragover', e => { e.preventDefault(); textareaElement.classList.add('drop-hover'); });
+        textareaElement.addEventListener('dragleave', e => { textareaElement.classList.remove('drop-hover'); });
+        textareaElement.addEventListener('drop', e => {
+            e.preventDefault(); textareaElement.classList.remove('drop-hover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onprogress = evt => {
+                    if (evt.lengthComputable) {
+                        const percent = Math.round((evt.loaded / evt.total) * 100);
+                        updateCardProgress(percent, 'Membaca file');
+                    }
+                };
+                reader.onloadstart = () => updateCardProgress(0, 'Membaca file');
+                reader.onload = evt => {
+                    textareaElement.value = evt.target.result;
+                    updateCardProgress(100, 'File berhasil dibaca ✔️');
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        statusMessageElement.style.display = 'none';
+                    }, 1000);
+                    setStatus(statusMessageElement, 'File berhasil dibaca!', 'success');
+                };
+                reader.readAsText(file);
+            }
+        });
+    }
+
+    // --- Card 1: Konversi Data Absensi Mentah (Log-like) ---
+    const rawInputData = document.getElementById('rawInputData');
+    const rawFileInput = document.getElementById('rawFileInput');
+    const rawProgressContainer = document.getElementById('rawProgressContainer');
+    const rawProgressBar = document.getElementById('rawProgressBar');
+    const rawProgressStatus = document.getElementById('rawProgressStatus');
+
+    const rawStatusMap = { "1": "C/Masuk", "2": "C/Keluar", "3": "Lembur Masuk", "4": "Lembur Keluar" };
+
+    setupDragDrop(rawInputData, rawFileInput, rawProgressContainer, rawProgressBar, rawProgressStatus);
+
+    window.convertRawAndDownload = function() {
+      const rawText = rawInputData.value.trim();
+      if (!rawText) { 
+        setStatus(rawProgressStatus, 'Tempel atau upload data dulu ya.', 'error');
+        return;
       }
-    });
 
-    window.convertAndDownload = function() {
-      const rawText = textarea.value.trim();
-      if (!rawText) { alert('Tempel atau upload data dulu ya.'); return; }
+      setStatus(rawProgressStatus, 'Memulai konversi...', 'info', 0); // Keep status until done
 
-      updateProgress(10, 'Memulai konversi');
       setTimeout(() => {
-        updateProgress(40, 'Memproses data...');
+        setStatus(rawProgressStatus, 'Memproses data...');
         const lines = rawText.split('\n');
-        let csv = 'NIK,NAMA,Waktu,Status\n';
+        let outputContent = ['NIK,NAMA,Waktu,Status']; // Header awal
 
         lines.forEach(line => {
           const nik = (line.match(/User ID:\s*([^,]+)/) || [])[1]?.trim() || "";
@@ -280,39 +359,178 @@
           let waktu = (line.match(/Waktu:\s*([^,]+)/) || [])[1]?.trim() || "";
           let status = (line.match(/Status:\s*(\d+)/) || [])[1]?.trim() || "";
 
-          if (waktu.match(/^\d{4}-\d{2}-\d{2}/)) {
+          // Convert YYYY-MM-DD HH:MM:SS to DD/MM/YYYY HH:MM
+          if (waktu.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
             const [datePart, timePart] = waktu.split(' ');
             const [y, m, d] = datePart.split('-');
-            const [hh, mm] = timePart.split(':');
+            const [hh, mm] = timePart.split(':'); // ignore seconds
             waktu = `${d}/${m}/${y} ${hh}:${mm}`;
           }
-          status = statusMap[status] || "C/Masuk";
+          status = rawStatusMap[status] || "C/Masuk"; // Default if not found
 
-          csv += `${nik},"${nama}",${waktu},${status}\n`;
+          // Basic CSV quoting for name if it contains commas
+          const quotedNama = nama.includes(',') ? `"${nama.replace(/"/g, '""')}"` : nama;
+          outputContent.push(`${nik},${quotedNama},${waktu},${status}`);
         });
 
         setTimeout(() => {
-          updateProgress(70, 'Menyiapkan file...');
-          const mode = document.querySelector('input[name="mode"]:checked').value;
+          setStatus(rawProgressStatus, 'Menyiapkan file...');
+          const mode = document.querySelector('input[name="rawMode"]:checked').value;
           const type = (mode === 'csv') ? 'text/csv' : 'text/plain';
           const ext = (mode === 'csv') ? 'csv' : 'txt';
+          const finalOutput = outputContent.join('\n');
 
           setTimeout(() => {
-            updateProgress(100, 'Selesai ✔️');
-            const blob = new Blob([csv], { type });
+            const blob = new Blob([finalOutput], { type });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `data_absensi.${ext}`;
+            a.download = `data_absensi_mentah_konversi.${ext}`;
             a.click();
             URL.revokeObjectURL(url);
 
-            setTimeout(() => {
-              progressContainer.style.display = 'none';
-              progressStatus.style.display = 'none';
-            }, 1000);
+            setStatus(rawProgressStatus, `Konversi selesai! File data_absensi_mentah_konversi.${ext} berhasil diunduh.`, 'success');
           }, 500);
         }, 500);
+      }, 500);
+    };
+
+    // --- Card 2: Konversi Data Absensi Tabel (CSV/Excel) ---
+    const structuredInputData = document.getElementById('structuredInputData');
+    const structuredFileInput = document.getElementById('structuredFileInput');
+    const structuredProgressContainer = document.getElementById('structuredProgressContainer');
+    const structuredProgressBar = document.getElementById('structuredProgressBar');
+    const structuredProgressStatus = document.getElementById('structuredProgressStatus');
+
+    setupDragDrop(structuredInputData, structuredFileInput, structuredProgressContainer, structuredProgressBar, structuredProgressStatus);
+
+    // Fungsi untuk mendeteksi delimiter input (tab atau koma)
+    function detectDelimiter(line) {
+        const commaCount = (line.match(/,/g) || []).length;
+        const tabCount = (line.match(/\t/g) || []).length;
+        // Heuristik sederhana: Jika jumlah koma lebih banyak dari tab, atau tidak ada tab sama sekali,
+        // kemungkinan besar itu CSV. Jika ada tab, kemungkinan besar itu tab-separated.
+        if (tabCount > 0 && tabCount >= commaCount) {
+            return '\t';
+        }
+        return ','; // Default ke koma jika tidak ada tab atau tab lebih sedikit
+    }
+
+    // Helper function to parse a line based on delimiter (handles simple CSV/TSV)
+    // Does not handle complex CSV like embedded newlines or quoted delimiters
+    function parseCsvOrTabLine(line, delimiter) {
+        if (delimiter === ',') {
+            const cells = [];
+            let inQuote = false;
+            let currentCell = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (i + 1 < line.length && line[i+1] === '"') { // Handle escaped double quote ""
+                        currentCell += '"';
+                        i++; // Skip the next quote
+                    } else {
+                        inQuote = !inQuote;
+                    }
+                } else if (char === ',' && !inQuote) {
+                    cells.push(currentCell.trim());
+                    currentCell = '';
+                } else {
+                    currentCell += char;
+                }
+            }
+            cells.push(currentCell.trim()); // Push the last cell
+            return cells;
+        } else { // Assume tab-separated
+            return line.split(delimiter).map(cell => cell.trim());
+        }
+    }
+
+    window.convertStructuredAndDownload = function() {
+      const rawText = structuredInputData.value.trim();
+      if (!rawText) { 
+        setStatus(structuredProgressStatus, 'Tempel atau upload data dulu ya.', 'error');
+        return;
+      }
+
+      setStatus(structuredProgressStatus, 'Memulai konversi...', 'info', 0); // Keep status until done
+
+      setTimeout(() => {
+          setStatus(structuredProgressStatus, 'Memproses data baris demi baris...');
+          const lines = rawText.split('\n').filter(line => line.trim() !== '');
+          if (lines.length === 0) {
+              setStatus(structuredProgressStatus, 'Data tidak ditemukan.', 'error');
+              return;
+          }
+
+          const inputDelimiter = detectDelimiter(lines[0]);
+          const outputMode = document.querySelector('input[name="structuredMode"]:checked').value;
+          const outputDelimiter = (outputMode === 'csv') ? ',' : '\t'; // Tab for TXT
+
+          let outputContent = [];
+          // Clean headers from quotes and trim, then recreate for output
+          let header = parseCsvOrTabLine(lines[0], inputDelimiter).map(h => h.trim());
+
+          // Add header to output, applying CSV quoting if necessary
+          outputContent.push(header.map(h => {
+              return (outputMode === 'csv' && (h.includes(',') || h.includes('"'))) ? `"${h.replace(/"/g, '""')}"` : h;
+          }).join(outputDelimiter));
+
+          const waktuColIndex = header.findIndex(h => h.toLowerCase() === 'waktu');
+          const namaColIndex = header.findIndex(h => h.toLowerCase() === 'nama');
+
+          if (waktuColIndex === -1) {
+              setStatus(structuredProgressStatus, 'Kolom "Waktu" tidak ditemukan di data Anda. Pastikan ada header "Waktu".', 'error');
+              return;
+          }
+
+          for (let i = 1; i < lines.length; i++) {
+              const cells = parseCsvOrTabLine(lines[i], inputDelimiter);
+              if (cells.length === 0) continue; // Skip empty rows
+
+              // Ensure cells array has enough elements to prevent errors
+              while (cells.length <= Math.max(waktuColIndex, namaColIndex)) {
+                  cells.push('');
+              }
+
+              let waktuCell = cells[waktuColIndex];
+              // Convert DD/MM/YYYY HH:MM to DD-MM-YYYY HH:MM
+              if (waktuCell && waktuCell.match(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)) {
+                  waktuCell = waktuCell.replace(/\//g, '-');
+              }
+              cells[waktuColIndex] = waktuCell;
+
+              let namaCell = cells[namaColIndex];
+              if (namaColIndex !== -1 && outputMode === 'csv') {
+                  // Apply CSV quoting rule: if cell contains comma or quotes, wrap in quotes.
+                  // Also, if original content had quotes, double them up.
+                  if (namaCell.includes(',') || namaCell.includes('"')) {
+                      namaCell = `"${namaCell.replace(/"/g, '""')}"`;
+                  }
+              }
+              cells[namaColIndex] = namaCell;
+
+              outputContent.push(cells.join(outputDelimiter));
+          }
+
+          setTimeout(() => {
+              setStatus(structuredProgressStatus, 'Menyiapkan file untuk diunduh...');
+              const type = (outputMode === 'csv') ? 'text/csv' : 'text/plain';
+              const ext = (outputMode === 'csv') ? 'csv' : 'txt';
+              const finalOutput = outputContent.join('\n');
+
+              setTimeout(() => {
+                  const blob = new Blob([finalOutput], { type });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `data_absensi_tabel_konversi.${ext}`; // Changed filename
+                  a.click();
+                  URL.revokeObjectURL(url);
+
+                  setStatus(structuredProgressStatus, `Konversi selesai! File data_absensi_tabel_konversi.${ext} berhasil diunduh.`, 'success');
+              }, 500);
+          }, 500);
       }, 500);
     };
 </script>
