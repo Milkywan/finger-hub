@@ -124,6 +124,19 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }
 
+  /* --- STATUS MESSAGE (Ditambahkan, konsisten dengan superadmin_settings.html) --- */
+  .status-message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      text-align: center;
+      display: none; /* Defaultnya tersembunyi */
+  }
+  .status-message.success { background-color: #10b981; color: white; display: block; }
+  .status-message.error { background-color: #ef4444; color: white; display: block; }
+  .status-message.info { background-color: #60a5fa; color: white; display: block; }
+
   /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
   footer { 
       text-align: center; 
@@ -176,6 +189,9 @@
 
       <button class="green" onclick="window.downloadSatuMesin()">⬇️ Download Mesin Terpilih</button>
       <button class="blue" onclick="window.downloadSemuaMesin()">⬇️ Download Semua Mesin</button>
+
+      <!-- Elemen untuk menampilkan pesan status -->
+      <div class="status-message" id="downloadStatusMessage"></div>
     </div>
   </div>
 
@@ -188,6 +204,9 @@
 
     let mesinList = {};
 
+    // --- Elemen DOM ---
+    const downloadStatusMessage = document.getElementById('downloadStatusMessage'); // Elemen pesan status
+
     // Panggil initPage saat DOM siap
     document.addEventListener('DOMContentLoaded', () => {
       initPage(
@@ -198,29 +217,56 @@
       window.loadMachinesDefault(); // Panggil fungsi ini setelah initPage()
     });
 
+    // --- Fungsi Helper Umum ---
+    function setStatus(messageElement, message, type = 'info') {
+        messageElement.textContent = message;
+        messageElement.className = `status-message ${type}`;
+        // Opsional: Sembunyikan pesan setelah beberapa detik
+        setTimeout(() => {
+            messageElement.className = 'status-message'; // Mengatur ulang class untuk menyembunyikan
+            messageElement.textContent = '';
+        }, 5000); // Pesan akan hilang setelah 5 detik
+    }
+
+    window.openNewWindow = function(url) {
+      window.open(url, '_blank', 'width=800,height=600'); // Membuka dengan dimensi yang ditentukan
+    };
+
     window.handleFileUpload = function(event) {
       const file = event.target.files[0];
-      if (!file) return;
+      if (!file) {
+          setStatus(downloadStatusMessage, "Tidak ada file yang dipilih.", 'info');
+          return;
+      }
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
           mesinList = JSON.parse(e.target.result);
           window.isiDropdownMesin();
-          alert("Data mesin berhasil dimuat dari file JSON!");
+          setStatus(downloadStatusMessage, "Data mesin berhasil dimuat dari file JSON!", 'success');
         } catch (err) {
-          alert("JSON tidak valid!");
+          setStatus(downloadStatusMessage, `JSON tidak valid: ${err.message}`, 'error');
+          console.error("Error parsing JSON file:", err);
         }
       };
       reader.readAsText(file);
     };
 
     window.loadMachinesDefault = async function() {
+      setStatus(downloadStatusMessage, "Memuat daftar mesin default...", 'info');
       try {
         const resp = await fetch('mesin.json');
+        if (!resp.ok) { // Check if response was successful
+             throw new Error(`HTTP error! status: ${resp.status}`);
+        }
         mesinList = await resp.json();
         window.isiDropdownMesin();
+        setStatus(downloadStatusMessage, `Daftar mesin default berhasil dimuat! (${Object.keys(mesinList).length} mesin)`, 'success');
       } catch (e) {
-        console.warn("Gagal load mesin.json (normal kalau tanpa server):", e);
+        setStatus(downloadStatusMessage, "Gagal memuat mesin.json (normal jika file tidak ada atau tanpa server Flask/lokal). Gunakan upload JSON.", 'info');
+        console.warn("Gagal memuat mesin.json:", e);
+        mesinList = {}; // Pastikan kosong jika gagal load
+        window.isiDropdownMesin(); // Kosongkan dropdown
       }
     };
 
@@ -241,29 +287,40 @@
       }
     };
 
-    window.openNewWindow = function(url) {
-      window.open(url, '_blank');
-    };
-
     window.downloadSatuMesin = function() {
-      // checkExpiry() dihilangkan karena session expiry diatur oleh common-ui.js
       const baseUrl = document.getElementById("base_url").value;
       const mesin = document.getElementById("mesin").value;
-      if (!mesin) { alert("Pilih mesin dulu!"); return; }
+      if (!mesin) {
+          setStatus(downloadStatusMessage, "Pilih mesin dulu!", 'error');
+          return;
+      }
+      if (!baseUrl) {
+          setStatus(downloadStatusMessage, "Base URL harus diisi!", 'error');
+          return;
+      }
+      setStatus(downloadStatusMessage, `Membuka tab baru untuk absensi mesin ${mesin}...`, 'info');
       let url = `${baseUrl}/lihat_absensi?mesin=${mesin}`;
       window.openNewWindow(url);
+      setStatus(downloadStatusMessage, `Permintaan download untuk ${mesin} dikirim. Periksa tab baru di browser Anda.`, 'success');
     };
 
     window.downloadSemuaMesin = function() {
-      // checkExpiry() dihilangkan karena session expiry diatur oleh common-ui.js
       const baseUrl = document.getElementById("base_url").value;
-      if (!Object.keys(mesinList).length) { alert("Belum ada data mesin!"); return; }
+      if (!Object.keys(mesinList).length) {
+          setStatus(downloadStatusMessage, "Belum ada data mesin yang dimuat untuk di-download!", 'error');
+          return;
+      }
+      if (!baseUrl) {
+          setStatus(downloadStatusMessage, "Base URL harus diisi!", 'error');
+          return;
+      }
+      setStatus(downloadStatusMessage, "Membuka tab baru untuk setiap mesin yang akan di-download...", 'info');
       Object.keys(mesinList).forEach(m => {
         let url = `${baseUrl}/lihat_absensi?mesin=${m}`;
         window.openNewWindow(url);
       });
+      setStatus(downloadStatusMessage, "Permintaan download semua absensi dikirim. Periksa tab baru di browser Anda.", 'success');
     };
   </script>
 </body>
 </html>
-
