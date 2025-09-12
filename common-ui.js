@@ -81,7 +81,7 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
                 ${adminMenuLinks}
                 <a href="flask.html" class="${currentPageTitle === 'Download Data Finger' ? 'active' : ''}">Download Data Finger</a>
                 <a href="excel_to_json.html" class="${currentPageTitle === 'Mesin → JSON' ? 'active' : ''}">Mesin → JSON</a>
-                <a href="convert-csv.html" class="${currentPageTitle === 'Absensi → CSV/TXT' ? 'active' : ''}">Absensi → CSV/TXT</a>
+                <a href="convert-csv.html" class="${currentPageTitle === 'Converter Xls' ? 'active' : ''}">Converter Xls</a>
                 <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
             </div>
         `;
@@ -226,5 +226,6 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
         }
     });
 }
+
 
 
