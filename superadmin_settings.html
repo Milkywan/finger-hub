@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Super Admin: Pengaturan Sistem</title>
+    <title>Super Admin: Pengaturan Sistem & Mesin</title>
     <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
     <style>
         /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
@@ -78,16 +78,28 @@
             padding: 2rem;
         }
 
+        /* --- GRID LAYOUT UNTUK DUA CARD --- */
+        .settings-grid {
+            display: flex; /* Menggunakan flexbox untuk layout horizontal */
+            gap: 2rem; /* Jarak antar card */
+            width: 100%;
+            max-width: 1200px; /* Batasi lebar keseluruhan grid */
+            justify-content: center; /* Pusatkan grid di tengah */
+            flex-wrap: wrap; /* Izinkan wrapping pada layar kecil */
+        }
+
         /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
         .container { 
             background: rgba(255,255,255,0.1); /* Latar belakang transparan */
             padding: 2rem; /* Padding lebih besar */
             border-radius: 1rem; /* Border radius lebih besar */
-            width: 100%;
-            max-width: 600px; /* Lebar yang cukup untuk form pengaturan */
+            width: 100%; /* Default 100% untuk mobile */
+            max-width: 500px; /* Batasi lebar card tunggal */
             box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
             backdrop-filter: blur(8px); /* Efek blur */
             animation: fadeIn .8s ease; /* Animasi fade in */
+            flex: 1; /* Biarkan flexbox mengatur lebar */
+            min-width: 300px; /* Lebar minimum sebelum wrap */
         }
         @keyframes fadeIn { /* Animasi fade in */
             from { opacity: 0; transform: translateY(20px); }
@@ -113,7 +125,10 @@
             font-weight: 600;
         }
         .form-group input[type="date"],
-        .form-group input[type="text"] {
+        .form-group input[type="text"],
+        .form-group input[type="file"],
+        .form-group input[type="datetime-local"],
+        .form-group select {
             width: 100%;
             padding: .75rem; /* Padding baru */
             border: none; /* Hilangkan border */
@@ -125,12 +140,22 @@
         }
         /* Style untuk input date placeholder */
         input[type="date"]::-webkit-inner-spin-button,
-        input[type="date"]::-webkit-calendar-picker-indicator {
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="datetime-local"]::-webkit-inner-spin-button,
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
             filter: invert(1); /* Untuk membuat ikon kalender putih */
         }
-        input[type="date"] {
+        input[type="date"], input[type="datetime-local"] {
             color-scheme: dark; /* Untuk tampilan kalender gelap di beberapa browser */
         }
+        input::placeholder { /* Placeholder warna putih */
+            color: rgba(255,255,255,0.6); 
+        }
+        select option { /* Gaya untuk opsi dropdown agar terlihat di background gelap */
+            background: #4f46e5;
+            color: white;
+        }
+
 
         /* --- CONTROLS / BUTTONS (Konsisten di semua halaman admin) --- */
         .controls {
@@ -160,6 +185,12 @@
         .btn-primary:hover { background: #4338ca; }
         .btn-info { background: #3b82f6; color: #fff; }
         .btn-info:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-success:hover { background: #0e9f73; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-danger:hover { background: #d73a3a; }
+        .btn-warning { background: #a855f7; color: #fff; } /* Menggunakan warning untuk ungu */
+        .btn-warning:hover { background: #903ed7; }
 
         /* --- STATUS MESSAGE (Konsisten di semua halaman admin) --- */
         .status-message {
@@ -190,6 +221,10 @@
             nav .menu { margin-top: 10px; }
             nav .menu a { margin: 0.5rem 0.5rem; display: inline-block; }
             nav .menu2 { margin-top: 10px; }
+            .settings-grid {
+                flex-direction: column; /* Tumpuk card secara vertikal pada layar kecil */
+                align-items: center; /* Pusatkan card saat ditumpuk */
+            }
             .controls {
                 flex-direction: column;
                 align-items: stretch;
@@ -206,31 +241,72 @@
 
     <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
     <div class="main-content-wrapper">
-        <!-- Konten halaman spesifik (sekarang menggunakan id "adminSettingsContainer" dan class "container") -->
-        <div class="container" id="adminSettingsContainer">
-            <h2>Pengaturan Sistem</h2> <!-- Mengganti h1 menjadi h2 -->
+        <!-- Grid utama untuk dua card -->
+        <div class="settings-grid">
+            <!-- Sisi Kiri: Pengaturan Sistem (Manajemen Eksipry Offline) -->
+            <div class="container" id="adminSettingsContainer">
+                <h2>Pengaturan Sistem</h2> 
 
-            <div class="form-group">
-                <label for="offlineExpiryDateInput">Tanggal Kedaluwarsa Offline (YYYY-MM-DD)</label>
-                <input type="date" id="offlineExpiryDateInput">
-                <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Tanggal ini digunakan oleh aplikasi desktop saat offline.</small>
+                <div class="form-group">
+                    <label for="offlineExpiryDateInput">Tanggal Kedaluwarsa Offline (YYYY-MM-DD)</label>
+                    <input type="date" id="offlineExpiryDateInput">
+                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Tanggal ini digunakan oleh aplikasi desktop saat offline.</small>
+                </div>
+
+                <!-- Anda bisa menambahkan form-group lain di sini untuk pengaturan lainnya -->
+                <!--
+                <div class="form-group">
+                    <label for="anotherSetting">Pengaturan Lain</label>
+                    <input type="text" id="anotherSetting" placeholder="Nilai pengaturan...">
+                </div>
+                -->
+
+                <div class="controls">
+                    <button class="btn btn-primary" id="saveSettingsBtn">Simpan Pengaturan Sistem</button>
+                    <!-- Tombol kembali ke home, sekarang pakai goPage() -->
+                    <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button>
+                </div>
+
+                <div class="status-message" id="systemStatusMessage">Memuat pengaturan sistem...</div>
             </div>
 
-            <!-- Anda bisa menambahkan form-group lain di sini untuk pengaturan lainnya -->
-            <!--
-            <div class="form-group">
-                <label for="anotherSetting">Pengaturan Lain</label>
-                <input type="text" id="anotherSetting" placeholder="Nilai pengaturan...">
-            </div>
-            -->
+            <!-- Sisi Kanan: Pengaturan Mesin (Tanggal/Waktu & Lihat Absensi) -->
+            <div class="container" id="machineSettingsContainer">
+                <h2>Pengaturan & Download Mesin</h2>
+                <div class="form-group">
+                    <label for="jsonFile">Pilih dan Upload File JSON Mesin:</label>
+                    <input type="file" id="jsonFile" accept=".json" onchange="window.handleFileUpload(event)">
+                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Gunakan ini untuk memuat daftar mesin dari file.</small>
+                </div>
 
-            <div class="controls">
-                <button class="btn btn-primary" id="saveSettingsBtn">Simpan Pengaturan</button>
-                <!-- Tombol kembali ke home, sekarang pakai goPage() -->
-                <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button>
-            </div>
+                <div class="form-group">
+                    <label for="mesinManualInput">Nama Mesin:</label>
+                    <input type="text" id="mesinManualInput" list="mesinDatalist" placeholder="Ketik atau pilih mesin">
+                    <datalist id="mesinDatalist"></datalist>
+                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Ketik nama mesin atau pilih dari daftar jika sudah diupload.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="baseUrlMachine">Base URL API Mesin:</label>
+                    <input type="text" id="baseUrlMachine" value="http://10.30.32.16:5000/">
+                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">URL API untuk komunikasi dengan mesin fingerprint.</small>
+                </div>
 
-            <div class="status-message" id="statusMessage">Memuat pengaturan...</div>
+                <div class="form-group">
+                    <label for="machineSetDateTime">Tanggal & Waktu Mesin:</label>
+                    <input type="datetime-local" id="machineSetDateTime">
+                    <button class="btn btn-warning" onclick="window.setMachineCurrentDateTime()">Gunakan Waktu Sekarang</button>
+                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Atur tanggal dan waktu mesin fingerprint.</small>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-danger" onclick="window.updateMachineDateTime()">Update Waktu Mesin</button>
+                    <button class="btn btn-info" onclick="window.viewMachineAbsensi()">Lihat Absensi Mesin</button>
+                    <button class="btn btn-success" onclick="window.downloadAllMachinesAbsensi()">Download Semua Absensi</button>
+                </div>
+
+                <div class="status-message" id="machineStatusMessage"></div>
+            </div>
         </div>
     </div>
 
@@ -241,7 +317,9 @@
         // Import initPage dari common-ui.js
         import { initPage } from "./common-ui.js";
         // Import db dari firebase-config.js (dibutuhkan untuk Firestore ops)
-        import { db } from "./firebase-config.js";
+        import {
+            db
+        } from "./firebase-config.js";
         import {
             doc,
             getDoc,
@@ -249,32 +327,51 @@
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
         // auth dan onAuthStateChanged tidak perlu diimpor/digunakan di sini karena sudah dihandle oleh initPage di common-ui.js
 
+        // --- Variabel Global ---
+        let globalMesinList = {}; // Akan menyimpan daftar mesin dari mesin.json atau upload JSON
+
         // Panggil initPage saat DOM siap
         document.addEventListener('DOMContentLoaded', () => {
             initPage(
-                "Pengaturan Sistem",     // pageTitle
-                "adminSettingsContainer", // mainContentId
-                "super_admin"            // requiredRole
+                "Pengaturan Sistem & Mesin", // pageTitle
+                "adminSettingsContainer",   // mainContentId (untuk kartu kiri sebagai fokus utama jika ada satu)
+                "super_admin"               // requiredRole
             );
+            loadSettings(); // Muat pengaturan sistem saat halaman dimuat
+            loadMachinesDefault(); // Muat daftar mesin default (mesin.json)
         });
 
+        // --- Elemen DOM Sisi Kiri (Pengaturan Sistem) ---
         const offlineExpiryDateInput = document.getElementById('offlineExpiryDateInput');
         const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-        const statusMessage = document.getElementById('statusMessage');
-        // adminSettingsContainer tidak perlu diakses di sini lagi, karena initPage yang mengelola display-nya
+        const systemStatusMessage = document.getElementById('systemStatusMessage');
 
-        // --- Konstanta untuk lokasi dokumen pengaturan ---
+        // --- Elemen DOM Sisi Kanan (Pengaturan Mesin) ---
+        const jsonFileInput = document.getElementById('jsonFile');
+        const mesinManualInput = document.getElementById('mesinManualInput');
+        const mesinDatalist = document.getElementById('mesinDatalist');
+        const baseUrlMachineInput = document.getElementById('baseUrlMachine');
+        const machineSetDateTimeInput = document.getElementById('machineSetDateTime');
+        const machineStatusMessage = document.getElementById('machineStatusMessage');
+
+        // --- Konstanta untuk lokasi dokumen pengaturan Firestore ---
         const SETTINGS_DOC_REF = doc(db, "settings", "app_config"); // Koleksi 'settings', dokumen 'app_config'
 
-        // --- Fungsi Helper ---
-        function setStatus(message, type = 'info') {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`;
+        // --- Fungsi Helper Umum ---
+        function setStatus(messageElement, message, type = 'info') {
+            messageElement.textContent = message;
+            messageElement.className = `status-message ${type}`;
         }
 
-        // --- Fungsi untuk Memuat Pengaturan ---
+        function openNewWindow(url) {
+            window.open(url, '_blank', 'width=800,height=600'); // Ukuran window yang lebih layak
+        }
+
+        // --- Fungsi Sisi Kiri: Pengaturan Sistem ---
+
+        // Fungsi untuk Memuat Pengaturan dari Firestore
         async function loadSettings() {
-            setStatus("Memuat pengaturan sistem...", 'info');
+            setStatus(systemStatusMessage, "Memuat pengaturan sistem...", 'info');
             try {
                 const settingsSnap = await getDoc(SETTINGS_DOC_REF);
                 if (settingsSnap.exists()) {
@@ -283,33 +380,33 @@
                     if (settings.OFFLINE_EXPIRY_DATE) {
                         offlineExpiryDateInput.value = settings.OFFLINE_EXPIRY_DATE; // Format YYYY-MM-DD
                     }
-                    setStatus("Pengaturan berhasil dimuat.", 'success');
+                    setStatus(systemStatusMessage, "Pengaturan sistem berhasil dimuat.", 'success');
                 } else {
-                    setStatus("Dokumen pengaturan belum ada. Menggunakan nilai default.", 'info');
+                    setStatus(systemStatusMessage, "Dokumen pengaturan sistem belum ada. Menggunakan nilai default.", 'info');
                     offlineExpiryDateInput.value = ''; // Biarkan kosong
                 }
             } catch (error) {
-                setStatus(`Gagal memuat pengaturan: ${error.message}`, 'error');
+                setStatus(systemStatusMessage, `Gagal memuat pengaturan sistem: ${error.message}`, 'error');
                 console.error("Error loading settings:", error);
             }
         }
 
-        // --- Fungsi untuk Menyimpan Pengaturan ---
+        // Fungsi untuk Menyimpan Pengaturan ke Firestore
         saveSettingsBtn.addEventListener('click', async () => {
             const newOfflineExpiryDate = offlineExpiryDateInput.value;
 
             if (!newOfflineExpiryDate) {
-                setStatus("Tanggal kedaluwarsa offline tidak boleh kosong.", 'error');
+                setStatus(systemStatusMessage, "Tanggal kedaluwarsa offline tidak boleh kosong.", 'error');
                 return;
             }
 
             // Validasi format tanggal
             if (!/^\d{4}-\d{2}-\d{2}$/.test(newOfflineExpiryDate)) {
-                setStatus("Format tanggal tidak valid. Gunakan YYYY-MM-DD.", 'error');
+                setStatus(systemStatusMessage, "Format tanggal tidak valid. Gunakan YYYY-MM-DD.", 'error');
                 return;
             }
 
-            setStatus("Menyimpan pengaturan...", 'info');
+            setStatus(systemStatusMessage, "Menyimpan pengaturan sistem...", 'info');
             saveSettingsBtn.disabled = true; // Nonaktifkan tombol saat menyimpan
 
             try {
@@ -318,14 +415,147 @@
                     lastUpdated: new Date().toISOString() // Tambahkan timestamp update
                 }, { merge: true }); // Gunakan merge:true agar tidak menimpa field lain jika ada
 
-                setStatus("Pengaturan berhasil disimpan!", 'success');
+                setStatus(systemStatusMessage, "Pengaturan sistem berhasil disimpan!", 'success');
             } catch (error) {
-                setStatus(`Gagal menyimpan pengaturan: ${error.message}`, 'error');
+                setStatus(systemStatusMessage, `Gagal menyimpan pengaturan sistem: ${error.message}`, 'error');
                 console.error("Error saving settings:", error);
             } finally {
                 saveSettingsBtn.disabled = false; // Aktifkan kembali tombol
             }
         });
+
+
+        // --- Fungsi Sisi Kanan: Pengaturan Mesin ---
+
+        // Memuat daftar mesin dari file JSON yang diupload
+        window.handleFileUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                setStatus(machineStatusMessage, "Tidak ada file yang dipilih.", 'info');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    globalMesinList = JSON.parse(e.target.result);
+                    populateDatalistMesin();
+                    setStatus(machineStatusMessage, `Data mesin berhasil dimuat dari file JSON! (${Object.keys(globalMesinList).length} mesin)`, 'success');
+                } catch (err) {
+                    setStatus(machineStatusMessage, `JSON tidak valid: ${err.message}`, 'error');
+                    console.error("Error parsing JSON file:", err);
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        // Memuat daftar mesin dari mesin.json secara default
+        window.loadMachinesDefault = async function() {
+            setStatus(machineStatusMessage, "Memuat daftar mesin default...", 'info');
+            try {
+                const resp = await fetch('mesin.json'); // Asumsi mesin.json ada di root server Anda
+                if (!resp.ok) {
+                    throw new Error(`HTTP error! status: ${resp.status}`);
+                }
+                globalMesinList = await resp.json();
+                populateDatalistMesin();
+                setStatus(machineStatusMessage, `Daftar mesin default berhasil dimuat! (${Object.keys(globalMesinList).length} mesin)`, 'success');
+            } catch (e) {
+                setStatus(machineStatusMessage, "Gagal memuat mesin.json (normal jika file tidak ada atau tanpa server Flask/lokal). Gunakan upload JSON.", 'info');
+                console.warn("Gagal memuat mesin.json:", e);
+                globalMesinList = {}; // Pastikan kosong jika gagal load
+                populateDatalistMesin(); // Kosongkan datalist
+            }
+        };
+
+        // Mengisi datalist untuk input nama mesin
+        function populateDatalistMesin() {
+            mesinDatalist.innerHTML = "";
+            Object.keys(globalMesinList).forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m; // Value dan textContent sama untuk option di datalist
+                mesinDatalist.appendChild(opt);
+            });
+        }
+
+        // Mengatur waktu input datetime-local dengan waktu saat ini
+        window.setMachineCurrentDateTime = function() {
+            const now = new Date();
+            // Format ke YYYY-MM-DDTHH:mm untuk input type="datetime-local"
+            const formattedDateTime = now.getFullYear() + "-" +
+                String(now.getMonth() + 1).padStart(2, '0') + "-" +
+                String(now.getDate()).padStart(2, '0') + "T" +
+                String(now.getHours()).padStart(2, '0') + ":" +
+                String(now.getMinutes()).padStart(2, '0');
+            machineSetDateTimeInput.value = formattedDateTime;
+            setStatus(machineStatusMessage, "Waktu saat ini berhasil diatur.", 'info');
+        };
+
+        // Mengirim permintaan untuk memperbarui waktu mesin
+        window.updateMachineDateTime = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            const mesin = mesinManualInput.value.trim(); // Ambil dari input manual/datalist
+            const datetimeRaw = machineSetDateTimeInput.value;
+
+            if (!mesin) {
+                setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Update Waktu!", 'error');
+                return;
+            }
+            if (!datetimeRaw) {
+                setStatus(machineStatusMessage, "Tanggal & Waktu harus diisi!", 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+
+            // Konversi format datetime-local ke format yang diharapkan server (YYYY-MM-DD HH:MM:SS)
+            // Kita tambahkan ":00" untuk detik, karena datetime-local tidak menyertakan detik secara default
+            const datetime = datetimeRaw.replace('T', ' ') + ':00'; 
+            
+            let url = `${baseUrl}/ubah_waktu?mesin=${mesin}&datetime=${encodeURIComponent(datetime)}`;
+            setStatus(machineStatusMessage, `Mengirim permintaan update waktu ke ${mesin}...`, 'info');
+            openNewWindow(url);
+        };
+
+        // Mengirim permintaan untuk melihat absensi mesin
+        window.viewMachineAbsensi = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            const mesin = mesinManualInput.value.trim(); // Ambil dari input manual/datalist
+
+            if (!mesin) {
+                setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Lihat Absensi!", 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+
+            let url = `${baseUrl}/lihat_absensi?mesin=${mesin}`;
+            setStatus(machineStatusMessage, `Membuka absensi untuk ${mesin}...`, 'info');
+            openNewWindow(url);
+        };
+
+        // Mengirim permintaan untuk mendownload absensi semua mesin
+        window.downloadAllMachinesAbsensi = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            if (!Object.keys(globalMesinList).length) {
+                setStatus(machineStatusMessage, "Belum ada data mesin untuk Download Semua!", 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+
+            setStatus(machineStatusMessage, "Membuka tab baru untuk setiap mesin yang akan didownload...", 'info');
+            Object.keys(globalMesinList).forEach(m => {
+                let url = `${baseUrl}/lihat_absensi?mesin=${m}`;
+                openNewWindow(url);
+            });
+            setStatus(machineStatusMessage, "Permintaan download semua absensi dikirim. Periksa tab baru di browser Anda.", 'success');
+        };
     </script>
 </body>
 </html>
