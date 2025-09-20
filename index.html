@@ -129,11 +129,15 @@ import {
   doc,
   setDoc,
   serverTimestamp,
-  query,
-  collection,
-  where,
-  getDocs
+  // query, // Tidak lagi digunakan untuk login
+  // collection, // Tidak lagi digunakan untuk login
+  // where, // Tidak lagi digunakan untuk login
+  // getDocs, // Tidak lagi digunakan untuk login
+  getDoc // Ini akan digunakan setelah login untuk mengambil data user
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+// Tambahkan import untuk Firebase Functions
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js";
+
 
 window.showRegister = () => {
     document.getElementById("loginForm").classList.add("hidden");
@@ -152,45 +156,64 @@ loginPasswordInput.addEventListener("keydown", (event) => {
         loginBtn.click(); 
     }
 });
-    // --- Username auto-lowercase & no-space di LOGIN ---
 const loginUsernameInput = document.getElementById("login-username");
 loginUsernameInput.addEventListener("input", () => {
   loginUsernameInput.value = loginUsernameInput.value.replace(/\s+/g, "").toLowerCase();
 });
 loginBtn.addEventListener("click", async () => {
     const username = loginUsernameInput.value.trim(); 
-
-    //const username = document.getElementById("login-username").value.trim().toLowerCase();
-     // --- const username = document.getElementById("login-username").value.trim();
     const password = document.getElementById("login-password").value;
     const msgEl = document.getElementById("loginMessage");
     msgEl.textContent = "";
+
     try {
         if (!username || !password) throw new Error("Isi username & password.");
-        const q = query(collection(db, "users"), where("username", "==", username));
-        const snap = await getDocs(q);
-        if (snap.empty) throw new Error("Username tidak ditemukan.");
-        const userData = snap.docs[0].data();
-        const email = userData.email;
+
+        // --- Perubahan dimulai di sini ---
+        // 1. Panggil Cloud Function untuk mendapatkan email berdasarkan username
+        const functions = getFunctions();
+        const getEmailByUsernameCallable = httpsCallable(functions, 'getEmailByUsername');
+        const result = await getEmailByUsernameCallable({ username: username });
+        const email = result.data.email; // Ambil email dari hasil Cloud Function
+
+        // 2. Gunakan email yang didapat dari Cloud Function untuk signInWithEmailAndPassword
         await signInWithEmailAndPassword(auth, email, password);
         
-        // --- START MODIFIKASI UNTUK ROLE ---
-        // Simpan peran pengguna di localStorage
-        // Default ke 'user' jika field 'role' tidak ada
-        localStorage.setItem("userRole", userData.role || "user"); 
-        // --- END MODIFIKASI UNTUK ROLE ---
+        // 3. Setelah login berhasil, ambil data profil pengguna dari koleksi 'users'
+        //    menggunakan UID yang didapat dari Firebase Authentication.
+        const currentUser = auth.currentUser;
+        if (!currentUser) throw new Error("Gagal mendapatkan informasi pengguna yang login.");
 
-        if (userData.approved !== true) throw new Error("Akun belum di-approve admin.");
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef); // Menggunakan getDoc bukan getDocs
+
+        if (!userDocSnap.exists()) {
+            // Ini seharusnya tidak terjadi jika register sudah membuat dokumen user.
+            // Namun, sebagai penanganan kesalahan, log out pengguna dan beri pesan.
+            await signOut(auth);
+            throw new Error("Profil pengguna tidak ditemukan di Firestore. Harap hubungi administrator.");
+        }
+        
+        const userData = userDocSnap.data();
+
+        // --- Logika berikutnya tetap sama ---
+        localStorage.setItem("userRole", userData.role || "user"); 
+        if (userData.approved !== true) {
+            await signOut(auth); // Log out jika belum di-approve
+            throw new Error("Akun belum di-approve admin.");
+        }
         localStorage.setItem("loginTime", Date.now());
         msgEl.textContent = "Login sukses. Mengarahkan...";
         msgEl.className = "msg ok";
         setTimeout(() => window.location.href = "home.html", 800);
+
     } catch (e) {
         msgEl.textContent = e.message || "Login gagal.";
         msgEl.className = "msg error";
+        console.error("Login Error:", e); // Tambahkan console.error untuk debugging
     }
 });
-// --- Username auto-lowercase & no-space di REGISTER ---
+
 const regUsernameInput = document.getElementById("reg-username");
 regUsernameInput.addEventListener("input", () => {
   regUsernameInput.value = regUsernameInput.value.replace(/\s+/g, "").toLowerCase();
@@ -203,21 +226,20 @@ registerBtn.addEventListener("click", async () => {
     msgEl.textContent = "";
     try {
         if (!username || !email || !password) throw new Error("Isi semua field.");
-
-        // 🔎 Validasi panjang username (3 - 16 karakter, hanya huruf/angka)
         const usernameRegex = /^[a-z0-9]{3,16}$/;
         if (!usernameRegex.test(username)) {
             throw new Error("Username harus 3-16 karakter, hanya huruf & angka (tanpa spasi).");
         }
-
-        // 🔎 Cek apakah username sudah dipakai
+        // Query ini untuk pendaftaran masih akan bermasalah jika allow list di Firestore rules Anda 'false'.
+        // Untuk pendaftaran, Anda mungkin ingin tetap menggunakan Cloud Function atau
+        // menggunakan Authentication dengan custom claims untuk menghindari query list.
+        // Untuk saat ini, asumsikan ini berjalan di lingkungan di mana aturan ini tidak terpicu
+        // atau Anda akan memperbaikinya nanti (misalnya dengan Cloud Function juga untuk cek username).
         const q = query(collection(db, "users"), where("username", "==", username));
         const snap = await getDocs(q);
         if (!snap.empty) {
             throw new Error("Username sudah dipakai, pilih yang lain.");
         }
-
-        // ✅ Kalau username aman, baru bikin akun
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         const uid = cred.user.uid;
 
@@ -250,6 +272,9 @@ forgotPasswordBtn.addEventListener("click", async () => {
     const email = prompt("Masukkan email untuk reset password:");
     if (!email) return;
     try {
+        // Untuk reset password, Anda memang harus menggunakan email.
+        // Jika Anda ingin pengguna bisa reset password dengan username,
+        // Anda perlu Cloud Function serupa untuk mendapatkan email terlebih dahulu.
         await sendPasswordResetEmail(auth, email);
         alert("Link reset password sudah dikirim ke " + email + "\n\n📌 Jika email tidak masuk di Inbox, coba periksa folder Junk atau Spam.");
     } catch (e) {
@@ -260,8 +285,3 @@ forgotPasswordBtn.addEventListener("click", async () => {
 <script type="module" src="analytics.js"></script>
 </body>
 </html>
-
-
-
-
-
