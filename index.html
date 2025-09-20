@@ -153,7 +153,8 @@ loginPasswordInput.addEventListener("keydown", (event) => {
     }
 });
 loginBtn.addEventListener("click", async () => {
-    const username = document.getElementById("login-username").value.trim();
+    const username = document.getElementById("login-username").value.trim().toLowerCase();
+     // --- const username = document.getElementById("login-username").value.trim();
     const password = document.getElementById("login-password").value;
     const msgEl = document.getElementById("loginMessage");
     msgEl.textContent = "";
@@ -184,7 +185,8 @@ loginBtn.addEventListener("click", async () => {
 });
 
 registerBtn.addEventListener("click", async () => {
-    const username = document.getElementById("reg-username").value.trim();
+    const username = document.getElementById("reg-username").value.trim().toLowerCase();
+    // const username = document.getElementById("reg-username").value.trim();
     const email = document.getElementById("reg-email").value.trim();
     const password = document.getElementById("reg-password").value;
     const msgEl = document.getElementById("registerMessage");
@@ -242,5 +244,6 @@ forgotPasswordBtn.addEventListener("click", async () => {
 <script type="module" src="analytics.js"></script>
 </body>
 </html>
+
 
 
