@@ -190,29 +190,42 @@ registerBtn.addEventListener("click", async () => {
     const msgEl = document.getElementById("registerMessage");
     msgEl.textContent = "";
     try {
-        if (!username || !email || !password) throw new Error("Isi semua field.");
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        const uid = cred.user.uid;
-        await setDoc(doc(db, "pendaftar", uid), {
-            username,
-            email,
-            password, // PERHATIAN: MENYIMPAN PASSWORD DI FIRESTORE BUKAN PRAKTIK KEAMANAN YANG BAIK! HAPUS INI.
-            createdAt: serverTimestamp()
-        });
-        await setDoc(doc(db, "users", uid), {
-            username,
-            email,
-            approved: false,
-            role: "user", // --- TAMBAHKAN ROLE DEFAULT SAAT PENDAFTARAN ---
-            createdAt: serverTimestamp()
-        });
-        await signOut(auth);
-        msgEl.textContent = "Pendaftaran berhasil. Tunggu approval admin.";
-        msgEl.className = "msg ok";
-    } catch (e) {
-        msgEl.textContent = e.message || "Pendaftaran gagal.";
-        msgEl.className = "msg error";
+    if (!username || !email || !password) throw new Error("Isi semua field.");
+
+    // 🔎 Cek apakah username sudah dipakai
+    const q = query(collection(db, "users"), where("username", "==", username));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+        throw new Error("Username sudah dipakai, pilih yang lain.");
     }
+
+    // ✅ Kalau username aman, baru bikin akun
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+
+    await setDoc(doc(db, "pendaftar", uid), {
+        username,
+        email,
+        password, // ⚠️ disarankan dihapus, jangan simpan password ke Firestore
+        createdAt: serverTimestamp()
+    });
+
+    await setDoc(doc(db, "users", uid), {
+        username,
+        email,
+        approved: false,
+        role: "user",
+        createdAt: serverTimestamp()
+    });
+
+    await signOut(auth);
+    msgEl.textContent = "Pendaftaran berhasil. Tunggu approval admin.";
+    msgEl.className = "msg ok";
+} catch (e) {
+    msgEl.textContent = e.message || "Pendaftaran gagal.";
+    msgEl.className = "msg error";
+}
+
 });
 
 forgotPasswordBtn.addEventListener("click", async () => {
@@ -229,4 +242,5 @@ forgotPasswordBtn.addEventListener("click", async () => {
 <script type="module" src="analytics.js"></script>
 </body>
 </html>
+
 
