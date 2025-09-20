@@ -152,8 +152,15 @@ loginPasswordInput.addEventListener("keydown", (event) => {
         loginBtn.click(); 
     }
 });
+    // --- Username auto-lowercase & no-space di LOGIN ---
+const loginUsernameInput = document.getElementById("login-username");
+loginUsernameInput.addEventListener("input", () => {
+  loginUsernameInput.value = loginUsernameInput.value.replace(/\s+/g, "").toLowerCase();
+});
 loginBtn.addEventListener("click", async () => {
-    const username = document.getElementById("login-username").value.trim().toLowerCase();
+    const username = loginUsernameInput.value.trim(); 
+
+    //const username = document.getElementById("login-username").value.trim().toLowerCase();
      // --- const username = document.getElementById("login-username").value.trim();
     const password = document.getElementById("login-password").value;
     const msgEl = document.getElementById("loginMessage");
@@ -183,52 +190,60 @@ loginBtn.addEventListener("click", async () => {
         msgEl.className = "msg error";
     }
 });
-
+// --- Username auto-lowercase & no-space di REGISTER ---
+const regUsernameInput = document.getElementById("reg-username");
+regUsernameInput.addEventListener("input", () => {
+  regUsernameInput.value = regUsernameInput.value.replace(/\s+/g, "").toLowerCase();
+});
 registerBtn.addEventListener("click", async () => {
     const username = document.getElementById("reg-username").value.trim().toLowerCase();
-    // const username = document.getElementById("reg-username").value.trim();
     const email = document.getElementById("reg-email").value.trim();
     const password = document.getElementById("reg-password").value;
     const msgEl = document.getElementById("registerMessage");
     msgEl.textContent = "";
     try {
-    if (!username || !email || !password) throw new Error("Isi semua field.");
+        if (!username || !email || !password) throw new Error("Isi semua field.");
 
-    // 🔎 Cek apakah username sudah dipakai
-    const q = query(collection(db, "users"), where("username", "==", username));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-        throw new Error("Username sudah dipakai, pilih yang lain.");
+        // 🔎 Validasi panjang username (3 - 16 karakter, hanya huruf/angka)
+        const usernameRegex = /^[a-z0-9]{3,16}$/;
+        if (!usernameRegex.test(username)) {
+            throw new Error("Username harus 3-16 karakter, hanya huruf & angka (tanpa spasi).");
+        }
+
+        // 🔎 Cek apakah username sudah dipakai
+        const q = query(collection(db, "users"), where("username", "==", username));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            throw new Error("Username sudah dipakai, pilih yang lain.");
+        }
+
+        // ✅ Kalau username aman, baru bikin akun
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = cred.user.uid;
+
+        await setDoc(doc(db, "pendaftar", uid), {
+            username,
+            email,
+            createdAt: serverTimestamp()
+        });
+
+        await setDoc(doc(db, "users", uid), {
+            username,
+            email,
+            approved: false,
+            role: "user",
+            createdAt: serverTimestamp()
+        });
+
+        await signOut(auth);
+        msgEl.textContent = "Pendaftaran berhasil. Tunggu approval admin.";
+        msgEl.className = "msg ok";
+    } catch (e) {
+        msgEl.textContent = e.message || "Pendaftaran gagal.";
+        msgEl.className = "msg error";
     }
-
-    // ✅ Kalau username aman, baru bikin akun
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = cred.user.uid;
-
-    await setDoc(doc(db, "pendaftar", uid), {
-        username,
-        email,
-        password, // ⚠️ disarankan dihapus, jangan simpan password ke Firestore
-        createdAt: serverTimestamp()
-    });
-
-    await setDoc(doc(db, "users", uid), {
-        username,
-        email,
-        approved: false,
-        role: "user",
-        createdAt: serverTimestamp()
-    });
-
-    await signOut(auth);
-    msgEl.textContent = "Pendaftaran berhasil. Tunggu approval admin.";
-    msgEl.className = "msg ok";
-} catch (e) {
-    msgEl.textContent = e.message || "Pendaftaran gagal.";
-    msgEl.className = "msg error";
-}
-
 });
+
 
 forgotPasswordBtn.addEventListener("click", async () => {
     const email = prompt("Masukkan email untuk reset password:");
@@ -244,6 +259,7 @@ forgotPasswordBtn.addEventListener("click", async () => {
 <script type="module" src="analytics.js"></script>
 </body>
 </html>
+
 
 
 
