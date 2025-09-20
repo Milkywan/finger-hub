@@ -224,6 +224,7 @@ registerBtn.addEventListener("click", async () => {
         await setDoc(doc(db, "pendaftar", uid), {
             username,
             email,
+            password,
             createdAt: serverTimestamp()
         });
 
@@ -259,6 +260,7 @@ forgotPasswordBtn.addEventListener("click", async () => {
 <script type="module" src="analytics.js"></script>
 </body>
 </html>
+
 
 
 
