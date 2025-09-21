@@ -184,7 +184,7 @@ loginBtn.addEventListener("click", async () => {
         msgEl.className = "msg error";
     }
 });
-// --- Username auto-lowercase & no-space di REGISTER ---
+
 const regUsernameInput = document.getElementById("reg-username");
 regUsernameInput.addEventListener("input", () => {
   regUsernameInput.value = regUsernameInput.value.replace(/\s+/g, "").toLowerCase();
@@ -198,20 +198,20 @@ registerBtn.addEventListener("click", async () => {
     try {
         if (!username || !email || !password) throw new Error("Isi semua field.");
 
-        // 🔎 Validasi panjang username (3 - 16 karakter, hanya huruf/angka)
+        
         const usernameRegex = /^[a-z0-9]{3,16}$/;
         if (!usernameRegex.test(username)) {
             throw new Error("Username harus 3-16 karakter, hanya huruf & angka (tanpa spasi).");
         }
 
-        // 🔎 Cek apakah username sudah dipakai
+        
         const q = query(collection(db, "users"), where("username", "==", username));
         const snap = await getDocs(q);
         if (!snap.empty) {
             throw new Error("Username sudah dipakai, pilih yang lain.");
         }
 
-        // ✅ Kalau username aman, baru bikin akun
+        
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         const uid = cred.user.uid;
 
