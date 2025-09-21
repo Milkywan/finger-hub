@@ -301,7 +301,53 @@
             deleteDoc
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
         import { db } from "./firebase-config.js"; 
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js";
+async function loadUsers(searchTerm = '') {
+    setStatus("Memuat daftar pengguna...", 'info');
+    usersTableBody.innerHTML = '';
+    allUsersData = [];
 
+    try {
+        // Panggil Cloud Function untuk mendapatkan daftar pengguna
+        const functions = getFunctions();
+        const listUsersCallable = httpsCallable(functions, 'listUsersForAdmin');
+
+        // Kirim searchTerm ke Cloud Function
+        const result = await listUsersCallable({ searchTerm: searchTerm });
+        
+        if (!result.data || !result.data.users || result.data.users.length === 0) {
+            setStatus("Tidak ada pengguna ditemukan.", 'info');
+            return;
+        }
+
+        allUsersData = result.data.users.map(user => {
+            // Konversi Timestamp kembali ke Date object jika diperlukan
+            // Ini karena Admin SDK mengembalikan Timestamp, bukan Date object.
+            if (user.createdAt && user.createdAt._seconds) { // Contoh format Timestamp dari Admin SDK
+                 user.createdAt = new Date(user.createdAt._seconds * 1000 + user.createdAt._nanoseconds / 1000000);
+            }
+            return user;
+        });
+        
+        renderUsersTable(allUsersData);
+        setStatus(`Berhasil memuat ${allUsersData.length} pengguna.`, 'success');
+
+    } catch (error) {
+        // Tangani error dari Cloud Function, termasuk permission-denied
+        const errorMessage = error.message || "Terjadi kesalahan yang tidak diketahui.";
+        if (error.code === "permission-denied" || error.code === "unauthenticated") {
+            setStatus(`Akses ditolak: ${errorMessage}`, 'error');
+            console.error("Akses ditolak:", error.message);
+            // Anda mungkin ingin mengarahkan pengguna ke halaman login jika unauthenticated
+            if (error.code === "unauthenticated") {
+                setTimeout(() => window.location.href = "/", 3000);
+            }
+        } else {
+            setStatus(`Gagal memuat pengguna: ${errorMessage}`, 'error');
+            console.error("Error loading users via Cloud Function:", error);
+        }
+    }
+}
         // Panggil initPage saat DOM siap
         document.addEventListener('DOMContentLoaded', () => {
             initPage(
@@ -552,5 +598,6 @@
     </script>
 </body>
 </html>
+
 
 
