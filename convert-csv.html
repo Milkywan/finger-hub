@@ -6,10 +6,10 @@
   <link rel="icon" type="image/png" href="images/icon.png">
 
   <title>Konversi Xls → CSV/TXT</title>
-  <!-- Sertakan library SheetJS di sini -->
+  
   <script src="xlsx.full.min.js"></script> 
   <style>
-    /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
+    
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -18,11 +18,11 @@
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
-      min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
+      flex-direction: column; 
+      min-height: 100vh; 
     }
     
-    /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+    
     nav {
         display: flex; 
         justify-content: space-between; 
@@ -47,7 +47,7 @@
     }
     nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
 
-    /* Gaya untuk info user dan tombol logout di header */
+    
     .right-nav-items {
         display: flex;
         align-items: center;
@@ -58,7 +58,7 @@
         color: rgba(255, 255, 255, 0.8);
         white-space: nowrap; 
     }
-    nav .menu2 { /* Untuk tombol Logout */
+    nav .menu2 { 
         color: white;
         cursor: pointer;
         padding: 0.5rem 1rem;
@@ -72,39 +72,39 @@
         transform: translateY(-2px);
     }
 
-    /* --- WRAPPER KONTEN UTAMA --- */
+    
     .main-content-wrapper {
-        flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+        flex: 1; 
         display: flex;
         justify-content: center;
         align-items: center;
         padding: 2rem;
     }
 
-    /* --- GRID LAYOUT UNTUK DUA CARD --- */
+    
     .converter-grid {
-        display: flex; /* Menggunakan flexbox untuk layout horizontal */
-        gap: 2rem; /* Jarak antar card */
+        display: flex; 
+        gap: 2rem; 
         width: 100%;
-        max-width: 1200px; /* Batasi lebar keseluruhan grid */
-        justify-content: center; /* Pusatkan grid di tengah */
-        flex-wrap: wrap; /* Izinkan wrapping pada layar kecil */
+        max-width: 1200px; 
+        justify-content: center; 
+        flex-wrap: wrap; 
     }
 
-    /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
+    
     .container { 
-        background: rgba(255,255,255,0.1); /* Latar belakang transparan */
-        padding: 2rem; /* Padding lebih besar */
-        border-radius: 1rem; /* Border radius lebih besar */
-        width: 100%; /* Default 100% untuk mobile */
-        max-width: 550px; /* Batasi lebar card tunggal */
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
-        backdrop-filter: blur(8px); /* Efek blur */
-        animation: fadeIn .8s ease; /* Animasi fade in */
-        flex: 1; /* Biarkan flexbox mengatur lebar */
-        min-width: 300px; /* Lebar minimum sebelum wrap */
+        background: rgba(255,255,255,0.1); 
+        padding: 2rem; 
+        border-radius: 1rem; 
+        width: 100%; 
+        max-width: 550px; 
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+        backdrop-filter: blur(8px); 
+        animation: fadeIn .8s ease; 
+        flex: 1; 
+        min-width: 300px; 
     }
-    @keyframes fadeIn { /* Animasi fade in */
+    @keyframes fadeIn { 
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
@@ -114,13 +114,13 @@
       width: 100%; height: 200px;
       border: none; border-radius: 0.5rem;
       padding: 1rem; margin-top: 1rem;
-      font-family: monospace; resize: vertical; /* Allow vertical resize */
+      font-family: monospace; resize: vertical; 
       background: rgba(255,255,255,0.15); color: white;
     }
     input::placeholder,
-    textarea::placeholder { /* Menargetkan placeholder pada input dan textarea */
-    color: #cccccc; /* Contoh: warna abu-abu terang */
-    /* Atau rgba(255,255,255,0.8) jika ingin lebih terang dari default tapi tetap semi-transparan */
+    textarea::placeholder { 
+    color: #cccccc; 
+    
     }
     .options { text-align: center; margin-top: 1rem; }
     .options label { margin: 0 1rem; font-size: .95rem; }
@@ -141,20 +141,20 @@
     .progress-bar {
       height: 100%; width: 0%; background: #10b981; transition: width 0.3s ease;
     }
-    /* Status Message (Consistent with superadmin_settings.html) */
+    
     .status-message {
         margin-top: 15px;
         padding: 10px;
         border-radius: 5px;
         font-size: 14px;
         text-align: center;
-        display: none; /* Defaultnya tersembunyi */
+        display: none; 
     }
     .status-message.success { background-color: #10b981; color: white; display: block; }
     .status-message.error { background-color: #ef4444; color: white; display: block; }
     .status-message.info { background-color: #60a5fa; color: white; display: block; }
 
-    /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+    
     footer {
       text-align: center;
       padding: 1rem;
@@ -165,7 +165,7 @@
     footer a { color: white; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    /* --- Media Queries for Responsiveness (Konsisten di semua halaman) --- */
+    
     @media (max-width: 768px) {
         nav { 
             padding: 1rem; 
@@ -186,8 +186,8 @@
             margin-top: 10px;
         }
         .converter-grid {
-            flex-direction: column; /* Tumpuk card secara vertikal pada layar kecil */
-            align-items: center; /* Pusatkan card saat ditumpuk */
+            flex-direction: column; 
+            align-items: center; 
         }
     }
     @media (max-width: 600px) { .container { padding: 1rem; } }
@@ -195,15 +195,15 @@
   </style>
 </head>
 <body>
-  <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+  
   <div id="header-placeholder"></div> 
 
-  <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+  
   <div class="main-content-wrapper">
-    <!-- Grid utama untuk dua card converter -->
+    
     <div class="converter-grid">
 
-        <!-- Card 1: Konversi Data Absensi Mentah (Log-like) -->
+        
         <div class="container" id="rawConverterContainer">
             <h2>Konversi Absensi (Log Mentah)</h2>
             <p style="text-align:center;">Tempel data absensi dari log mesin atau upload file:</p>
@@ -223,11 +223,11 @@
             <div class="status-message" id="rawProgressStatus"></div>
         </div>
 
-        <!-- Card 2: Konversi Data Absensi Tabel (CSV/Excel) -->
+        
         <div class="container" id="structuredConverterContainer">
             <h2>Konversi Absensi (Tabel/CSV/Excel)</h2>
             <p style="text-align:center;">Tempel data tabel (dari Excel/CSV) atau <strong style="color: #a5b4fc;">upload file CSV/TXT/XLSX</strong>:</p>
-            <!-- Update accept attribute to include .xlsx -->
+            
             <input type="file" id="structuredFileInput" accept=".txt,.csv,.xlsx" style="display:none;" />
             <div style="text-align:center;">
               <label for="structuredFileInput" class="upload-label">📂 Upload File CSV/TXT/XLSX</label>
@@ -247,35 +247,35 @@
     </div>
   </div>
 
-  <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+  
   <div id="footer-placeholder"></div> 
 
 <script type="module">
-    // Import initPage dari common-ui.js
+    
     import { initPage } from "./common-ui.js";
 
-    // Panggil initPage saat DOM siap
+    
     document.addEventListener('DOMContentLoaded', () => {
       initPage(
-          "Converter Xls",     // pageTitle (akan jadi active di navigasi)
-          "rawConverterContainer", // mainContentId (ID dari div container utama halaman ini, bisa salah satu)
-          "user"                   // requiredRole (semua user bisa akses)
+          "Converter Xls",     
+          "rawConverterContainer", 
+          "user"                   
       );
     });
 
-    // --- Helper Functions (Shared) ---
+    
     function setStatus(messageElement, message, type = 'info', timeout = 5000) {
         messageElement.textContent = message;
         messageElement.className = `status-message ${type}`;
         if (timeout > 0) {
             setTimeout(() => {
-                messageElement.className = 'status-message'; // Reset class untuk menyembunyikan
+                messageElement.className = 'status-message'; 
                 messageElement.textContent = '';
             }, timeout);
         }
     }
 
-    // --- CARD 1: RAW CONVERTER FUNCTIONS ---
+    
     const rawInputData = document.getElementById('rawInputData');
     const rawFileInput = document.getElementById('rawFileInput');
     const rawProgressContainer = document.getElementById('rawProgressContainer');
@@ -284,7 +284,7 @@
 
     const rawStatusMap = { "1": "C/Masuk", "2": "C/Keluar", "3": "Lembur Masuk", "4": "Lembur Keluar" };
 
-    // Generic file handling for text-based files (for raw converter)
+    
     function handleRawFile(file) {
         if (!file) {
             setStatus(rawProgressStatus, 'Tidak ada file yang dipilih.', 'info');
@@ -325,12 +325,12 @@
         return;
       }
 
-      setStatus(rawProgressStatus, 'Memulai konversi...', 'info', 0); // Keep status until done
+      setStatus(rawProgressStatus, 'Memulai konversi...', 'info', 0); 
 
       setTimeout(() => {
         setStatus(rawProgressStatus, 'Memproses data...');
         const lines = rawText.split('\n');
-        let outputContent = ['NIK,NAMA,Waktu,Status']; // Header awal
+        let outputContent = ['NIK,NAMA,Waktu,Status']; 
 
         lines.forEach(line => {
           const nik = (line.match(/User ID:\s*([^,]+)/) || [])[1]?.trim() || "";
@@ -338,16 +338,16 @@
           let waktu = (line.match(/Waktu:\s*([^,]+)/) || [])[1]?.trim() || "";
           let status = (line.match(/Status:\s*(\d+)/) || [])[1]?.trim() || "";
 
-          // Convert YYYY-MM-DD HH:MM:SS to DD/MM/YYYY HH:MM
+          
           if (waktu.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
             const [datePart, timePart] = waktu.split(' ');
             const [y, m, d] = datePart.split('-');
-            const [hh, mm] = timePart.split(':'); // ignore seconds
+            const [hh, mm] = timePart.split(':'); 
             waktu = `${d}/${m}/${y} ${hh}:${mm}`;
           }
-          status = rawStatusMap[status] || "C/Masuk"; // Default if not found
+          status = rawStatusMap[status] || "C/Masuk"; 
 
-          // Basic CSV quoting for name if it contains commas
+          
           const quotedNama = nama.includes(',') ? `"${nama.replace(/"/g, '""')}"` : nama;
           outputContent.push(`${nik},${quotedNama},${waktu},${status}`);
         });
@@ -374,14 +374,14 @@
       }, 500);
     };
 
-    // --- CARD 2: STRUCTURED CONVERTER FUNCTIONS ---
+    
     const structuredInputData = document.getElementById('structuredInputData');
     const structuredFileInput = document.getElementById('structuredFileInput');
     const structuredProgressContainer = document.getElementById('structuredProgressContainer');
     const structuredProgressBar = document.getElementById('structuredProgressBar');
     const structuredProgressStatus = document.getElementById('structuredProgressStatus');
 
-    // Helper to update progress specific to this card
+    
     function updateCardProgress(container, bar, statusEl, percent, text) {
         container.style.display = 'block';
         statusEl.style.display = 'block';
@@ -389,7 +389,7 @@
         statusEl.textContent = text + ` (${percent}%)`;
     }
 
-    // New handler for structured files, including XLSX
+    
     function handleStructuredFile(file) {
         if (!file) {
             setStatus(structuredProgressStatus, 'Tidak ada file yang dipilih.', 'info');
@@ -415,7 +415,7 @@
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
                     
-                    // Convert to CSV string, which our existing logic can then parse
+                    
                     const csvData = XLSX.utils.sheet_to_csv(worksheet);
                     structuredInputData.value = csvData;
 
@@ -434,8 +434,8 @@
                     structuredProgressStatus.style.display = 'none';
                 }
             };
-            reader.readAsArrayBuffer(file); // Read XLSX as ArrayBuffer
-        } else { // .csv or .txt files
+            reader.readAsArrayBuffer(file); 
+        } else { 
             reader.onload = evt => {
                 structuredInputData.value = evt.target.result;
                 updateCardProgress(structuredProgressContainer, structuredProgressBar, structuredProgressStatus, 100, 'File berhasil dibaca ✔️');
@@ -445,7 +445,7 @@
                 }, 1000);
                 setStatus(structuredProgressStatus, 'File berhasil dibaca!', 'success');
             };
-            reader.readAsText(file); // Read CSV/TXT as text
+            reader.readAsText(file); 
         }
     }
 
@@ -457,17 +457,17 @@
       handleStructuredFile(e.dataTransfer.files[0]);
     });
 
-    // Fungsi untuk mendeteksi delimiter input (tab atau koma)
+    
     function detectDelimiter(line) {
         const commaCount = (line.match(/,/g) || []).length;
         const tabCount = (line.match(/\t/g) || []).length;
         if (tabCount > 0 && tabCount >= commaCount) {
             return '\t';
         }
-        return ','; // Default ke koma jika tidak ada tab atau tab lebih sedikit
+        return ','; 
     }
 
-    // Helper function to parse a line based on delimiter (handles simple CSV/TSV)
+    
     function parseCsvOrTabLine(line, delimiter) {
         if (delimiter === ',') {
             const cells = [];
@@ -478,7 +478,7 @@
                 if (char === '"') {
                     if (i + 1 < line.length && line[i+1] === '"') { 
                         currentCell += '"';
-                        i++; // Skip the next quote
+                        i++; 
                     } else {
                         inQuote = !inQuote;
                     }
@@ -491,7 +491,7 @@
             }
             cells.push(currentCell.trim()); 
             return cells;
-        } else { // Assume tab-separated
+        } else { 
             return line.split(delimiter).map(cell => cell.trim());
         }
     }
@@ -503,7 +503,7 @@
         return;
       }
 
-      setStatus(structuredProgressStatus, 'Memulai konversi...', 'info', 0); // Keep status until done
+      setStatus(structuredProgressStatus, 'Memulai konversi...', 'info', 0); 
 
       setTimeout(() => {
           setStatus(structuredProgressStatus, 'Memproses data baris demi baris...');
@@ -515,7 +515,7 @@
 
           const inputDelimiter = detectDelimiter(lines[0]);
           const outputMode = document.querySelector('input[name="structuredMode"]:checked').value;
-          const outputDelimiter = (outputMode === 'csv') ? ',' : '\t'; // Tab for TXT
+          const outputDelimiter = (outputMode === 'csv') ? ',' : '\t'; 
 
           let outputContent = [];
           let header = parseCsvOrTabLine(lines[0], inputDelimiter).map(h => h.trim());

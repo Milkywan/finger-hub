@@ -6,9 +6,9 @@
     <link rel="icon" type="image/png" href="images/icon.png">
 
     <title>Kelola Pengguna</title>
-    <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
+    
     <style>
-        /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
+        
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -17,11 +17,11 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
-            min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
+            flex-direction: column; 
+            min-height: 100vh; 
         }
         
-        /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+        
         nav {
             display: flex; 
             justify-content: space-between; 
@@ -46,7 +46,7 @@
         }
         nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
 
-        /* Gaya untuk info user dan tombol logout di header */
+        
         .right-nav-items {
             display: flex;
             align-items: center;
@@ -57,7 +57,7 @@
             color: rgba(255, 255, 255, 0.8);
             white-space: nowrap; 
         }
-        nav .menu2 { /* Untuk tombol Logout */
+        nav .menu2 { 
             color: white;
             cursor: pointer;
             padding: 0.5rem 1rem;
@@ -71,40 +71,40 @@
             transform: translateY(-2px);
         }
 
-        /* --- WRAPPER KONTEN UTAMA --- */
+        
         .main-content-wrapper {
-            flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+            flex: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 2rem;
         }
 
-        /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
+        
         .container { 
-            background: rgba(255,255,255,0.1); /* Latar belakang transparan */
-            padding: 2rem; /* Padding lebih besar */
-            border-radius: 1rem; /* Border radius lebih besar */
+            background: rgba(255,255,255,0.1); 
+            padding: 2rem; 
+            border-radius: 1rem; 
             width: 100%;
-            max-width: 1000px; /* Pertahankan lebar untuk tabel pengguna */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
-            backdrop-filter: blur(8px); /* Efek blur */
-            animation: fadeIn .8s ease; /* Animasi fade in */
+            max-width: 1000px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+            backdrop-filter: blur(8px); 
+            animation: fadeIn .8s ease; 
         }
-        @keyframes fadeIn { /* Animasi fade in */
+        @keyframes fadeIn { 
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- HEADINGS --- */
-        h2 { /* Mengganti h1 menjadi h2 untuk konsistensi */
+        
+        h2 { 
             text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
             font-size: 26px;
         }
 
-        /* --- FORM CONTROLS --- */
+        
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -115,12 +115,12 @@
         }
         input[type="text"] {
             width: 100%;
-            padding: .75rem; /* Padding baru */
-            margin-top: .5rem; /* Margin baru */
-            border-radius: .5rem; /* Border radius baru */
+            padding: .75rem; 
+            margin-top: .5rem; 
+            border-radius: .5rem; 
             border: none;
-            background: rgba(255,255,255,0.15); /* Latar belakang transparan */
-            color: white; /* Warna teks putih */
+            background: rgba(255,255,255,0.15); 
+            color: white; 
             box-sizing: border-box;
             max-width: 300px;
         }
@@ -128,23 +128,23 @@
             color: rgba(255,255,255,0.6);
         }
         
-        /* --- BUTTONS --- */
-        .btn { /* Gaya dasar tombol */
-            width: auto; /* Otomatis menyesuaikan konten */
-            padding: .75rem; /* Padding baru */
-            margin-top: .75rem; /* Margin baru */
+        
+        .btn { 
+            width: auto; 
+            padding: .75rem; 
+            margin-top: .75rem; 
             border: none;
-            border-radius: .5rem; /* Border radius baru */
+            border-radius: .5rem; 
             font-weight: bold;
             cursor: pointer;
             transition: transform .2s, box-shadow .2s;
-            font-size: 15px; /* Pertahankan ukuran font */
+            font-size: 15px; 
         }
-        .btn:hover { /* Efek hover baru */
+        .btn:hover { 
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
-        /* Specific button colors */
+        
         .btn-primary { background: #4f46e5; color: #fff; }
         .btn-primary:hover { background: #4338ca; }
         .btn-danger { background: #ef4444; color: #fff; }
@@ -152,7 +152,7 @@
         .btn-info { background: #3b82f6; color: #fff; }
         .btn-info:hover { background: #2563eb; }
 
-        /* --- STATUS MESSAGE --- */
+        
         .status-message {
             margin-top: 15px;
             padding: 10px;
@@ -164,7 +164,7 @@
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
 
-        /* --- DATA TABLE --- */
+        
         .data-table-container {
             margin-top: 20px;
             background: rgba(255,255,255,0.1);
@@ -202,7 +202,7 @@
             font-size: 13px;
         }
         td select option {
-            background: #4f46e5; /* Background options dropdown */
+            background: #4f46e5; 
             color: white;
         }
         td button {
@@ -212,7 +212,7 @@
             border-radius: 6px;
         }
 
-        /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+        
         footer {
             text-align: center;
             padding: 1rem;
@@ -223,7 +223,7 @@
         footer a { color: white; text-decoration: none; }
         footer a:hover { text-decoration: underline; }
 
-        /* --- Media Queries for Responsiveness --- */
+        
         @media (max-width: 768px) {
             nav { padding: 1rem; flex-direction: column; }
             nav .menu { margin-top: 10px; }
@@ -243,21 +243,21 @@
     </style>
 </head>
 <body>
-    <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+    
     <div id="header-placeholder"></div> 
 
-    <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+    
     <div class="main-content-wrapper">
-        <!-- Konten halaman spesifik (sekarang menggunakan id "adminContainer" dan class "container") -->
+        
         <div class="container" id="adminContainer">
-            <h2>Kelola Pengguna</h2> <!-- Mengganti h1 menjadi h2 -->
+            <h2>Kelola Pengguna</h2> 
 
             <div class="controls">
                 <input type="text" id="searchUserInput" placeholder="Cari berdasarkan username/email...">
                 <button class="btn btn-primary" id="searchUserBtn">Cari</button>
                 <button class="btn btn-info" id="refreshUsersBtn">Refresh Data</button>
-                <!-- Tombol kembali ke home, sekarang pakai goPage() -->
-                <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button>
+                
+                <!-- <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button> -->
             </div>
 
             <div class="status-message" id="statusMessage">Memuat daftar pengguna...</div>
@@ -275,20 +275,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Data pengguna akan dimuat di sini -->
+                        
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+    
     <div id="footer-placeholder"></div> 
 
     <script type="module">
-        // Import initPage dari common-ui.js
+        
         import { initPage } from "./common-ui.js";
-        // Import auth dari firebase-config.js (dibutuhkan untuk auth.currentUser)
+        
         import { auth } from "./firebase-config.js"; 
         import {
             collection,
@@ -302,12 +302,12 @@
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
         import { db } from "./firebase-config.js"; 
 
-        // Panggil initPage saat DOM siap
+        
         document.addEventListener('DOMContentLoaded', () => {
             initPage(
-                "Kelola Pengguna",   // pageTitle
-                "adminContainer",    // mainContentId
-                "super_admin"        // requiredRole
+                "Kelola Pengguna",   
+                "adminContainer",    
+                "super_admin"        
             );
         });
 
@@ -319,7 +319,7 @@
 
         let allUsersData = []; 
 
-        // --- Fungsi Helper ---
+        
         function setStatus(message, type = 'info') {
             statusMessage.textContent = message;
             statusMessage.className = `status-message ${type}`;
@@ -364,7 +364,7 @@
         function renderUsersTable(users) {
             usersTableBody.innerHTML = '';
             const currentUserUid = auth.currentUser ? auth.currentUser.uid : null;
-            const currentUserRole = localStorage.getItem('userRole'); // Ambil peran user yang login dari localStorage
+            const currentUserRole = localStorage.getItem('userRole'); 
 
             users.forEach(user => {
                 const row = usersTableBody.insertRow();
@@ -380,8 +380,8 @@
                 const roleSelect = document.createElement('select');
                 roleSelect.id = `role-${user.id}`;
                 
-                // Cek apakah dropdown harus dinonaktifkan
-                // Jika user yang diedit adalah super_admin, DAN BUKAN dirinya sendiri
+                
+                
                 const disableRoleSelect = (user.role === 'super_admin' && user.id !== currentUserUid) || (user.id === currentUserUid && currentUserRole === 'super_admin');
                 if (disableRoleSelect) {
                     roleSelect.disabled = true;
@@ -399,7 +399,7 @@
                     if (user.role === role) {
                         option.selected = true;
                     }
-                    // Jika user yang login bukan super_admin, tidak boleh mengubah ke super_admin
+                    
                     if (role === 'super_admin' && currentUserRole !== 'super_admin') {
                          option.disabled = true;
                     }
@@ -415,11 +415,11 @@
                 approvedCheckbox.id = `approved-${user.id}`;
                 approvedCheckbox.checked = user.approved === true; 
 
-                // Nonaktifkan checkbox 'Disetujui' jika user yang diedit adalah super_admin dan bukan dirinya sendiri
+                
                 if (user.role === 'super_admin' && user.id !== currentUserUid) {
                     approvedCheckbox.disabled = true;
                     approvedCheckbox.title = "Tidak bisa mengubah status persetujuan super admin lain.";
-                } else if (user.id === currentUserUid) { // Tidak bisa mengubah status persetujuan dirinya sendiri
+                } else if (user.id === currentUserUid) { 
                      approvedCheckbox.disabled = true;
                      approvedCheckbox.title = "Tidak bisa mengubah status persetujuan Anda sendiri.";
                 }
@@ -435,7 +435,7 @@
                 deleteBtn.textContent = 'Hapus';
                 deleteBtn.className = 'btn btn-danger';
                 
-                // Nonaktifkan tombol hapus untuk super_admin lain atau diri sendiri
+                
                 if (user.role === 'super_admin' && user.id !== currentUserUid) {
                     deleteBtn.disabled = true;
                     deleteBtn.title = "Tidak bisa menghapus super admin lain.";
@@ -455,26 +455,26 @@
             const targetUser = allUsersData.find(u => u.id === uid);
             const targetUserRole = targetUser ? targetUser.role : null;
 
-            // Proteksi: Super Admin tidak bisa mengubah peran Super Admin lain atau dirinya sendiri
+            
             if (fieldName === 'role') {
                 if (targetUserRole === 'super_admin' && uid !== currentUserUid) {
                     alert("Tidak bisa mengubah peran 'Super Admin' lain.");
-                    loadUsers(); // Muat ulang untuk membatalkan perubahan di UI
+                    loadUsers(); 
                     return;
                 }
                 if (uid === currentUserUid && value !== 'super_admin' && currentUserRole === 'super_admin') {
                     alert("Anda tidak bisa menurunkan peran Anda sendiri dari 'Super Admin'.");
-                    loadUsers(); // Muat ulang untuk membatalkan perubahan di UI
+                    loadUsers(); 
                     return;
                 }
                 if (value === 'super_admin' && currentUserRole !== 'super_admin') {
                     alert("Anda tidak memiliki izin untuk mengubah peran menjadi 'Super Admin'.");
-                    loadUsers(); // Muat ulang untuk membatalkan perubahan di UI
+                    loadUsers(); 
                     return;
                 }
             }
             
-            // Proteksi: Tidak bisa mengubah status approved super admin lain atau dirinya sendiri
+            
             if (fieldName === 'approved') {
                  if (targetUserRole === 'super_admin' && uid !== currentUserUid) {
                     alert("Tidak bisa mengubah status persetujuan super admin lain.");
@@ -506,7 +506,7 @@
             const targetUser = allUsersData.find(u => u.id === uid);
             const targetUserRole = targetUser ? targetUser.role : null;
 
-            // Proteksi: Super Admin tidak bisa menghapus Super Admin lain atau dirinya sendiri
+            
             if (targetUserRole === 'super_admin' && uid !== currentUserUid) {
                 alert("Anda tidak memiliki izin untuk menghapus 'Super Admin' lain.");
                 return;
@@ -533,7 +533,7 @@
             }
         }
 
-        // --- Event Listeners untuk Kontrol ---
+        
         searchUserBtn.addEventListener('click', () => {
             const searchTerm = searchUserInput.value.trim();
             loadUsers(searchTerm);

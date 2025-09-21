@@ -6,12 +6,12 @@
     <link rel="icon" type="image/png" href="images/icon.png">
 
     <title>Unggah & Kelola Data Karyawan</title>
-    <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
-    <!-- PASTIKAN PATH INI BENAR KE FILE XLSX.FULL.MIN.JS ANDA -->
+    
+    
     <script src="./xlsx.full.min.js"></script>
 
     <style>
-        /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
+        
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -20,11 +20,11 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
-            min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
+            flex-direction: column; 
+            min-height: 100vh; 
         }
         
-        /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+        
         nav {
             display: flex; 
             justify-content: space-between; 
@@ -49,7 +49,7 @@
         }
         nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
 
-        /* Gaya untuk info user dan tombol logout di header */
+        
         .right-nav-items {
             display: flex;
             align-items: center;
@@ -60,7 +60,7 @@
             color: rgba(255, 255, 255, 0.8);
             white-space: nowrap; 
         }
-        nav .menu2 { /* Untuk tombol Logout */
+        nav .menu2 { 
             color: white;
             cursor: pointer;
             padding: 0.5rem 1rem;
@@ -74,40 +74,40 @@
             transform: translateY(-2px);
         }
 
-        /* --- WRAPPER KONTEN UTAMA --- */
+        
         .main-content-wrapper {
-            flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+            flex: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 2rem;
         }
 
-        /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
-        .container { /* General container style, applied to #adminUploadContainer */
-            background: rgba(255,255,255,0.1); /* Latar belakang transparan */
-            padding: 2rem; /* Padding lebih besar */
-            border-radius: 1rem; /* Border radius lebih besar */
+        
+        .container { 
+            background: rgba(255,255,255,0.1); 
+            padding: 2rem; 
+            border-radius: 1rem; 
             width: 100%;
-            max-width: 900px; /* Pertahankan lebar untuk halaman upload */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
-            backdrop-filter: blur(8px); /* Efek blur */
-            animation: fadeIn .8s ease; /* Animasi fade in */
+            max-width: 900px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+            backdrop-filter: blur(8px); 
+            animation: fadeIn .8s ease; 
         }
-        @keyframes fadeIn { /* Animasi fade in */
+        @keyframes fadeIn { 
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- HEADINGS --- */
-        h2 { /* Mengganti h1 menjadi h2 untuk konsistensi */
+        
+        h2 { 
             text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
             font-size: 26px;
         }
 
-        /* --- FORM CONTROLS --- */
+        
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -120,10 +120,10 @@
             display: block;
             width: 100%;
             max-width: 300px;
-            padding: .75rem; /* Padding baru */
-            border: none; /* Hilangkan border */
-            border-radius: .5rem; /* Border radius baru */
-            background: rgba(255,255,255,0.15); /* Latar belakang transparan */
+            padding: .75rem; 
+            border: none; 
+            border-radius: .5rem; 
+            background: rgba(255,255,255,0.15); 
             color: white;
             box-sizing: border-box;
             cursor: pointer;
@@ -141,31 +141,31 @@
             background: #d97706;
         }
 
-        /* --- BUTTONS --- */
-        .btn { /* Gaya dasar tombol */
-            width: auto; /* Otomatis menyesuaikan konten */
-            padding: .75rem; /* Padding baru */
-            margin-top: .75rem; /* Margin baru */
+        
+        .btn { 
+            width: auto; 
+            padding: .75rem; 
+            margin-top: .75rem; 
             border: none;
-            border-radius: .5rem; /* Border radius baru */
+            border-radius: .5rem; 
             font-weight: bold;
             cursor: pointer;
             transition: transform .2s, box-shadow .2s;
-            font-size: 15px; /* Pertahankan ukuran font */
+            font-size: 15px; 
         }
-        .btn:hover { /* Efek hover baru */
+        .btn:hover { 
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
-        /* Specific button colors */
+        
         .btn-primary { background: #4f46e5; color: #fff; }
         .btn-primary:hover { background: #4338ca; }
-        .btn-secondary { background: #f59e0b; color: #fff; } /* Warna khusus untuk tombol preview */
+        .btn-secondary { background: #f59e0b; color: #fff; } 
         .btn-secondary:hover { background: #d97706; }
         .btn-info { background: #3b82f6; color: #fff; }
         .btn-info:hover { background: #2563eb; }
 
-        /* --- STATUS MESSAGE --- */
+        
         .status-message {
             margin-top: 15px;
             padding: 10px;
@@ -177,7 +177,7 @@
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
 
-        /* --- DATA PREVIEW TABLE --- */
+        
         .data-preview {
             margin-top: 20px;
             background: rgba(255,255,255,0.1);
@@ -206,7 +206,7 @@
             z-index: 1;
         }
 
-        /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+        
         footer {
             text-align: center;
             padding: 1rem;
@@ -217,7 +217,7 @@
         footer a { color: white; text-decoration: none; }
         footer a:hover { text-decoration: underline; }
 
-        /* --- Media Queries for Responsiveness --- */
+        
         @media (max-width: 768px) {
             nav { padding: 1rem; flex-direction: column; }
             nav .menu { margin-top: 10px; }
@@ -237,21 +237,21 @@
     </style>
 </head>
 <body>
-    <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+    
     <div id="header-placeholder"></div> 
 
-    <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+    
     <div class="main-content-wrapper">
-        <!-- Konten halaman spesifik (sekarang menggunakan id "pageContainer" dan class "container") -->
+        
         <div class="container" id="adminUploadContainer">
-            <h2>Unggah & Kelola Data Karyawan REVISI</h2> <!-- Mengganti h1 menjadi h2 -->
+            <h2>Unggah & Kelola Data Karyawan REVISI</h2> 
 
             <div class="controls">
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
                 <button class="btn btn-secondary" id="previewBtn">Preview Data</button>
                 <button class="btn btn-primary" id="uploadToFirestoreBtn">Unggah ke Firestore</button>
-                <!-- Tombol kembali ke home, sekarang pakai goPage() -->
-                  <!--     <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button>  -->
+                
+                  
             </div>
 
             <div class="status-message" id="statusMessage">Pilih file Excel (.xlsx/.xls) dan klik Preview Data.</div>
@@ -265,38 +265,38 @@
         </div>
     </div>
 
-    <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+    
     <div id="footer-placeholder"></div> 
 
     <script type="module">
-        // Import initPage dari common-ui.js
+        
         import { initPage } from "./common-ui.js";
 
-        // Panggil initPage saat DOM siap
+        
         document.addEventListener('DOMContentLoaded', () => {
             initPage(
-                "Unggah Data Karyawan", // pageTitle (akan jadi active di navigasi)
-                "adminUploadContainer",  // mainContentId (ID dari div container utama halaman ini)
-                "admin"                  // requiredRole (hanya admin & super_admin bisa akses)
+                "Unggah Data Karyawan", 
+                "adminUploadContainer",  
+                "admin"                  
             );
         });
 
-        // --- BARIS PENTING INI AGAR LIBRARY XLSX TERDETEKSI DALAM MODUL ---
+        
         const XLSX = window.XLSX; 
         if (!XLSX) {
             console.error("SheetJS (xlsx.full.min.js) tidak dimuat dengan benar. Pastikan path-nya benar dan dimuat sebelum script ini.");
             setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
         }
 
-        // Impor Firebase SDK
-        // auth dan onAuthStateChanged tidak perlu diimpor/digunakan di sini karena sudah dihandle oleh initPage di common-ui.js
+        
+        
         import {
             collection,
             doc,
             writeBatch, 
             setDoc
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { db } from "./firebase-config.js"; // Hanya db yang dibutuhkan di sini
+        import { db } from "./firebase-config.js"; 
 
         const excelFile = document.getElementById('excelFile');
         const previewBtn = document.getElementById('previewBtn');
@@ -304,11 +304,11 @@
         const statusMessage = document.getElementById('statusMessage');
         const dataTableHead = document.querySelector('#dataTable thead');
         const dataTableBody = document.querySelector('#dataTable tbody');
-        // adminUploadContainer tidak perlu diakses di sini lagi, karena initPage yang mengelola display-nya
+        
 
         let excelData = []; 
 
-        // --- Fungsi Helper ---
+        
         function setStatus(message, type = 'info') {
             statusMessage.textContent = message;
             statusMessage.className = `status-message ${type}`;
@@ -326,7 +326,7 @@
                 return;
             }
 
-            // Header
+            
             const headers = Object.keys(data[0]);
             let headerRow = '<tr>';
             headers.forEach(header => {
@@ -335,7 +335,7 @@
             headerRow += '</tr>';
             dataTableHead.innerHTML = headerRow;
 
-            // Body
+            
             data.forEach(row => {
                 let dataRow = '<tr>';
                 headers.forEach(header => {
@@ -347,7 +347,7 @@
             setStatus(`Preview berhasil. Ditemukan ${data.length} baris data.`, 'success');
         }
 
-        // --- Event Listeners ---
+        
         previewBtn.addEventListener('click', () => {
             const file = excelFile.files[0];
             if (!file) {
@@ -355,7 +355,7 @@
                 return;
             }
 
-            // Pastikan XLSX sudah tersedia
+            
             if (typeof XLSX === 'undefined') {
                 setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
                 return;
@@ -371,14 +371,14 @@
                     const sheetName = workbook.SheetNames[0]; 
                     const worksheet = workbook.Sheets[sheetName];
                     
-                    // Konversi sheet ke array of JSON objects
+                    
                     excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true }); 
                     
-                    // Asumsikan baris pertama adalah header, dan baris sisanya adalah data
+                    
                     const headers = excelData[0];
                     const rows = excelData.slice(1);
                     
-                    // Format ulang menjadi array of objects dengan kunci header
+                    
                     excelData = rows.map(row => {
                         let obj = {};
                         headers.forEach((header, index) => {

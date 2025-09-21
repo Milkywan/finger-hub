@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="icon" type="image/png" href="images/icon.png">
     <title>Super Admin: Pengaturan Sistem & Mesin</title>
-    <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
+    
     <style>
-        /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
+        
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -16,11 +16,11 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
-            min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
+            flex-direction: column; 
+            min-height: 100vh; 
         }
         
-        /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+        
         nav {
             display: flex; 
             justify-content: space-between; 
@@ -45,7 +45,7 @@
         }
         nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
 
-        /* Gaya untuk info user dan tombol logout di header */
+        
         .right-nav-items {
             display: flex;
             align-items: center;
@@ -56,7 +56,7 @@
             color: rgba(255, 255, 255, 0.8);
             white-space: nowrap; 
         }
-        nav .menu2 { /* Untuk tombol Logout */
+        nav .menu2 { 
             color: white;
             cursor: pointer;
             padding: 0.5rem 1rem;
@@ -70,52 +70,52 @@
             transform: translateY(-2px);
         }
 
-        /* --- WRAPPER KONTEN UTAMA --- */
+        
         .main-content-wrapper {
-            flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+            flex: 1; 
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 2rem;
         }
 
-        /* --- GRID LAYOUT UNTUK DUA CARD --- */
+        
         .settings-grid {
-            display: flex; /* Menggunakan flexbox untuk layout horizontal */
-            gap: 2rem; /* Jarak antar card */
+            display: flex; 
+            gap: 2rem; 
             width: 100%;
-            max-width: 1200px; /* Batasi lebar keseluruhan grid */
-            justify-content: center; /* Pusatkan grid di tengah */
-            flex-wrap: wrap; /* Izinkan wrapping pada layar kecil */
+            max-width: 1200px; 
+            justify-content: center; 
+            flex-wrap: wrap; 
         }
 
-        /* --- CONTAINER UTAMA / CARD (Konsisten di semua halaman admin) --- */
+        
         .container { 
-            background: rgba(255,255,255,0.1); /* Latar belakang transparan */
-            padding: 2rem; /* Padding lebih besar */
-            border-radius: 1rem; /* Border radius lebih besar */
-            width: 100%; /* Default 100% untuk mobile */
-            max-width: 500px; /* Batasi lebar card tunggal */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3); /* Shadow baru */
-            backdrop-filter: blur(8px); /* Efek blur */
-            animation: fadeIn .8s ease; /* Animasi fade in */
-            flex: 1; /* Biarkan flexbox mengatur lebar */
-            min-width: 300px; /* Lebar minimum sebelum wrap */
+            background: rgba(255,255,255,0.1); 
+            padding: 2rem; 
+            border-radius: 1rem; 
+            width: 100%; 
+            max-width: 500px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+            backdrop-filter: blur(8px); 
+            animation: fadeIn .8s ease; 
+            flex: 1; 
+            min-width: 300px; 
         }
-        @keyframes fadeIn { /* Animasi fade in */
+        @keyframes fadeIn { 
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- HEADINGS --- */
-        h2 { /* Mengganti h1 menjadi h2 untuk konsistensi */
+        
+        h2 { 
             text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
             font-size: 26px;
         }
 
-        /* --- FORM ELEMENTS (Disesuaikan agar konsisten) --- */
+        
         .form-group {
             margin-bottom: 15px;
             text-align: left;
@@ -131,57 +131,57 @@
         .form-group input[type="datetime-local"],
         .form-group select {
             width: 100%;
-            padding: .75rem; /* Padding baru */
-            border: none; /* Hilangkan border */
-            border-radius: .5rem; /* Border radius baru */
+            padding: .75rem; 
+            border: none; 
+            border-radius: .5rem; 
             font-size: 14px;
-            background: rgba(255,255,255,0.15); /* Latar belakang transparan */
+            background: rgba(255,255,255,0.15); 
             color: white;
             box-sizing: border-box;
         }
-        /* Style untuk input date placeholder */
+        
         input[type="date"]::-webkit-inner-spin-button,
         input[type="date"]::-webkit-calendar-picker-indicator,
         input[type="datetime-local"]::-webkit-inner-spin-button,
         input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            filter: invert(1); /* Untuk membuat ikon kalender putih */
+            filter: invert(1); 
         }
         input[type="date"], input[type="datetime-local"] {
-            color-scheme: dark; /* Untuk tampilan kalender gelap di beberapa browser */
+            color-scheme: dark; 
         }
-        input::placeholder { /* Placeholder warna putih */
+        input::placeholder { 
             color: rgba(255,255,255,0.6); 
         }
-        select option { /* Gaya untuk opsi dropdown agar terlihat di background gelap */
+        select option { 
             background: #4f46e5;
             color: white;
         }
 
 
-        /* --- CONTROLS / BUTTONS (Konsisten di semua halaman admin) --- */
+        
         .controls {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            margin-top: 20px; /* Jarak dari form group */
+            margin-top: 20px; 
             justify-content: center;
             align-items: center;
         }
-        .btn { /* Gaya dasar tombol */
-            width: auto; /* Otomatis menyesuaikan konten */
-            padding: .75rem; /* Padding baru */
+        .btn { 
+            width: auto; 
+            padding: .75rem; 
             border: none;
-            border-radius: .5rem; /* Border radius baru */
+            border-radius: .5rem; 
             font-weight: bold;
             cursor: pointer;
             transition: transform .2s, box-shadow .2s;
             font-size: 15px;
         }
-        .btn:hover { /* Efek hover baru */
+        .btn:hover { 
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
-        /* Specific button colors */
+        
         .btn-primary { background: #4f46e5; color: #fff; }
         .btn-primary:hover { background: #4338ca; }
         .btn-info { background: #3b82f6; color: #fff; }
@@ -190,10 +190,10 @@
         .btn-success:hover { background: #0e9f73; }
         .btn-danger { background: #ef4444; color: #fff; }
         .btn-danger:hover { background: #d73a3a; }
-        .btn-warning { background: #a855f7; color: #fff; } /* Menggunakan warning untuk ungu */
+        .btn-warning { background: #a855f7; color: #fff; } 
         .btn-warning:hover { background: #903ed7; }
 
-        /* --- STATUS MESSAGE (Konsisten di semua halaman admin) --- */
+        
         .status-message {
             margin-top: 15px;
             padding: 10px;
@@ -205,7 +205,7 @@
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
 
-        /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+        
         footer {
             text-align: center;
             padding: 1rem;
@@ -216,15 +216,15 @@
         footer a { color: white; text-decoration: none; }
         footer a:hover { text-decoration: underline; }
 
-        /* --- Media Queries for Responsiveness (Konsisten di semua halaman admin) --- */
+        
         @media (max-width: 768px) {
             nav { padding: 1rem; flex-direction: column; }
             nav .menu { margin-top: 10px; }
             nav .menu a { margin: 0.5rem 0.5rem; display: inline-block; }
             nav .menu2 { margin-top: 10px; }
             .settings-grid {
-                flex-direction: column; /* Tumpuk card secara vertikal pada layar kecil */
-                align-items: center; /* Pusatkan card saat ditumpuk */
+                flex-direction: column; 
+                align-items: center; 
             }
             .controls {
                 flex-direction: column;
@@ -237,14 +237,14 @@
     </style>
 </head>
 <body>
-    <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+    
     <div id="header-placeholder"></div> 
 
-    <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+    
     <div class="main-content-wrapper">
-        <!-- Grid utama untuk dua card -->
+        
         <div class="settings-grid">
-            <!-- Sisi Kiri: Pengaturan Sistem (Manajemen Eksipry Offline) -->
+            
             <div class="container" id="adminSettingsContainer">
                 <h2>Pengaturan Sistem</h2> 
 
@@ -254,7 +254,7 @@
                     <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Tanggal ini digunakan oleh aplikasi desktop saat offline.</small>
                 </div>
 
-                <!-- Anda bisa menambahkan form-group lain di sini untuk pengaturan lainnya -->
+                <!-- kalau mau menambahkan form-group lain di sini untuk pengaturan lainnya -->
                 <!--
                 <div class="form-group">
                     <label for="anotherSetting">Pengaturan Lain</label>
@@ -264,14 +264,14 @@
 
                 <div class="controls">
                     <button class="btn btn-primary" id="saveSettingsBtn">Simpan Pengaturan Sistem</button>
-                    <!-- Tombol kembali ke home, sekarang pakai goPage() -->
-                   <!--  <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button> -->
+                    
+                   
                 </div>
 
                 <div class="status-message" id="systemStatusMessage">Memuat pengaturan sistem...</div>
             </div>
 
-            <!-- Sisi Kanan: Pengaturan Mesin (Tanggal/Waktu & Lihat Absensi) -->
+            
             <div class="container" id="machineSettingsContainer">
                 <h2>Pengaturan & Download Mesin</h2>
                 <div class="form-group">
@@ -311,43 +311,43 @@
         </div>
     </div>
 
-    <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+    
     <div id="footer-placeholder"></div> 
 
     <script type="module">
-        // Import initPage dari common-ui.js
+        
         import { initPage } from "./common-ui.js";
-        // Import db dari firebase-config.js (dibutuhkan untuk Firestore ops)
+        
         import {
             db
         } from "./firebase-config.js";
         import {
             doc,
             getDoc,
-            setDoc, // Menggunakan setDoc untuk membuat/memperbarui dokumen pengaturan
+            setDoc, 
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        // auth dan onAuthStateChanged tidak perlu diimpor/digunakan di sini karena sudah dihandle oleh initPage di common-ui.js
+        
 
-        // --- Variabel Global ---
-        let globalMesinList = {}; // Akan menyimpan daftar mesin dari mesin.json atau upload JSON
+        
+        let globalMesinList = {}; 
 
-        // Panggil initPage saat DOM siap
+        
         document.addEventListener('DOMContentLoaded', () => {
             initPage(
-                "Pengaturan Sistem", // pageTitle
-                "adminSettingsContainer",   // mainContentId (untuk kartu kiri sebagai fokus utama jika ada satu)
-                "super_admin"               // requiredRole
+                "Pengaturan Sistem", 
+                "adminSettingsContainer",   
+                "super_admin"               
             );
-            loadSettings(); // Muat pengaturan sistem saat halaman dimuat
-            loadMachinesDefault(); // Muat daftar mesin default (mesin.json)
+            loadSettings(); 
+            loadMachinesDefault(); 
         });
 
-        // --- Elemen DOM Sisi Kiri (Pengaturan Sistem) ---
+        
         const offlineExpiryDateInput = document.getElementById('offlineExpiryDateInput');
         const saveSettingsBtn = document.getElementById('saveSettingsBtn');
         const systemStatusMessage = document.getElementById('systemStatusMessage');
 
-        // --- Elemen DOM Sisi Kanan (Pengaturan Mesin) ---
+        
         const jsonFileInput = document.getElementById('jsonFile');
         const mesinManualInput = document.getElementById('mesinManualInput');
         const mesinDatalist = document.getElementById('mesinDatalist');
@@ -355,36 +355,36 @@
         const machineSetDateTimeInput = document.getElementById('machineSetDateTime');
         const machineStatusMessage = document.getElementById('machineStatusMessage');
 
-        // --- Konstanta untuk lokasi dokumen pengaturan Firestore ---
-        const SETTINGS_DOC_REF = doc(db, "settings", "app_config"); // Koleksi 'settings', dokumen 'app_config'
+        
+        const SETTINGS_DOC_REF = doc(db, "settings", "app_config"); 
 
-        // --- Fungsi Helper Umum ---
+        
         function setStatus(messageElement, message, type = 'info') {
             messageElement.textContent = message;
             messageElement.className = `status-message ${type}`;
         }
 
         function openNewWindow(url) {
-            window.open(url, '_blank', 'width=800,height=600'); // Ukuran window yang lebih layak
+            window.open(url, '_blank', 'width=800,height=600'); 
         }
 
-        // --- Fungsi Sisi Kiri: Pengaturan Sistem ---
+        
 
-        // Fungsi untuk Memuat Pengaturan dari Firestore
+        
         async function loadSettings() {
             setStatus(systemStatusMessage, "Memuat pengaturan sistem...", 'info');
             try {
                 const settingsSnap = await getDoc(SETTINGS_DOC_REF);
                 if (settingsSnap.exists()) {
                     const settings = settingsSnap.data();
-                    // Set nilai ke input field
+                    
                     if (settings.OFFLINE_EXPIRY_DATE) {
-                        offlineExpiryDateInput.value = settings.OFFLINE_EXPIRY_DATE; // Format YYYY-MM-DD
+                        offlineExpiryDateInput.value = settings.OFFLINE_EXPIRY_DATE; 
                     }
                     setStatus(systemStatusMessage, "Pengaturan sistem berhasil dimuat.", 'success');
                 } else {
                     setStatus(systemStatusMessage, "Dokumen pengaturan sistem belum ada. Menggunakan nilai default.", 'info');
-                    offlineExpiryDateInput.value = ''; // Biarkan kosong
+                    offlineExpiryDateInput.value = ''; 
                 }
             } catch (error) {
                 setStatus(systemStatusMessage, `Gagal memuat pengaturan sistem: ${error.message}`, 'error');
@@ -392,7 +392,7 @@
             }
         }
 
-        // Fungsi untuk Menyimpan Pengaturan ke Firestore
+        
         saveSettingsBtn.addEventListener('click', async () => {
             const newOfflineExpiryDate = offlineExpiryDateInput.value;
 
@@ -401,34 +401,34 @@
                 return;
             }
 
-            // Validasi format tanggal
+            
             if (!/^\d{4}-\d{2}-\d{2}$/.test(newOfflineExpiryDate)) {
                 setStatus(systemStatusMessage, "Format tanggal tidak valid. Gunakan YYYY-MM-DD.", 'error');
                 return;
             }
 
             setStatus(systemStatusMessage, "Menyimpan pengaturan sistem...", 'info');
-            saveSettingsBtn.disabled = true; // Nonaktifkan tombol saat menyimpan
+            saveSettingsBtn.disabled = true; 
 
             try {
                 await setDoc(SETTINGS_DOC_REF, {
                     OFFLINE_EXPIRY_DATE: newOfflineExpiryDate,
-                    lastUpdated: new Date().toISOString() // Tambahkan timestamp update
-                }, { merge: true }); // Gunakan merge:true agar tidak menimpa field lain jika ada
+                    lastUpdated: new Date().toISOString() 
+                }, { merge: true }); 
 
                 setStatus(systemStatusMessage, "Pengaturan sistem berhasil disimpan!", 'success');
             } catch (error) {
                 setStatus(systemStatusMessage, `Gagal menyimpan pengaturan sistem: ${error.message}`, 'error');
                 console.error("Error saving settings:", error);
             } finally {
-                saveSettingsBtn.disabled = false; // Aktifkan kembali tombol
+                saveSettingsBtn.disabled = false; 
             }
         });
 
 
-        // --- Fungsi Sisi Kanan: Pengaturan Mesin ---
+        
 
-        // Memuat daftar mesin dari file JSON yang diupload
+        
         window.handleFileUpload = function(event) {
             const file = event.target.files[0];
             if (!file) {
@@ -449,11 +449,11 @@
             reader.readAsText(file);
         };
 
-        // Memuat daftar mesin dari mesin.json secara default
+        
         window.loadMachinesDefault = async function() {
             setStatus(machineStatusMessage, "Memuat daftar mesin default...", 'info');
             try {
-                const resp = await fetch('mesin.json'); // Asumsi mesin.json ada di root server Anda
+                const resp = await fetch('mesin.json'); 
                 if (!resp.ok) {
                     throw new Error(`HTTP error! status: ${resp.status}`);
                 }
@@ -463,25 +463,25 @@
             } catch (e) {
                 setStatus(machineStatusMessage, "Gagal memuat mesin.json (normal jika file tidak ada atau tanpa server Flask/lokal). Gunakan upload JSON.", 'info');
                 console.warn("Gagal memuat mesin.json:", e);
-                globalMesinList = {}; // Pastikan kosong jika gagal load
-                populateDatalistMesin(); // Kosongkan datalist
+                globalMesinList = {}; 
+                populateDatalistMesin(); 
             }
         };
 
-        // Mengisi datalist untuk input nama mesin
+        
         function populateDatalistMesin() {
             mesinDatalist.innerHTML = "";
             Object.keys(globalMesinList).forEach(m => {
                 const opt = document.createElement("option");
-                opt.value = m; // Value dan textContent sama untuk option di datalist
+                opt.value = m; 
                 mesinDatalist.appendChild(opt);
             });
         }
 
-        // Mengatur waktu input datetime-local dengan waktu saat ini
+        
         window.setMachineCurrentDateTime = function() {
             const now = new Date();
-            // Format ke YYYY-MM-DDTHH:mm untuk input type="datetime-local"
+            
             const formattedDateTime = now.getFullYear() + "-" +
                 String(now.getMonth() + 1).padStart(2, '0') + "-" +
                 String(now.getDate()).padStart(2, '0') + "T" +
@@ -491,10 +491,10 @@
             setStatus(machineStatusMessage, "Waktu saat ini berhasil diatur.", 'info');
         };
 
-        // Mengirim permintaan untuk memperbarui waktu mesin
+        
         window.updateMachineDateTime = function() {
             const baseUrl = baseUrlMachineInput.value;
-            const mesin = mesinManualInput.value.trim(); // Ambil dari input manual/datalist
+            const mesin = mesinManualInput.value.trim(); 
             const datetimeRaw = machineSetDateTimeInput.value;
 
             if (!mesin) {
@@ -510,8 +510,8 @@
                 return;
             }
 
-            // Konversi format datetime-local ke format yang diharapkan server (YYYY-MM-DD HH:MM:SS)
-            // Kita tambahkan ":00" untuk detik, karena datetime-local tidak menyertakan detik secara default
+            
+            
             const datetime = datetimeRaw.replace('T', ' ') + ':00'; 
             
             let url = `${baseUrl}/ubah_waktu?mesin=${mesin}&datetime=${encodeURIComponent(datetime)}`;
@@ -519,10 +519,10 @@
             openNewWindow(url);
         };
 
-        // Mengirim permintaan untuk melihat absensi mesin
+        
         window.viewMachineAbsensi = function() {
             const baseUrl = baseUrlMachineInput.value;
-            const mesin = mesinManualInput.value.trim(); // Ambil dari input manual/datalist
+            const mesin = mesinManualInput.value.trim(); 
 
             if (!mesin) {
                 setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Lihat Absensi!", 'error');
@@ -538,7 +538,7 @@
             openNewWindow(url);
         };
 
-        // Mengirim permintaan untuk mendownload absensi semua mesin
+        
         window.downloadAllMachinesAbsensi = function() {
             const baseUrl = baseUrlMachineInput.value;
             if (!Object.keys(globalMesinList).length) {

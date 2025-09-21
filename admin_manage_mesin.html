@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Kelola Mesin Fingerprint</title>
+<style>
+  /* --- Style seragam dengan theme project (simple & compatible) --- */
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    color: white;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .main-content-wrapper {
+    flex: 1;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding: 2rem;
+  }
+  .container {
+    background: rgba(255,255,255,0.06);
+    padding: 1.25rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 1100px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+  }
+  h2 { margin: 0 0 12px 0; font-size: 20px; }
+  .actions { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .btn {
+    padding:8px 12px;
+    border-radius:8px;
+    border: none;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn-primary { background:#4f46e5; color:white; }
+  .btn-ghost { background: rgba(255,255,255,0.06); color:white; border:1px solid rgba(255,255,255,0.08); }
+  .table-wrap { overflow:auto; max-height:520px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); }
+  table { width:100%; border-collapse:collapse; min-width:720px; color:white; }
+  th, td { padding:10px 12px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06); font-size:14px; }
+  th { position: sticky; top:0; background: rgba(255,255,255,0.02); font-weight:700; }
+  .muted { color: rgba(255,255,255,0.7); font-size:13px; }
+  .small { font-size:13px; padding:6px 8px; border-radius:6px; }
+  .icon-btn { background:transparent; border:1px solid rgba(255,255,255,0.06); padding:6px 8px; border-radius:6px; cursor:pointer; color:white; }
+  .status { margin-left:8px; font-size:13px; color:#9ca3ff; }
+
+  /* Modal */
+  .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:1000; }
+  .modal-card { background: white; color: #111827; width: 420px; max-width: 94%; border-radius: 10px; padding:16px; box-shadow:0 12px 36px rgba(0,0,0,0.4); }
+  .modal-card h3 { margin:0 0 8px 0; font-size:18px; }
+  .form-row { margin-bottom:10px; }
+  .form-row label { display:block; font-size:13px; margin-bottom:6px; color:#374151; }
+  .form-row input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d1d5db; box-sizing:border-box; font-size:14px; }
+
+  .hidden { display:none; }
+
+  @media (max-width:720px) {
+    .container { padding: 12px; }
+    table { min-width: 640px; }
+  }
+</style>
+</head>
+<body>
+  <!-- header + footer disuntik oleh common-ui.js -->
+  <div id="header-placeholder"></div>
+
+  <div class="main-content-wrapper">
+    <div class="container" id="mainContainer">
+      <h2>⚙️ Kelola Mesin Fingerprint</h2>
+
+      <div class="actions">
+        <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
+        <div class="status" id="pageStatus">Memuat data...</div>
+      </div>
+
+      <div class="table-wrap">
+        <table aria-describedby="Daftar mesin">
+          <thead>
+            <tr>
+              <th>Nama Mesin</th>
+              <th>IP Address</th>
+              <th>Port</th>
+              <th>Dibuat</th>
+              <th style="width:150px">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="mesinTbody">
+            <!-- rows inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- Modal: add/edit -->
+  <div id="mesinModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Tambah Mesin</h3>
+
+      <div class="form-row">
+        <label for="inputNama">Nama Mesin / Lokasi</label>
+        <input id="inputNama" type="text" placeholder="Mis: HR110 / Area Coal Dome">
+      </div>
+      <div class="form-row">
+        <label for="inputIP">IP Address</label>
+        <input id="inputIP" type="text" placeholder="Contoh: 10.30.39.189">
+      </div>
+      <div class="form-row">
+        <label for="inputPort">Port</label>
+        <input id="inputPort" type="text" placeholder="Contoh: 4370">
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+        <button id="cancelBtn" class="btn btn-ghost small">Batal</button>
+        <button id="saveBtn" class="btn btn-primary small">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  // gunakan existing initPage & firebase-config
+  import { initPage } from "./common-ui.js";
+  import { auth, db } from "./firebase-config.js";
+  import {
+    collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc,
+    serverTimestamp, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+  // inisialisasi page - tidak mengubah common-ui.js
+  initPage("Kelola Mesin Fingerprint", "mainContainer", "admin");
+
+  // DOM refs
+  const pageStatus = document.getElementById("pageStatus");
+  const tbody = document.getElementById("mesinTbody");
+  const addBtn = document.getElementById("addMesinBtn");
+
+  const modal = document.getElementById("mesinModal");
+  const modalTitle = document.getElementById("modalTitle");
+  const inputNama = document.getElementById("inputNama");
+  const inputIP = document.getElementById("inputIP");
+  const inputPort = document.getElementById("inputPort");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const saveBtn = document.getElementById("saveBtn");
+
+  let editingId = null; // null => tambah, otherwise edit
+
+  // helper: show status
+  function setStatus(msg, isError=false) {
+    pageStatus.textContent = msg;
+    pageStatus.style.color = isError ? "#fca5a5" : "#c7d2fe";
+  }
+
+  // show/hide modal
+  function openModal(asEdit=false) {
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+  }
+  function closeModal() {
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  // load mesin list
+  async function loadMesin() {
+    try {
+      setStatus("Memuat data mesin...");
+      tbody.innerHTML = "";
+      // ambil semua mesin ordered by createdAt desc
+      const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">Belum ada mesin terdaftar.</td></tr>`;
+      } else {
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          const id = docSnap.id;
+          const created = d.createdAt ? (d.createdAt.toDate ? d.createdAt.toDate().toLocaleString() : new Date(d.createdAt).toLocaleString()) : "-";
+          const tr = document.createElement("tr");
+
+          // safe text escaping
+          function esc(v) { return v === undefined || v === null ? "" : String(v); }
+
+          tr.innerHTML = `
+            <td>${esc(d.mesin)}</td>
+            <td>${esc(d.ip)}</td>
+            <td>${esc(d.port)}</td>
+            <td class="muted">${created}</td>
+            <td>
+              <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
+              <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      setStatus(`Selesai memuat (${snap.size} mesin).`);
+    } catch (err) {
+      console.error(err);
+      setStatus("Gagal memuat data mesin. Cek konsol.", true);
+      tbody.innerHTML = `<tr><td colspan="5" class="muted">Error saat memuat data.</td></tr>`;
+    }
+  }
+
+  // prepare "add" flow
+  addBtn.addEventListener("click", () => {
+    editingId = null;
+    modalTitle.textContent = "Tambah Mesin";
+    inputNama.value = "";
+    inputIP.value = "";
+    inputPort.value = "";
+    openModal();
+  });
+
+  // cancel
+  cancelBtn.addEventListener("click", () => {
+    closeModal();
+  });
+
+  // SAVE (tambah / edit)
+  saveBtn.addEventListener("click", async () => {
+    const nama = inputNama.value.trim();
+    const ip = inputIP.value.trim();
+    const port = inputPort.value.trim();
+
+    if (!nama || !ip || !port) {
+      alert("Isi semua field (Nama, IP, Port).");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    try {
+      // get current user info for log
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error("Pengguna belum terautentikasi.");
+
+      // get username from users collection (so we can store updatedname)
+      const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const updatedName = (userDocSnap.exists() && userDocSnap.data().username) ? userDocSnap.data().username : currentUser.email || currentUser.uid;
+
+      if (editingId) {
+        // edit: compare fields and write logs per-field if ada perubahan
+        const ref = doc(db, "mesin_fp", editingId);
+        const beforeSnap = await getDoc(ref);
+        if (!beforeSnap.exists()) throw new Error("Dokumen mesin tidak ditemukan (saat update).");
+
+        const before = beforeSnap.data();
+        // update doc
+        await updateDoc(ref, {
+          mesin: nama,
+          ip: ip,
+          port: port,
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUser.uid
+        });
+
+        // create logs per changed field
+        const changes = [];
+        if ((before.mesin || "") !== nama) {
+          changes.push({ field: "mesin", old: before.mesin || "", neu: nama });
+        }
+        if ((before.ip || "") !== ip) {
+          changes.push({ field: "ip", old: before.ip || "", neu: ip });
+        }
+        if ((before.port || "") !== port) {
+          changes.push({ field: "port", old: before.port || "", neu: port });
+        }
+
+        // write a log doc for each changed field
+        for (const ch of changes) {
+          const log = {
+            mesin_id: editingId,
+            action: "update",
+            field: ch.field,
+            // dynamic lama/baru fields (ip_lama/ip_baru etc)
+            [`${ch.field}_lama`]: ch.old,
+            [`${ch.field}_baru`]: ch.neu,
+            updatedname: updatedName,
+            updatedBy: currentUser.uid,
+            updatedAt: serverTimestamp()
+          };
+          await addDoc(collection(db, "mesin_logs"), log);
+        }
+
+        setStatus("Mesin diperbarui.");
+      } else {
+        // create
+        const payload = {
+          mesin: nama,
+          ip: ip,
+          port: port,
+          createdAt: serverTimestamp(),
+          createdBy: currentUser.uid
+        };
+        const newRef = await addDoc(collection(db, "mesin_fp"), payload);
+
+        // log create action (single log document)
+        const log = {
+          mesin_id: newRef.id,
+          action: "create",
+          mesin_baru: nama,
+          ip_baru: ip,
+          port_baru: port,
+          createdBy: currentUser.uid,
+          createdname: updatedName,
+          createdAt: serverTimestamp()
+        };
+        await addDoc(collection(db, "mesin_logs"), log);
+
+        setStatus("Mesin baru ditambahkan.");
+      }
+
+      closeModal();
+      await loadMesin();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan: " + (err.message || err));
+      setStatus("Gagal menyimpan.", true);
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  // handle edit / delete button clicks via delegation
+  tbody.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest("button");
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (!action || !id) return;
+
+    if (action === "edit") {
+      try {
+        const snap = await getDoc(doc(db, "mesin_fp", id));
+        if (!snap.exists()) {
+          alert("Data mesin tidak ditemukan.");
+          return;
+        }
+        const d = snap.data();
+        editingId = id;
+        modalTitle.textContent = "Edit Mesin";
+        inputNama.value = d.mesin || "";
+        inputIP.value = d.ip || "";
+        inputPort.value = d.port || "";
+        openModal();
+      } catch (err) {
+        console.error(err);
+        alert("Gagal memuat data mesin untuk edit.");
+      }
+    } else if (action === "delete") {
+      if (!confirm("Yakin ingin menghapus mesin ini? Tindakan ini tidak bisa dibatalkan.")) return;
+      saveBtn.disabled = true;
+      try {
+        const currentUser = auth.currentUser;
+        if (!currentUser) throw new Error("Pengguna belum terautentikasi.");
+        const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
+        const deletedName = (userDocSnap.exists() && userDocSnap.data().username) ? userDocSnap.data().username : currentUser.email || currentUser.uid;
+
+        const ref = doc(db, "mesin_fp", id);
+        const beforeSnap = await getDoc(ref);
+        if (!beforeSnap.exists()) {
+          alert("Mesin sudah tidak ada.");
+          return;
+        }
+        const before = beforeSnap.data();
+
+        // delete doc
+        await deleteDoc(ref);
+
+        // create single delete log (contains old values)
+        const log = {
+          mesin_id: id,
+          action: "delete",
+          mesin_lama: before.mesin || "",
+          ip_lama: before.ip || "",
+          port_lama: before.port || "",
+          updatedname: deletedName,
+          updatedBy: currentUser.uid,
+          updatedAt: serverTimestamp()
+        };
+        await addDoc(collection(db, "mesin_logs"), log);
+
+        setStatus("Mesin dihapus.");
+        await loadMesin();
+      } catch (err) {
+        console.error(err);
+        alert("Gagal menghapus mesin: " + (err.message || err));
+        setStatus("Gagal menghapus.", true);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+  });
+
+  // initial load (call after small delay to let initPage render header)
+  setTimeout(() => {
+    loadMesin();
+  }, 300);
+</script>
+</body>
+</html>

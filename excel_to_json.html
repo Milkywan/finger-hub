@@ -6,11 +6,11 @@
   <link rel="icon" type="image/png" href="images/icon.png">
 
   <title>Konversi Mesin → JSON</title>
-  <!-- common-auth.js dihapus, semua autentikasi dan UI dihandel common-ui.js -->
-  <!-- PASTIKAN XLSX INI DIMUAT SEBELUM SCRIPT MODULE DI BAWAH -->
+  
+  
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    /* --- GLOBAL STYLES (Konsisten di semua halaman) --- */
+    
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -19,11 +19,11 @@
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column; /* Menggunakan column untuk layout nav + content + footer */
-      min-height: 100vh; /* Pastikan halaman memenuhi tinggi viewport */
+      flex-direction: column; 
+      min-height: 100vh; 
     }
     
-    /* --- NAVIGASI (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+    
     nav {
         display: flex; 
         justify-content: space-between; 
@@ -48,7 +48,7 @@
     }
     nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
 
-    /* Gaya untuk info user dan tombol logout di header */
+    
     .right-nav-items {
         display: flex;
         align-items: center;
@@ -59,7 +59,7 @@
         color: rgba(255, 255, 255, 0.8);
         white-space: nowrap; 
     }
-    nav .menu2 { /* Untuk tombol Logout */
+    nav .menu2 { 
         color: white;
         cursor: pointer;
         padding: 0.5rem 1rem;
@@ -73,22 +73,22 @@
         transform: translateY(-2px);
     }
 
-    /* --- WRAPPER KONTEN UTAMA --- */
+    
     .main-content-wrapper {
-        flex: 1; /* Ambil sisa ruang vertikal antara header dan footer */
+        flex: 1; 
         display: flex;
         justify-content: center;
         align-items: center;
         padding: 2rem;
     }
 
-    /* --- CARD KONTEN SPESIFIK HALAMAN INI --- */
-    /* Nama class 'card' diubah menjadi 'container' untuk konsistensi dengan pola admin pages */
-    .container { /* Menggantikan .card di HTML asli */
+    
+    
+    .container { 
       background: rgba(255,255,255,0.1);
       padding: 2rem;
       border-radius: 1rem;
-      max-width: 800px; /* Pertahankan lebar yang sesuai untuk halaman ini */
+      max-width: 800px; 
       width: 100%;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       animation: fadeIn .8s ease;
@@ -107,7 +107,7 @@
       text-align: center;
       cursor: pointer;
       transition: background .3s, transform .2s;
-      margin-bottom: 1rem; /* Tambahkan sedikit margin bawah */
+      margin-bottom: 1rem; 
     }
     .dropzone.dragover {
       background: rgba(165,180,252,0.1);
@@ -126,9 +126,9 @@
       color: white;
     }
     input::placeholder,
-    textarea::placeholder { /* Menargetkan placeholder pada input dan textarea */
-    color: #cccccc; /* Contoh: warna abu-abu terang */
-    /* Atau rgba(255,255,255,0.8) jika ingin lebih terang dari default tapi tetap semi-transparan */
+    textarea::placeholder { 
+    color: #cccccc; 
+    
     }
     button {
       padding: 0.75rem 1.25rem;
@@ -146,13 +146,13 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
-    /* Gaya untuk status box */
+    
     #status {
         margin-top: 1rem;
         text-align: center;
     }
 
-    /* --- FOOTER (Gaya yang sama seperti yang disuntikkan common-ui.js) --- */
+    
     footer {
       text-align: center;
       padding: 1rem;
@@ -163,7 +163,7 @@
     footer a { color: white; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    /* --- Media Queries for Responsiveness (Konsisten di semua halaman) --- */
+    
     @media (max-width: 768px) {
         nav { 
             padding: 1rem; 
@@ -190,12 +190,12 @@
   </style>
 </head>
 <body>
-  <!-- Placeholder untuk Header yang akan disuntikkan oleh common-ui.js -->
+  
   <div id="header-placeholder"></div> 
 
-  <!-- Wrapper untuk konten utama, agar layout vertikal rapi -->
+  
   <div class="main-content-wrapper">
-    <!-- Konten halaman spesifik (sekarang menggunakan id "pageContainer" dan class "container") -->
+    
     <div class="container" id="pageContainer">
       <h1>Excel → JSON Converter</h1>
       <p>Konversi daftar <strong>Mesin Fingerprint</strong> ke format JSON siap pakai.</p>
@@ -213,23 +213,23 @@
     </div>
   </div>
 
-  <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
+  
   <div id="footer-placeholder"></div> 
 
   <script type="module">
-    // Import initPage dari common-ui.js
+    
     import { initPage } from "./common-ui.js";
 
-    // Panggil initPage saat DOM siap
+    
     document.addEventListener('DOMContentLoaded', () => {
       initPage(
-          "Mesin → JSON", // pageTitle (akan jadi active di navigasi)
-          "pageContainer",          // mainContentId (ID dari div container utama halaman ini)
-          "user"                    // requiredRole (semua user bisa akses)
+          "Mesin → JSON", 
+          "pageContainer",          
+          "user"                    
       );
     });
 
-    // Pastikan XLSX global tersedia
+    
     const XLSX = window.XLSX;
     if (!XLSX) {
         console.error("SheetJS (xlsx.full.min.js) tidak dimuat dengan benar. Pastikan path-nya benar dan dimuat sebelum script ini.");
