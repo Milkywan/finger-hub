@@ -250,14 +250,14 @@
     <div class="main-content-wrapper">
         <!-- Konten halaman spesifik (sekarang menggunakan id "adminContainer" dan class "container") -->
         <div class="container" id="adminContainer">
-            <h2>Kelola Pengguna rev</h2> <!-- Mengganti h1 menjadi h2 -->
+            <h2>Kelola Pengguna</h2> <!-- Mengganti h1 menjadi h2 -->
 
             <div class="controls">
                 <input type="text" id="searchUserInput" placeholder="Cari berdasarkan username/email...">
                 <button class="btn btn-primary" id="searchUserBtn">Cari</button>
                 <button class="btn btn-info" id="refreshUsersBtn">Refresh Data</button>
                 <!-- Tombol kembali ke home, sekarang pakai goPage() -->
-                <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button>
+               <!-- <button class="btn btn-info" onclick="window.goPage('home.html')">Kembali ke Menu Utama</button> -->
             </div>
 
             <div class="status-message" id="statusMessage">Memuat daftar pengguna...</div>
@@ -285,87 +285,35 @@
     <!-- Placeholder untuk Footer yang akan disuntikkan oleh common-ui.js -->
     <div id="footer-placeholder"></div> 
 
-    <script type="module">
+        <script type="module">
+        // --- IMPORTS ---
         // Import initPage dari common-ui.js
-        import { initPage } from "./common-ui.js";
+        import { initPage, goPage } from "./common-ui.js"; // Pastikan goPage juga diimpor jika digunakan
         // Import auth dari firebase-config.js (dibutuhkan untuk auth.currentUser)
-        import { auth } from "./firebase-config.js"; 
+        import { auth, db } from "./firebase-config.js"; 
         import {
-            collection,
-            doc,
-            getDocs,
-            query,
-            where,
-            orderBy,
+            // collection, // Tidak lagi digunakan langsung oleh klien
+            // doc, // Masih digunakan untuk update/delete
+            // getDocs, // Tidak lagi digunakan langsung oleh klien
+            // query, // Tidak lagi digunakan langsung oleh klien
+            // where, // Tidak lagi digunakan langsung oleh klien
+            // orderBy, // Tidak lagi digunakan langsung oleh klien
             updateDoc,
             deleteDoc
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { db } from "./firebase-config.js"; 
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js";
-async function loadUsers(searchTerm = '') {
-    setStatus("Memuat daftar pengguna...", 'info');
-    usersTableBody.innerHTML = '';
-    allUsersData = [];
 
-    try {
-        // Panggil Cloud Function untuk mendapatkan daftar pengguna
-        const functions = getFunctions();
-        const listUsersCallable = httpsCallable(functions, 'listUsersForAdmin');
-
-        // Kirim searchTerm ke Cloud Function
-        const result = await listUsersCallable({ searchTerm: searchTerm });
-        
-        if (!result.data || !result.data.users || result.data.users.length === 0) {
-            setStatus("Tidak ada pengguna ditemukan.", 'info');
-            return;
-        }
-
-        allUsersData = result.data.users.map(user => {
-            // Konversi Timestamp kembali ke Date object jika diperlukan
-            // Ini karena Admin SDK mengembalikan Timestamp, bukan Date object.
-            if (user.createdAt && user.createdAt._seconds) { // Contoh format Timestamp dari Admin SDK
-                 user.createdAt = new Date(user.createdAt._seconds * 1000 + user.createdAt._nanoseconds / 1000000);
-            }
-            return user;
-        });
-        
-        renderUsersTable(allUsersData);
-        setStatus(`Berhasil memuat ${allUsersData.length} pengguna.`, 'success');
-
-    } catch (error) {
-        // Tangani error dari Cloud Function, termasuk permission-denied
-        const errorMessage = error.message || "Terjadi kesalahan yang tidak diketahui.";
-        if (error.code === "permission-denied" || error.code === "unauthenticated") {
-            setStatus(`Akses ditolak: ${errorMessage}`, 'error');
-            console.error("Akses ditolak:", error.message);
-            // Anda mungkin ingin mengarahkan pengguna ke halaman login jika unauthenticated
-            if (error.code === "unauthenticated") {
-                setTimeout(() => window.location.href = "/", 3000);
-            }
-        } else {
-            setStatus(`Gagal memuat pengguna: ${errorMessage}`, 'error');
-            console.error("Error loading users via Cloud Function:", error);
-        }
-    }
-}
-        // Panggil initPage saat DOM siap
-        document.addEventListener('DOMContentLoaded', () => {
-            initPage(
-                "Kelola Pengguna",   // pageTitle
-                "adminContainer",    // mainContentId
-                "super_admin"        // requiredRole
-            );
-        });
-
+        // --- Variabel Global dan Elemen DOM ---
         const usersTableBody = document.querySelector('#usersTable tbody');
         const statusMessage = document.getElementById('statusMessage');
         const searchUserInput = document.getElementById('searchUserInput');
         const searchUserBtn = document.getElementById('searchUserBtn');
         const refreshUsersBtn = document.getElementById('refreshUsersBtn');
 
-        let allUsersData = []; 
+        let allUsersData = []; // Untuk menyimpan data pengguna yang dimuat
 
-        // --- Fungsi Helper ---
+        // --- Fungsi Helper (Dideklarasikan SEKALI di sini) ---
+
         function setStatus(message, type = 'info') {
             statusMessage.textContent = message;
             statusMessage.className = `status-message ${type}`;
@@ -373,44 +321,69 @@ async function loadUsers(searchTerm = '') {
 
         async function loadUsers(searchTerm = '') {
             setStatus("Memuat daftar pengguna...", 'info');
-            usersTableBody.innerHTML = '';
-            allUsersData = [];
+            usersTableBody.innerHTML = ''; // Bersihkan tabel sebelumnya
+            allUsersData = []; // Kosongkan data pengguna sebelumnya
 
             try {
-                let q = collection(db, "users");
-                if (searchTerm) {
-                    q = query(q, 
-                        where("username", ">=", searchTerm), 
-                        where("username", "<=", searchTerm + '\uf8ff')
-                    );
-                }
-                
-                q = query(q, orderBy("createdAt", "desc"));
+                // Panggil Cloud Function untuk mendapatkan daftar pengguna
+                const functions = getFunctions();
+                const listUsersCallable = httpsCallable(functions, 'listUsersForAdmin');
 
-                const querySnapshot = await getDocs(q);
+                // Kirim searchTerm ke Cloud Function
+                const result = await listUsersCallable({ searchTerm: searchTerm });
                 
-                if (querySnapshot.empty) {
+                // Periksa jika ada error dari Cloud Function (misal: permission-denied)
+                if (result.data.code && result.data.code !== 'ok') {
+                    const errorMessage = result.data.message || "Terjadi kesalahan saat memuat pengguna.";
+                    if (result.data.code === "permission-denied" || result.data.code === "unauthenticated") {
+                         setStatus(`Akses ditolak: ${errorMessage}`, 'error');
+                         console.error("Akses ditolak oleh Cloud Function:", errorMessage);
+                         if (result.data.code === "unauthenticated") {
+                             setTimeout(() => window.location.href = "/", 3000); // Redirect ke login
+                         }
+                    } else {
+                        setStatus(`Gagal memuat pengguna: ${errorMessage}`, 'error');
+                        console.error("Error loading users via CF:", errorMessage);
+                    }
+                    return;
+                }
+
+                if (!result.data || !result.data.users || result.data.users.length === 0) {
                     setStatus("Tidak ada pengguna ditemukan.", 'info');
                     return;
                 }
 
-                querySnapshot.forEach(doc => {
-                    allUsersData.push({ id: doc.id, ...doc.data() });
+                allUsersData = result.data.users.map(user => {
+                    // Konversi Timestamp dari Cloud Function kembali ke Date object
+                    // Firebase Admin SDK mengembalikan Timestamp, yang di JSON akan punya _seconds dan _nanoseconds
+                    if (user.createdAt && user.createdAt._seconds) {
+                         user.createdAt = new Date(user.createdAt._seconds * 1000 + user.createdAt._nanoseconds / 1000000);
+                    }
+                    return user;
                 });
                 
                 renderUsersTable(allUsersData);
                 setStatus(`Berhasil memuat ${allUsersData.length} pengguna.`, 'success');
 
             } catch (error) {
-                setStatus(`Gagal memuat pengguna: ${error.message}`, 'error');
-                console.error("Error loading users:", error);
+                // Tangani error jaringan atau error callable function lainnya
+                const errorMessage = error.message || "Terjadi kesalahan yang tidak diketahui.";
+                setStatus(`Gagal memuat pengguna: ${errorMessage}`, 'error');
+                console.error("Error loading users via Cloud Function (client-side catch):", error);
+                // Handle khusus jika error adalah dari Firebase Functions callable
+                if (error.code && (error.code === "permission-denied" || error.code === "unauthenticated")) {
+                    setStatus(`Akses ditolak: ${errorMessage}`, 'error');
+                    if (error.code === "unauthenticated") {
+                        setTimeout(() => window.location.href = "/", 3000);
+                    }
+                }
             }
         }
 
         function renderUsersTable(users) {
             usersTableBody.innerHTML = '';
             const currentUserUid = auth.currentUser ? auth.currentUser.uid : null;
-            const currentUserRole = localStorage.getItem('userRole'); // Ambil peran user yang login dari localStorage
+            const currentUserRole = localStorage.getItem('userRole');
 
             users.forEach(user => {
                 const row = usersTableBody.insertRow();
@@ -426,8 +399,6 @@ async function loadUsers(searchTerm = '') {
                 const roleSelect = document.createElement('select');
                 roleSelect.id = `role-${user.id}`;
                 
-                // Cek apakah dropdown harus dinonaktifkan
-                // Jika user yang diedit adalah super_admin, DAN BUKAN dirinya sendiri
                 const disableRoleSelect = (user.role === 'super_admin' && user.id !== currentUserUid) || (user.id === currentUserUid && currentUserRole === 'super_admin');
                 if (disableRoleSelect) {
                     roleSelect.disabled = true;
@@ -445,13 +416,13 @@ async function loadUsers(searchTerm = '') {
                     if (user.role === role) {
                         option.selected = true;
                     }
-                    // Jika user yang login bukan super_admin, tidak boleh mengubah ke super_admin
                     if (role === 'super_admin' && currentUserRole !== 'super_admin') {
                          option.disabled = true;
                     }
                     roleSelect.appendChild(option);
                 });
                 
+                // TODO: Pertimbangkan menggunakan Cloud Function juga untuk updateField ini
                 roleSelect.addEventListener('change', (e) => updateField(user.id, 'role', e.target.value));
                 roleCell.appendChild(roleSelect);
 
@@ -461,27 +432,26 @@ async function loadUsers(searchTerm = '') {
                 approvedCheckbox.id = `approved-${user.id}`;
                 approvedCheckbox.checked = user.approved === true; 
 
-                // Nonaktifkan checkbox 'Disetujui' jika user yang diedit adalah super_admin dan bukan dirinya sendiri
                 if (user.role === 'super_admin' && user.id !== currentUserUid) {
                     approvedCheckbox.disabled = true;
                     approvedCheckbox.title = "Tidak bisa mengubah status persetujuan super admin lain.";
-                } else if (user.id === currentUserUid) { // Tidak bisa mengubah status persetujuan dirinya sendiri
+                } else if (user.id === currentUserUid) { 
                      approvedCheckbox.disabled = true;
                      approvedCheckbox.title = "Tidak bisa mengubah status persetujuan Anda sendiri.";
                 }
 
+                // TODO: Pertimbangkan menggunakan Cloud Function juga untuk updateField ini
                 approvedCheckbox.addEventListener('change', (e) => updateField(user.id, 'approved', e.target.checked));
                 approvedCell.appendChild(approvedCheckbox);
 
                 const createdAtCell = row.insertCell();
-                createdAtCell.textContent = user.createdAt ? new Date(user.createdAt.toDate()).toLocaleString() : 'N/A';
+                createdAtCell.textContent = user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'; // createdAt sudah berupa Date object
 
                 const actionCell = row.insertCell();
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = 'Hapus';
                 deleteBtn.className = 'btn btn-danger';
                 
-                // Nonaktifkan tombol hapus untuk super_admin lain atau diri sendiri
                 if (user.role === 'super_admin' && user.id !== currentUserUid) {
                     deleteBtn.disabled = true;
                     deleteBtn.title = "Tidak bisa menghapus super admin lain.";
@@ -490,6 +460,7 @@ async function loadUsers(searchTerm = '') {
                     deleteBtn.title = "Tidak bisa menghapus akun Anda sendiri.";
                 }
                 
+                // TODO: Pertimbangkan menggunakan Cloud Function juga untuk deleteUser ini
                 deleteBtn.onclick = () => deleteUser(user.id, user.username || user.email);
                 actionCell.appendChild(deleteBtn);
             });
@@ -501,26 +472,25 @@ async function loadUsers(searchTerm = '') {
             const targetUser = allUsersData.find(u => u.id === uid);
             const targetUserRole = targetUser ? targetUser.role : null;
 
-            // Proteksi: Super Admin tidak bisa mengubah peran Super Admin lain atau dirinya sendiri
+            // Proteksi klien (sebaiknya juga ada di sisi server jika menggunakan CF)
             if (fieldName === 'role') {
                 if (targetUserRole === 'super_admin' && uid !== currentUserUid) {
                     alert("Tidak bisa mengubah peran 'Super Admin' lain.");
-                    loadUsers(); // Muat ulang untuk membatalkan perubahan di UI
+                    loadUsers(); 
                     return;
                 }
                 if (uid === currentUserUid && value !== 'super_admin' && currentUserRole === 'super_admin') {
                     alert("Anda tidak bisa menurunkan peran Anda sendiri dari 'Super Admin'.");
-                    loadUsers(); // Muat ulang untuk membatalkan perubahan di UI
+                    loadUsers(); 
                     return;
                 }
                 if (value === 'super_admin' && currentUserRole !== 'super_admin') {
                     alert("Anda tidak memiliki izin untuk mengubah peran menjadi 'Super Admin'.");
-                    loadUsers(); // Muat ulang untuk membatalkan perubahan di UI
+                    loadUsers(); 
                     return;
                 }
             }
             
-            // Proteksi: Tidak bisa mengubah status approved super admin lain atau dirinya sendiri
             if (fieldName === 'approved') {
                  if (targetUserRole === 'super_admin' && uid !== currentUserUid) {
                     alert("Tidak bisa mengubah status persetujuan super admin lain.");
@@ -541,6 +511,15 @@ async function loadUsers(searchTerm = '') {
                     [fieldName]: value
                 });
                 setStatus(`Pengguna ${targetUser.username || targetUser.email} - Bidang '${fieldName}' berhasil diperbarui menjadi '${value}'.`, 'success');
+                // Setelah update Firestore, sebaiknya update juga data di `allUsersData`
+                const updatedUserIndex = allUsersData.findIndex(u => u.id === uid);
+                if (updatedUserIndex !== -1) {
+                    allUsersData[updatedUserIndex][fieldName] = value;
+                }
+                // Jika perubahan peran, mungkin perlu update custom claims juga (melalui CF)
+                if (fieldName === 'role') {
+                    alert("Peran pengguna telah diubah di Firestore. Untuk efek penuh (misalnya di aturan keamanan), Anda mungkin perlu memperbarui Custom Claims Firebase Authentication pengguna ini melalui Cloud Function.");
+                }
             } catch (error) {
                 setStatus(`Gagal memperbarui pengguna ${targetUser.username || targetUser.email}: ${error.message}`, 'error');
                 console.error("Error updating user field:", error);
@@ -552,7 +531,7 @@ async function loadUsers(searchTerm = '') {
             const targetUser = allUsersData.find(u => u.id === uid);
             const targetUserRole = targetUser ? targetUser.role : null;
 
-            // Proteksi: Super Admin tidak bisa menghapus Super Admin lain atau dirinya sendiri
+            // Proteksi klien (sebaiknya juga ada di sisi server jika menggunakan CF)
             if (targetUserRole === 'super_admin' && uid !== currentUserUid) {
                 alert("Anda tidak memiliki izin untuk menghapus 'Super Admin' lain.");
                 return;
@@ -567,10 +546,13 @@ async function loadUsers(searchTerm = '') {
                     const userDocRef = doc(db, "users", uid);
                     await deleteDoc(userDocRef);
                     setStatus(`Pengguna '${displayIdentifier}' berhasil dihapus.`, 'success');
+                    // Hapus dari UI
                     const rowToRemove = document.querySelector(`tr[data-uid="${uid}"]`);
                     if (rowToRemove) {
                         rowToRemove.remove();
                     }
+                    // Hapus dari data lokal
+                    allUsersData = allUsersData.filter(u => u.id !== uid);
                     alert("Perhatian: Ini hanya menghapus dokumen profil pengguna dari Firestore. Akun autentikasi Firebase pengguna (email/password) masih ada. Untuk menghapus sepenuhnya, perlu dihapus melalui Firebase Console atau Cloud Functions.");
                 } catch (error) {
                     setStatus(`Gagal menghapus pengguna '${displayIdentifier}': ${error.message}`, 'error');
@@ -578,6 +560,19 @@ async function loadUsers(searchTerm = '') {
                 }
             }
         }
+
+        // --- Inisialisasi Halaman (Dipanggil saat DOM siap) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initPage(
+                "Kelola Pengguna",   // pageTitle
+                "adminContainer",    // mainContentId
+                "super_admin"        // requiredRole
+            );
+
+            // Muat pengguna saat halaman pertama kali dimuat
+            loadUsers();
+        });
+
 
         // --- Event Listeners untuk Kontrol ---
         searchUserBtn.addEventListener('click', () => {
@@ -592,12 +587,14 @@ async function loadUsers(searchTerm = '') {
         });
 
         refreshUsersBtn.addEventListener('click', () => {
-            searchUserInput.value = '';
-            loadUsers();
+            searchUserInput.value = ''; // Bersihkan input pencarian
+            loadUsers(); // Muat ulang tanpa filter pencarian
         });
     </script>
+
 </body>
 </html>
+
 
 
 
