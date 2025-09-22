@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="icon" type="image/png" href="images/icon.png">
-
+<script src="xlsx.full.min.js"></script>
 <title>Kelola Mesin Fingerprint</title>
 <style>
   /* --- Style seragam dengan theme project (simple & compatible) --- */
@@ -249,6 +249,9 @@ td, th {
       <div class="actions">
         <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
         <div class="status" id="pageStatus">Memuat data...</div>
+        <button id="uploadBtn" class="btn btn-ghost">⬆️ Upload Excel</button>
+<input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none">
+<button id="templateBtn" class="btn btn-ghost">⬇️ Download Template</button>
       </div>
 
       <div class="table-wrap">
@@ -591,6 +594,76 @@ snap.forEach(docSnap => {
       }
     }
   });
+const uploadBtn = document.getElementById("uploadBtn");
+const excelFile = document.getElementById("excelFile");
+const templateBtn = document.getElementById("templateBtn");
+
+// Download template Excel
+templateBtn.addEventListener("click", () => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["Nama Mesin", "IP Address", "Port"], // header
+    ["HR110", "10.30.39.189", "4370"]     // contoh
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws, "Template");
+  XLSX.writeFile(wb, "template_mesin.xlsx");
+});
+
+// Trigger file input
+uploadBtn.addEventListener("click", () => {
+  excelFile.click();
+});
+
+// Handle file upload
+excelFile.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    // Skip header row
+    const machines = rows.slice(1).filter(r => r.length >= 3);
+
+    let added = 0, skipped = 0;
+
+    for (const row of machines) {
+      const [nama, ip, port] = row.map(x => String(x).trim());
+
+      if (!nama || !ip || !port) continue;
+
+      // cek apakah sudah ada mesin dengan IP yang sama
+      const qSnap = await getDocs(query(collection(db, "mesin_fp")));
+      const exists = qSnap.docs.some(d => d.data().ip === ip);
+
+      if (exists) {
+        skipped++;
+        continue;
+      }
+
+      await addDoc(collection(db, "mesin_fp"), {
+        mesin: nama,
+        ip,
+        port: parseInt(port, 10),
+        createdAt: serverTimestamp(),
+        createdBy: auth.currentUser ? auth.currentUser.uid : "system"
+      });
+      added++;
+    }
+
+    alert(`Upload selesai. Ditambahkan: ${added}, dilewati: ${skipped}.`);
+    loadMesin();
+
+  } catch (err) {
+    console.error(err);
+    alert("Gagal memproses file Excel: " + err.message);
+  } finally {
+    excelFile.value = ""; // reset input
+  }
+});
 
   // initial load (call after small delay to let initPage render header)
   setTimeout(() => {
@@ -599,6 +672,7 @@ snap.forEach(docSnap => {
 </script>
 </body>
 </html>
+
 
 
 
