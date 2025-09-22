@@ -95,6 +95,16 @@
       border-radius: 5px;
       color: #a5b4fc;
   }
+/* Garis pemisah baris tabel */
+tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.04); /* striping halus */
+}
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08); /* highlight saat hover */
+}
+td, th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
 
   .right-nav-items {
       display: flex;
@@ -341,30 +351,32 @@
       if (snap.empty) {
         tbody.innerHTML = `<tr><td colspan="5" class="muted">Belum ada mesin terdaftar.</td></tr>`;
       } else {
-        snap.forEach(docSnap => {
-          const d = docSnap.data();
-          const id = docSnap.id;
-          // Periksa apakah d.createdAt adalah objek Timestamp Firestore atau sudah jadi Date
-          const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
-          const created = createdDate ? createdDate.toLocaleString() : "-";
+        let index = 0;
+snap.forEach(docSnap => {
+  index++;
+  const d = docSnap.data();
+  const id = docSnap.id;
+  const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
+  const created = createdDate ? createdDate.toLocaleString() : "-";
 
-          const tr = document.createElement("tr");
+  const tr = document.createElement("tr");
 
-          // safe text escaping
-          function esc(v) { return v === undefined || v === null ? "" : String(v); }
+  function esc(v) { return v === undefined || v === null ? "" : String(v); }
 
-          tr.innerHTML = `
-            <td>${esc(d.mesin)}</td>
-            <td>${esc(d.ip)}</td>
-            <td>${esc(d.port)}</td>
-            <td class="muted">${created}</td>
-            <td>
-              <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
-              <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
+  tr.innerHTML = `
+    <td>${index}</td>
+    <td>${esc(d.mesin)}</td>
+    <td>${esc(d.ip)}</td>
+    <td>${esc(d.port)}</td>
+    <td class="muted">${created}</td>
+    <td>
+      <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
+      <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+});
+
       }
       setStatus(`Selesai memuat (${snap.size} mesin).`);
     } catch (err) {
@@ -584,4 +596,5 @@
 </script>
 </body>
 </html>
+
 
