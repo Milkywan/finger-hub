@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="icon" type="image/png" href="images/icon.png">
+
 <title>Kelola Mesin Fingerprint</title>
 <style>
   /* --- Style seragam dengan theme project (simple & compatible) --- */
@@ -17,6 +19,110 @@
     flex-direction: column;
     min-height: 100vh;
   }
+
+  /* --- Navigation Styles (Diadaptasi dari skrip pertama untuk konsep menu ikon) --- */
+  nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      box-shadow: 0 2px 3px rgba(0,0,0,0.1); /* Ditambahkan untuk konsistensi */
+  }
+  nav .brand {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: white; /* Pastikan teks brand putih */
+  }
+
+  nav .menu {
+      display: flex;
+      align-items: center;
+      flex-grow: 1;
+      justify-content: center;
+      gap: 8px; /* Spasi antar ikon menu */
+  }
+
+  .menu-icon-link {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      text-decoration: none;
+      color: white;
+      transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .menu-icon-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      color: #a5b4fc;
+  }
+
+  .menu-icon-link .menu-icon {
+      width: 33px;
+      height: 33px;
+      object-fit: contain;
+  }
+
+  .menu-icon-link .menu-text {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+      z-index: 1000;
+      top: calc(100% + 5px);
+      left: 50%;
+      transform: translateX(-50%) translateY(5px);
+  }
+
+  .menu-icon-link:hover .menu-text {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+  }
+
+  .menu-icon-link.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      color: #a5b4fc;
+  }
+
+  .right-nav-items {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+  }
+  .user-info {
+      font-size: 0.9em;
+      color: rgba(255, 255, 255, 0.8);
+      white-space: nowrap;
+  }
+  nav .menu2 {
+      color: white;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.3s, transform 0.2s;
+      font-weight: bold;
+      font-size: 0.9em; /* Ukuran font disamakan */
+  }
+  nav .menu2:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+  }
+  /* --- End Navigation Styles --- */
+
+
   .main-content-wrapper {
     flex: 1;
     display:flex;
@@ -51,6 +157,7 @@
   .muted { color: rgba(255,255,255,0.7); font-size:13px; }
   .small { font-size:13px; padding:6px 8px; border-radius:6px; }
   .icon-btn { background:transparent; border:1px solid rgba(255,255,255,0.06); padding:6px 8px; border-radius:6px; cursor:pointer; color:white; }
+  .icon-btn:hover { background: rgba(255,255,255,0.1); } /* Tambahan hover untuk icon-btn */
   .status { margin-left:8px; font-size:13px; color:#9ca3ff; }
 
   /* Modal */
@@ -59,13 +166,55 @@
   .modal-card h3 { margin:0 0 8px 0; font-size:18px; }
   .form-row { margin-bottom:10px; }
   .form-row label { display:block; font-size:13px; margin-bottom:6px; color:#374151; }
-  .form-row input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d1d5db; box-sizing:border-box; font-size:14px; }
+  .form-row input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #d1d5db; box-sizing:border-box; font-size:14px; color: #111827;} /* Warna teks input modal */
+  .form-row input::placeholder { color: #6b7280; } /* Placeholder input modal */
 
   .hidden { display:none; }
 
-  @media (max-width:720px) {
-    .container { padding: 12px; }
-    table { min-width: 640px; }
+  /* --- Footer Styles (Diadaptasi dari skrip pertama untuk konsistensi) --- */
+  footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: .9rem;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 -2px 3px rgba(0,0,0,0.1); /* Ditambahkan untuk konsistensi */
+  }
+  footer a { color: white; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* --- Media Queries (Diadaptasi dari skrip pertama untuk navigasi) --- */
+  @media (max-width: 768px) {
+      nav {
+          padding: 1rem;
+          flex-direction: column;
+          align-items: flex-start;
+      }
+      nav .brand { margin-bottom: 10px; }
+      nav .menu {
+          width: 100%;
+          flex-wrap: wrap;
+          justify-content: flex-start;
+          margin-bottom: 10px;
+          gap: 5px; /* Spasi disesuaikan untuk layar kecil */
+      }
+      .menu-icon-link { /* Padding disesuaikan untuk layar kecil */
+          padding: 5px 8px;
+      }
+      .right-nav-items {
+          width: 100%;
+          justify-content: space-between;
+          margin-top: 10px;
+      }
+      .user-info {
+          font-size: 0.8em;
+      }
+      nav .menu2 {
+          padding: 0.4rem 0.8rem;
+          font-size: 0.8em;
+      }
+      .container { padding: 12px; }
+      table { min-width: 640px; }
   }
 </style>
 </head>
@@ -138,6 +287,7 @@
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
   // inisialisasi page - tidak mengubah common-ui.js
+  // Pastikan peran pengguna yang sesuai (misalnya 'admin') dapat mengakses halaman ini
   initPage("Kelola Mesin Fingerprint", "mainContainer", "admin");
 
   // DOM refs
@@ -158,11 +308,11 @@
   // helper: show status
   function setStatus(msg, isError=false) {
     pageStatus.textContent = msg;
-    pageStatus.style.color = isError ? "#fca5a5" : "#c7d2fe";
+    pageStatus.style.color = isError ? "#fca5a5" : "#c7d2fe"; // Warna konsisten
   }
 
   // show/hide modal
-  function openModal(asEdit=false) {
+  function openModal() {
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
   }
@@ -185,7 +335,10 @@
         snap.forEach(docSnap => {
           const d = docSnap.data();
           const id = docSnap.id;
-          const created = d.createdAt ? (d.createdAt.toDate ? d.createdAt.toDate().toLocaleString() : new Date(d.createdAt).toLocaleString()) : "-";
+          // Periksa apakah d.createdAt adalah objek Timestamp Firestore atau sudah jadi Date
+          const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
+          const created = createdDate ? createdDate.toLocaleString() : "-";
+
           const tr = document.createElement("tr");
 
           // safe text escaping
@@ -237,12 +390,25 @@
       alert("Isi semua field (Nama, IP, Port).");
       return;
     }
+    // Validasi IP Address (basic)
+    const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    if (!ipRegex.test(ip)) {
+        alert("Format IP Address tidak valid.");
+        return;
+    }
+    // Validasi Port
+    const portNum = parseInt(port, 10);
+    if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+        alert("Port harus berupa angka antara 1 dan 65535.");
+        return;
+    }
+
 
     saveBtn.disabled = true;
     try {
       // get current user info for log
       const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error("Pengguna belum terautentikasi.");
+      if (!currentUser) throw new Error("Pengguna belum terautentikasi. Silakan login kembali.");
 
       // get username from users collection (so we can store updatedname)
       const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
@@ -259,21 +425,21 @@
         await updateDoc(ref, {
           mesin: nama,
           ip: ip,
-          port: port,
+          port: portNum, // Simpan sebagai nomor
           updatedAt: serverTimestamp(),
           updatedBy: currentUser.uid
         });
 
         // create logs per changed field
         const changes = [];
-        if ((before.mesin || "") !== nama) {
+        if (esc(before.mesin) !== nama) {
           changes.push({ field: "mesin", old: before.mesin || "", neu: nama });
         }
-        if ((before.ip || "") !== ip) {
+        if (esc(before.ip) !== ip) {
           changes.push({ field: "ip", old: before.ip || "", neu: ip });
         }
-        if ((before.port || "") !== port) {
-          changes.push({ field: "port", old: before.port || "", neu: port });
+        if (esc(before.port) !== String(portNum)) { // Bandingkan port sebagai string untuk log
+          changes.push({ field: "port", old: before.port || "", neu: portNum });
         }
 
         // write a log doc for each changed field
@@ -292,13 +458,13 @@
           await addDoc(collection(db, "mesin_logs"), log);
         }
 
-        setStatus("Mesin diperbarui.");
+        setStatus("Mesin berhasil diperbarui.");
       } else {
         // create
         const payload = {
           mesin: nama,
           ip: ip,
-          port: port,
+          port: portNum, // Simpan sebagai nomor
           createdAt: serverTimestamp(),
           createdBy: currentUser.uid
         };
@@ -310,14 +476,14 @@
           action: "create",
           mesin_baru: nama,
           ip_baru: ip,
-          port_baru: port,
+          port_baru: portNum,
           createdBy: currentUser.uid,
           createdname: updatedName,
           createdAt: serverTimestamp()
         };
         await addDoc(collection(db, "mesin_logs"), log);
 
-        setStatus("Mesin baru ditambahkan.");
+        setStatus("Mesin baru berhasil ditambahkan.");
       }
 
       closeModal();
@@ -351,7 +517,7 @@
         modalTitle.textContent = "Edit Mesin";
         inputNama.value = d.mesin || "";
         inputIP.value = d.ip || "";
-        inputPort.value = d.port || "";
+        inputPort.value = d.port || ""; // Mengambil nilai port yang sudah ada
         openModal();
       } catch (err) {
         console.error(err);
@@ -359,10 +525,10 @@
       }
     } else if (action === "delete") {
       if (!confirm("Yakin ingin menghapus mesin ini? Tindakan ini tidak bisa dibatalkan.")) return;
-      saveBtn.disabled = true;
+      
       try {
         const currentUser = auth.currentUser;
-        if (!currentUser) throw new Error("Pengguna belum terautentikasi.");
+        if (!currentUser) throw new Error("Pengguna belum terautentikasi. Silakan login kembali.");
         const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
         const deletedName = (userDocSnap.exists() && userDocSnap.data().username) ? userDocSnap.data().username : currentUser.email || currentUser.uid;
 
@@ -384,20 +550,20 @@
           mesin_lama: before.mesin || "",
           ip_lama: before.ip || "",
           port_lama: before.port || "",
-          updatedname: deletedName,
+          updatedname: deletedName, // 'updatedname' karena ini aksi oleh user
           updatedBy: currentUser.uid,
           updatedAt: serverTimestamp()
         };
         await addDoc(collection(db, "mesin_logs"), log);
 
-        setStatus("Mesin dihapus.");
+        setStatus("Mesin berhasil dihapus.");
         await loadMesin();
       } catch (err) {
         console.error(err);
         alert("Gagal menghapus mesin: " + (err.message || err));
         setStatus("Gagal menghapus.", true);
       } finally {
-        saveBtn.disabled = false;
+        // saveBtn.disabled = false; // Ini hanya perlu jika tombol "delete" juga men-disable saveBtn
       }
     }
   });
