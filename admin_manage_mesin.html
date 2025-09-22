@@ -170,7 +170,8 @@ td, th {
   .btn-primary { background:#4f46e5; color:white; }
   .btn-ghost { background: rgba(255,255,255,0.06); color:white; border:1px solid rgba(255,255,255,0.08); }
   .table-wrap { overflow:auto; max-height:520px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); }
-  table { width:100%; border-collapse:collapse; min-width:720px; color:white; }
+  table { width:100%; border-collapse:collapse; min-width:720px; color:white; border: 1px solid rgba(255, 255, 255, 0.15);}
+
   th, td { padding:10px 12px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06); font-size:14px; }
   th { position: sticky; top:0; background: rgba(255,255,255,0.02); font-weight:700; }
   .muted { color: rgba(255,255,255,0.7); font-size:13px; }
@@ -351,7 +352,7 @@ td, th {
       const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
       if (snap.empty) {
-        tbody.innerHTML = `<tr><td colspan="5" class="muted">Belum ada mesin terdaftar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">Belum ada mesin terdaftar.</td></tr>`;
       } else {
         let index = 0;
 snap.forEach(docSnap => {
@@ -598,6 +599,7 @@ snap.forEach(docSnap => {
 </script>
 </body>
 </html>
+
 
 
 
