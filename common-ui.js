@@ -93,6 +93,7 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
 
         if (userRole === "admin" || userRole === "super_admin") {
             adminMenuLinks += createHeaderMenuItem("admin_upload_data.html", "Upload Data Karyawan", currentPageTitle);
+            adminMenuLinks += createHeaderMenuItem("admin_manage_mesin.html", "Kelola Mesin Finger", currentPageTitle);
         }
 
         if (userRole === "super_admin") {
@@ -169,6 +170,7 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
 
     if (userRole === "admin" || userRole === "super_admin") {
         mainMenuGrid.appendChild(createMenuCard('admin_upload_data.html', 'Upload & Kelola Data Karyawan'));
+        mainMenuGrid.appendChild(createMenuCard('admin_manage_mesin.html', 'Kelola Mesin Finger'));
     }
 
     if (userRole === "super_admin") {
@@ -244,4 +246,5 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
         }
     });
 }
+
 
