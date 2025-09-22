@@ -244,7 +244,7 @@ td, th {
 
   <div class="main-content-wrapper">
     <div class="container" id="mainContainer">
-      <h2>Kelola Mesin Fingerprint</h2>
+      <h2>Kelola Mesin Fingerprint REV</h2>
 
       <div class="actions">
         <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
@@ -610,6 +610,10 @@ snap.forEach(docSnap => {
 const uploadBtn = document.getElementById("uploadBtn");
 const excelFile = document.getElementById("excelFile");
 const templateBtn = document.getElementById("templateBtn");
+const reportBox = document.getElementById("reportBox");
+const uploadReport = document.getElementById("uploadReport");
+const downloadReportBtn = document.getElementById("downloadReportBtn");
+const discardReportBtn = document.getElementById("discardReportBtn");
 
 // Download template Excel
 templateBtn.addEventListener("click", () => {
@@ -627,97 +631,7 @@ uploadBtn.addEventListener("click", () => {
   excelFile.click();
 });
 
-const downloadReportBtn = document.getElementById("downloadReportBtn");
-
-excelFile.addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  try {
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-    const machines = rows.slice(1).filter(r => r.length >= 3);
-
-    let added = 0, skipped = 0;
-    const skippedList = [];
-
-    const qSnap = await getDocs(collection(db, "mesin_fp"));
-    const existingIPs = new Set(qSnap.docs.map(d => d.data().ip));
-
-    let processed = 0;
-    for (const row of machines) {
-      processed++;
-      const [nama, ip, port] = row.map(x => String(x).trim());
-      if (!nama || !ip || !port) continue;
-
-      if (existingIPs.has(ip)) {
-        skipped++;
-        skippedList.push(`${nama} (${ip})`);
-      } else {
-        await addDoc(collection(db, "mesin_fp"), {
-          mesin: nama,
-          ip,
-          port: parseInt(port, 10),
-          createdAt: serverTimestamp(),
-          createdBy: auth.currentUser ? auth.currentUser.uid : "system"
-        });
-        existingIPs.add(ip);
-        added++;
-      }
-
-      setStatus(`Memproses ${processed}/${machines.length} baris...`);
-    }
-
-    // summary
-    let msg = `Upload selesai.\nDitambahkan: ${added}, dilewati: ${skipped}.`;
-    if (skippedList.length > 0) {
-      msg += `\n\nMesin yang dilewati:\n- ${skippedList.join("\n- ")}`;
-      downloadReportBtn.style.display = "inline-block";
-
-      // simpan skippedList ke variabel global biar bisa dipakai saat klik download
-      downloadReportBtn.dataset.skipped = JSON.stringify(skippedList);
-    } else {
-      downloadReportBtn.style.display = "none";
-    }
-
-    alert(msg);
-    document.getElementById("uploadReport").textContent = msg;
-    setStatus("Upload selesai.");
-    loadMesin();
-
-  } catch (err) {
-    console.error(err);
-    alert("Gagal memproses file Excel: " + err.message);
-    setStatus("Upload gagal.", true);
-  } finally {
-    excelFile.value = "";
-  }
-});
-
-// Handle klik tombol download report
-downloadReportBtn.addEventListener("click", () => {
-  const skippedList = JSON.parse(downloadReportBtn.dataset.skipped || "[]");
-  if (skippedList.length === 0) return;
-
-  const wbReport = XLSX.utils.book_new();
-  const wsReport = XLSX.utils.aoa_to_sheet([
-    ["Nama Mesin", "IP Address"],
-    ...skippedList.map(item => {
-      const parts = item.match(/^(.*) \((.*)\)$/);
-      return parts ? [parts[1], parts[2]] : [item, ""];
-    })
-  ]);
-  XLSX.utils.book_append_sheet(wbReport, wsReport, "Skipped");
-  XLSX.writeFile(wbReport, "report_skipped.xlsx");
-});
-const reportBox = document.getElementById("reportBox");
-const uploadReport = document.getElementById("uploadReport");
-const downloadReportBtn = document.getElementById("downloadReportBtn");
-const discardReportBtn = document.getElementById("discardReportBtn");
-
+// Upload Excel & proses data
 excelFile.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -814,6 +728,7 @@ discardReportBtn.addEventListener("click", () => {
 
 
 
+
   // initial load (call after small delay to let initPage render header)
   setTimeout(() => {
     loadMesin();
@@ -821,6 +736,7 @@ discardReportBtn.addEventListener("click", () => {
 </script>
 </body>
 </html>
+
 
 
 
