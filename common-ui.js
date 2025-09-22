@@ -92,11 +92,11 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
         navMenuLinksHTML += createHeaderMenuItem("home.html", "Menu Utama", currentPageTitle);
 
         if (userRole === "admin" || userRole === "super_admin") {
-            adminMenuLinks += createHeaderMenuItem("admin_upload_data.html", "Unggah Data Karyawan", currentPageTitle);
+            adminMenuLinks += createHeaderMenuItem("admin_upload_data.html", "Upload Data Karyawan", currentPageTitle);
         }
 
         if (userRole === "super_admin") {
-            superAdminMenuLinks += createHeaderMenuItem("admin_manage_users.html", "Kelola Pengguna", currentPageTitle);
+            superAdminMenuLinks += createHeaderMenuItem("admin_manage_users.html", "Kelola User", currentPageTitle);
             superAdminMenuLinks += createHeaderMenuItem("superadmin_settings.html", "Pengaturan Sistem", currentPageTitle);
         }
 
@@ -104,7 +104,7 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
         navMenuLinksHTML += adminMenuLinks;
         navMenuLinksHTML += createHeaderMenuItem("flask.html", "Download Data Finger", currentPageTitle);
         navMenuLinksHTML += createHeaderMenuItem("excel_to_json.html", "Mesin → JSON", currentPageTitle);
-        navMenuLinksHTML += createHeaderMenuItem("convert-csv.html", "Converter Xls", currentPageTitle);
+        navMenuLinksHTML += createHeaderMenuItem("convert-csv.html", "Data → CSV", currentPageTitle);
         navMenuLinksHTML += createHeaderMenuItem("https://irwanss.web.app/", "Portfolio", currentPageTitle);
     }
 
@@ -158,9 +158,9 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
     };
 
     const commonMenuItems = [
-        { page: 'flask.html', text: '📥 Download Data Finger' },
-        { page: 'excel_to_json.html', text: '📄 List Mesin → JSON' },
-        { page: 'convert-csv.html', text: '🔄 Data Finger → CSV/TXT' },
+        { page: 'flask.html', text: 'Download Data Finger' },
+        { page: 'excel_to_json.html', text: 'List Mesin → JSON' },
+        { page: 'convert-csv.html', text: 'Data Finger → CSV/TXT' },
     ];
 
     commonMenuItems.forEach(item => {
@@ -168,12 +168,12 @@ function renderHomeMenuItems(userRole, mainMenuGridId) {
     });
 
     if (userRole === "admin" || userRole === "super_admin") {
-        mainMenuGrid.appendChild(createMenuCard('admin_upload_data.html', '⬆️ Upload & Kelola Data'));
+        mainMenuGrid.appendChild(createMenuCard('admin_upload_data.html', 'Upload & Kelola Data Karyawan'));
     }
 
     if (userRole === "super_admin") {
-        mainMenuGrid.appendChild(createMenuCard('admin_manage_users.html', '👥 Kelola Pengguna'));
-        mainMenuGrid.appendChild(createMenuCard('superadmin_settings.html', '⚙️ Pengaturan Sistem'));
+        mainMenuGrid.appendChild(createMenuCard('admin_manage_users.html', 'Kelola User'));
+        mainMenuGrid.appendChild(createMenuCard('superadmin_settings.html', 'Pengaturan Sistem'));
     }
 } 
 
@@ -244,3 +244,4 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
         }
     });
 }
+
