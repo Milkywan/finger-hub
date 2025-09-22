@@ -5,6 +5,74 @@ import { signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; 
 
+/* HEADER ICON LINKS */
+.menu a.icon-link {
+  position: relative;
+  display: inline-block;
+  padding: 6px;
+}
+
+.menu a.icon-link img {
+  width: 28px;
+  height: 28px;
+  vertical-align: middle;
+}
+
+.menu a.icon-link .tooltip {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  font-size: 12px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.menu a.icon-link:hover .tooltip {
+  opacity: 1;
+}
+
+/* MENU CARD ICONS */
+.menu-card {
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+  padding: 16px;
+}
+
+.menu-card img {
+  width: 60px;
+  height: 60px;
+  transition: transform 0.3s ease;
+}
+
+.menu-card:hover img {
+  transform: scale(1.1);
+}
+
+.menu-card .tooltip {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.menu-card:hover .tooltip {
+  opacity: 1;
+}
 
 
 
@@ -53,55 +121,78 @@ document.addEventListener('scroll', resetInactivityTimer);
 
 
 function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
-    const headerPlaceholder = document.getElementById('header-placeholder');
-    if (!headerPlaceholder) return;
+  const headerPlaceholder = document.getElementById('header-placeholder');
+  if (!headerPlaceholder) return;
 
-    let adminMenuLinks = '';
-    let superAdminMenuLinks = '';
-    let navMenuContent = ''; 
+  let adminMenuLinks = '';
+  let superAdminMenuLinks = '';
+  let navMenuContent = '';
 
-    
-    if (currentPageTitle !== 'Menu Utama') { 
-        
-        if (userRole === "admin" || userRole === "super_admin") {
-            adminMenuLinks += `<a href="admin_upload_data.html" class="${currentPageTitle === 'Unggah Data Karyawan' ? 'active' : ''}">Unggah Data Karyawan</a>`;
-        }
-
-        
-        if (userRole === "super_admin") {
-            superAdminMenuLinks += `<a href="admin_manage_users.html" class="${currentPageTitle === 'Kelola Pengguna' ? 'active' : ''}">Kelola Pengguna</a>`;
-            superAdminMenuLinks += `<a href="superadmin_settings.html" class="${currentPageTitle === 'Pengaturan Sistem' ? 'active' : ''}">Pengaturan Sistem</a>`;
-        }
-
-        
-        navMenuContent = `
-            <div class="menu">
-                <a href="home.html" class="${currentPageTitle === 'Menu Utama' ? 'active' : ''}">Home</a>
-                ${superAdminMenuLinks}
-                ${adminMenuLinks}
-                <a href="flask.html" class="${currentPageTitle === 'Download Data Finger' ? 'active' : ''}">Download Data Finger</a>
-                <a href="excel_to_json.html" class="${currentPageTitle === 'Mesin → JSON' ? 'active' : ''}">Mesin → JSON</a>
-                <a href="convert-csv.html" class="${currentPageTitle === 'Converter Xls' ? 'active' : ''}">Converter Xls</a>
-                <a href="https://irwanss.web.app/" target="_blank">Portfolio</a>
-            </div>
-        `;
+  if (currentPageTitle !== 'Menu Utama') {
+    if (userRole === "admin" || userRole === "super_admin") {
+      adminMenuLinks += `
+        <a href="admin_upload_data.html" class="icon-link ${currentPageTitle === 'Unggah Data Karyawan' ? 'active' : ''}">
+          <img src="images/admin_upload_data.png" alt="Upload Data">
+          <span class="tooltip">Unggah Data Karyawan</span>
+        </a>
+      `;
     }
 
-    const headerHTML = `
-        <nav>
-            <div class="brand">🦁 Internal Tools</div>
-            ${navMenuContent}  
-            <div class="right-nav-items">
-                <div class="user-info">
-                    <span>Halo, ${userName} (<span style="text-transform: capitalize;">${userRole}</span>)</span>
-                </div>
-                <div class="menu2" onclick="window.logout()">Logout</div>
-            </div>
-        </nav>
-    `;
-    headerPlaceholder.innerHTML = headerHTML;
-}
+    if (userRole === "super_admin") {
+      superAdminMenuLinks += `
+        <a href="admin_manage_users.html" class="icon-link ${currentPageTitle === 'Kelola Pengguna' ? 'active' : ''}">
+          <img src="images/admin_manage_users.png" alt="Manage Users">
+          <span class="tooltip">Kelola Pengguna</span>
+        </a>
+        <a href="superadmin_settings.html" class="icon-link ${currentPageTitle === 'Pengaturan Sistem' ? 'active' : ''}">
+          <img src="images/superadmin_settings.png" alt="Settings">
+          <span class="tooltip">Pengaturan Sistem</span>
+        </a>
+      `;
+    }
 
+    navMenuContent = `
+      <div class="menu">
+        <a href="home.html" class="icon-link ${currentPageTitle === 'Menu Utama' ? 'active' : ''}">
+          <img src="images/home.png" alt="Home">
+          <span class="tooltip">Home</span>
+        </a>
+        ${superAdminMenuLinks}
+        ${adminMenuLinks}
+        <a href="flask.html" class="icon-link ${currentPageTitle === 'Download Data Finger' ? 'active' : ''}">
+          <img src="images/flask.png" alt="Flask">
+          <span class="tooltip">Download Data Finger</span>
+        </a>
+        <a href="excel_to_json.html" class="icon-link ${currentPageTitle === 'Mesin → JSON' ? 'active' : ''}">
+          <img src="images/excel_to_json.png" alt="Excel to JSON">
+          <span class="tooltip">Mesin → JSON</span>
+        </a>
+        <a href="convert-csv.html" class="icon-link ${currentPageTitle === 'Converter Xls' ? 'active' : ''}">
+          <img src="images/convert-csv.png" alt="Convert CSV">
+          <span class="tooltip">Converter Xls</span>
+        </a>
+        <a href="https://irwanss.web.app/" target="_blank" class="icon-link">
+          <img src="images/portfolio.png" alt="Portfolio">
+          <span class="tooltip">Portfolio</span>
+        </a>
+      </div>
+    `;
+  }
+
+  const headerHTML = `
+    <nav>
+      <div class="brand">🦁 Internal Tools</div>
+      ${navMenuContent}
+      <div class="right-nav-items">
+        <div class="user-info">
+          <span>Halo, ${userName} (<span style="text-transform: capitalize;">${userRole}</span>)</span>
+        </div>
+        <div class="menu2" onclick="window.logout()">Logout</div>
+      </div>
+    </nav>
+  `;
+  headerPlaceholder.innerHTML = headerHTML;
+}
 
 function renderFooter() {
     const footerPlaceholder = document.getElementById('footer-placeholder');
@@ -117,47 +208,59 @@ function renderFooter() {
 
 
 function renderHomeMenuItems(userRole, mainMenuGridId) {
-    const mainMenuGrid = document.getElementById(mainMenuGridId);
-    if (!mainMenuGrid) return;
+  const mainMenuGrid = document.getElementById(mainMenuGridId);
+  if (!mainMenuGrid) return;
 
-    mainMenuGrid.innerHTML = ''; 
+  mainMenuGrid.innerHTML = '';
 
-    const commonMenuItems = [
-        { page: 'flask.html', text: '📥 Download Data Finger' },
-        { page: 'excel_to_json.html', text: '📄 List Mesin → JSON' },
-        { page: 'convert-csv.html', text: '🔄 Data Finger → CSV/TXT' },
-    ];
+  const commonMenuItems = [
+    { page: 'flask.html', text: 'Download Data Finger', icon: 'images/flask.png' },
+    { page: 'excel_to_json.html', text: 'List Mesin → JSON', icon: 'images/excel_to_json.png' },
+    { page: 'convert-csv.html', text: 'Data Finger → CSV/TXT', icon: 'images/convert-csv.png' },
+  ];
 
-    commonMenuItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'menu-card';
-        div.onclick = () => window.goPage(item.page);
-        div.textContent = item.text;
-        mainMenuGrid.appendChild(div);
-    });
+  commonMenuItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'menu-card';
+    div.onclick = () => window.goPage(item.page);
+    div.innerHTML = `
+      <img src="${item.icon}" alt="${item.text}">
+      <span class="tooltip">${item.text}</span>
+    `;
+    mainMenuGrid.appendChild(div);
+  });
 
-    if (userRole === "admin" || userRole === "super_admin") {
-        const adminMenuUpload = document.createElement("div");
-        adminMenuUpload.className = "menu-card";
-        adminMenuUpload.onclick = () => window.goPage('admin_upload_data.html');
-        adminMenuUpload.textContent = "⬆️ Upload & Kelola Data";
-        mainMenuGrid.appendChild(adminMenuUpload);
-    }
+  if (userRole === "admin" || userRole === "super_admin") {
+    const adminMenuUpload = document.createElement("div");
+    adminMenuUpload.className = "menu-card";
+    adminMenuUpload.onclick = () => window.goPage('admin_upload_data.html');
+    adminMenuUpload.innerHTML = `
+      <img src="images/admin_upload_data.png" alt="Upload">
+      <span class="tooltip">Upload & Kelola Data</span>
+    `;
+    mainMenuGrid.appendChild(adminMenuUpload);
+  }
 
-    if (userRole === "super_admin") {
-        const adminMenuUsers = document.createElement("div");
-        adminMenuUsers.className = "menu-card";
-        adminMenuUsers.onclick = () => window.goPage('admin_manage_users.html');
-        adminMenuUsers.textContent = "👥 Kelola Pengguna";
-        mainMenuGrid.appendChild(adminMenuUsers);
-  
-        const superAdminMenuSettings = document.createElement("div");
-        superAdminMenuSettings.className = "menu-card";
-        superAdminMenuSettings.onclick = () => window.goPage('superadmin_settings.html'); 
-        superAdminMenuSettings.textContent = "⚙️ Pengaturan Sistem";
-        mainMenuGrid.appendChild(superAdminMenuSettings);
-    }
-} 
+  if (userRole === "super_admin") {
+    const adminMenuUsers = document.createElement("div");
+    adminMenuUsers.className = "menu-card";
+    adminMenuUsers.onclick = () => window.goPage('admin_manage_users.html');
+    adminMenuUsers.innerHTML = `
+      <img src="images/admin_manage_users.png" alt="Users">
+      <span class="tooltip">Kelola Pengguna</span>
+    `;
+    mainMenuGrid.appendChild(adminMenuUsers);
+
+    const superAdminMenuSettings = document.createElement("div");
+    superAdminMenuSettings.className = "menu-card";
+    superAdminMenuSettings.onclick = () => window.goPage('superadmin_settings.html');
+    superAdminMenuSettings.innerHTML = `
+      <img src="images/superadmin_settings.png" alt="Settings">
+      <span class="tooltip">Pengaturan Sistem</span>
+    `;
+    mainMenuGrid.appendChild(superAdminMenuSettings);
+  }
+}
 
 
 
@@ -226,6 +329,7 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
         }
     });
 }
+
 
 
 
