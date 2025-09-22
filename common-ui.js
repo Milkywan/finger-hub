@@ -68,6 +68,14 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
     const headerPlaceholder = document.getElementById('header-placeholder');
     if (!headerPlaceholder) return;
 
+    // --- MODIFIKASI UTAMA DI SINI ---
+    // Jika halaman saat ini adalah "Menu Utama", kosongkan placeholder header dan hentikan eksekusi
+    if (currentPageTitle === 'Menu Utama') {
+        headerPlaceholder.innerHTML = '';
+        return; // Hentikan fungsi agar tidak ada header yang dirender
+    }
+    // --- AKHIR MODIFIKASI ---
+
     // Helper to create a menu item with icon and hover text
     const createHeaderMenuItem = (page, text, currentTitle) => {
         const iconPath = getIconPath(page);
@@ -84,9 +92,6 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
     let adminMenuLinks = '';
     let superAdminMenuLinks = '';
     
-    // --- KESALAHAN SEBELUMNYA ADA DI SINI ---
-    // --- SEKARANG, KONDISI 'if (currentPageTitle !== 'Menu Utama')' TELAH DIHAPUS
-    // --- AGAR MENU NAVIGASI SELALU TAMPIL, TERMASUK LINK HOME
     // Note: The text here must match the `pageTitle` passed to initPage function for 'active' state to work
     // Ensure home link is always present
     let navMenuContent = `
