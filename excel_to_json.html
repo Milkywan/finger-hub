@@ -7,10 +7,9 @@
 
   <title>Konversi Mesin → JSON</title>
   
-  
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    
+    /* Reset and Base Styles */
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -19,47 +18,97 @@
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column; 
-      min-height: 100vh; 
+      flex-direction: column;
+      min-height: 100vh;
     }
-    
-    
+
+    /* --- Navigation Styles (Diadaptasi dari skrip pertama untuk konsep menu ikon) --- */
     nav {
-        display: flex; 
-        justify-content: space-between; 
+        display: flex;
+        justify-content: space-between;
         align-items: center;
         padding: 1rem 2rem;
         background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(8px);
         z-index: 10;
+        box-shadow: 0 2px 3px rgba(0,0,0,0.1);
     }
-    nav .brand { font-weight: bold; font-size: 1.2rem; }
-    nav .menu { 
-        display: flex; 
-        align-items: center;
-        flex-grow: 1; 
-        justify-content: center; 
+    nav .brand {
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
     }
-    nav .menu a {
-        color: white; 
-        text-decoration: none; 
-        margin: 0 1rem; 
-        transition: color .3s;
-    }
-    nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
 
-    
+    nav .menu {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+        justify-content: center;
+        gap: 8px; /* Spasi antar ikon menu */
+    }
+
+    .menu-icon-link {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px;
+        text-decoration: none;
+        color: white;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .menu-icon-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        color: #a5b4fc;
+    }
+
+    .menu-icon-link .menu-icon {
+        width: 33px;
+        height: 33px;
+        object-fit: contain;
+    }
+
+    .menu-icon-link .menu-text {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        z-index: 1000;
+        top: calc(100% + 5px);
+        left: 50%;
+        transform: translateX(-50%) translateY(5px);
+    }
+
+    .menu-icon-link:hover .menu-text {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .menu-icon-link.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        color: #a5b4fc;
+    }
+
     .right-nav-items {
         display: flex;
         align-items: center;
-        gap: 1rem; 
+        gap: 10px;
     }
     .user-info {
-        font-size: 0.9rem; 
+        font-size: 0.9em;
         color: rgba(255, 255, 255, 0.8);
-        white-space: nowrap; 
+        white-space: nowrap;
     }
-    nav .menu2 { 
+    nav .menu2 {
         color: white;
         cursor: pointer;
         padding: 0.5rem 1rem;
@@ -67,39 +116,57 @@
         background: rgba(255,255,255,0.1);
         transition: background 0.3s, transform 0.2s;
         font-weight: bold;
+        font-size: 0.9em;
     }
     nav .menu2:hover {
         background: rgba(255,255,255,0.2);
         transform: translateY(-2px);
     }
 
-    
+    /* --- Main Content Styles (dari skrip kedua, disesuaikan) --- */
     .main-content-wrapper {
-        flex: 1; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
     }
 
-    
-    
-    .container { 
+    .container {
       background: rgba(255,255,255,0.1);
       padding: 2rem;
       border-radius: 1rem;
-      max-width: 800px; 
+      max-width: 800px; /* Spesifik untuk halaman converter ini */
       width: 100%;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      animation: fadeIn .8s ease;
       backdrop-filter: blur(8px);
+      animation: fadeIn .8s ease;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    h1 { /* Diganti dari h2 di skrip pertama */
+      text-align: center;
+      margin-top: 0;
     }
 
-    h1 { margin-top: 0; }
+    /* Elemen Formulir (umum, namun disesuaikan untuk textarea dan placeholder) */
+    input, select {
+      width: 100%; padding: .75rem; margin-top: .5rem;
+      border-radius: .5rem; border: none;
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+    input::placeholder,
+    textarea::placeholder { /* Digabungkan untuk konsistensi */
+        color: rgba(255,255,255,0.6);
+    }
+    select option {
+        background: #4f46e5;
+        color: white;
+    }
+    input[type="file"] { background: none; color: white; }
+
+    /* Gaya spesifik Dropzone */
     .dropzone {
       border: 2px dashed #a5b4fc;
       border-radius: 0.5rem;
@@ -107,12 +174,14 @@
       text-align: center;
       cursor: pointer;
       transition: background .3s, transform .2s;
-      margin-bottom: 1rem; 
+      margin-bottom: 1rem;
     }
     .dropzone.dragover {
       background: rgba(165,180,252,0.1);
       transform: scale(1.02);
     }
+
+    /* Gaya spesifik Textarea */
     textarea {
       width: 100%;
       height: 200px;
@@ -125,20 +194,15 @@
       background: rgba(255,255,255,0.15);
       color: white;
     }
-    input::placeholder,
-    textarea::placeholder { 
-    color: #cccccc; 
-    
-    }
+
+    /* Gaya tombol (spesifik untuk halaman converter ini) */
     button {
-      padding: 0.75rem 1.25rem;
-      border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      font-weight: bold;
-      margin-right: .5rem;
-      margin-top: .5rem;
-      transition: background .3s, transform .2s, box-shadow .2s;
+      padding: 0.75rem 1.25rem; /* Padding disesuaikan */
+      border: none; border-radius: 0.5rem;
+      font-weight: bold; cursor: pointer;
+      margin-right: .5rem; /* Margin spesifik */
+      margin-top: .5rem; /* Margin spesifik */
+      transition: transform .2s, box-shadow .2s;
     }
     button.primary { background: #10b981; color: #fff; }
     button.secondary { background: rgba(255,255,255,0.2); color: #fff; }
@@ -146,42 +210,62 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
-    
-    #status {
-        margin-top: 1rem;
-        text-align: center;
-    }
 
-    
+    /* Gaya pesan status (disatukan dari skrip pertama) */
+    .status-message {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        text-align: center;
+        display: none; /* Default hidden, controlled by JS */
+    }
+    .status-message.success { background-color: #10b981; color: white; display: block; }
+    .status-message.error { background-color: #ef4444; color: white; display: block; }
+    .status-message.info { background-color: #60a5fa; color: white; display: block; }
+
+
+    /* --- Gaya Footer --- */
     footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: .9rem;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(8px);
+        text-align: center;
+        padding: 1rem;
+        font-size: .9rem;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 -2px 3px rgba(0,0,0,0.1);
     }
     footer a { color: white; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    
+    /* --- Media Queries --- */
     @media (max-width: 768px) {
-        nav { 
-            padding: 1rem; 
-            flex-direction: column; 
-            align-items: flex-start; 
+        nav {
+            padding: 1rem;
+            flex-direction: column;
+            align-items: flex-start;
         }
-        nav .brand { margin-bottom: 10px; } 
-        nav .menu { 
-            width: 100%; 
-            flex-wrap: wrap; 
-            justify-content: flex-start; 
+        nav .brand { margin-bottom: 10px; }
+        nav .menu {
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: flex-start;
             margin-bottom: 10px;
+            gap: 5px;
         }
-        nav .menu a { margin: 0.5rem 0.5rem; } 
+        .menu-icon-link {
+            padding: 5px 8px;
+        }
         .right-nav-items {
-            width: 100%; 
-            justify-content: space-between; 
+            width: 100%;
+            justify-content: space-between;
             margin-top: 10px;
+        }
+        .user-info {
+            font-size: 0.8em;
+        }
+        nav .menu2 {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8em;
         }
     }
     @media (max-width: 600px) {
@@ -204,7 +288,7 @@
         <button class="secondary" id="btnTemplate">⬇️ Download Template Excel</button>
         <button class="primary" id="btnConvert">⚙️ Convert ke JSON</button>
       </div>
-      <div id="status"></div>
+      <div id="status" class="status-message"></div> <!-- Added class for consistent styling -->
       <textarea id="json" placeholder="Hasil JSON akan muncul di sini…"></textarea>
       <div style="text-align:center;">
         <button class="secondary" id="btnCopy">📋 Copy</button>
@@ -233,17 +317,25 @@
     const XLSX = window.XLSX;
     if (!XLSX) {
         console.error("SheetJS (xlsx.full.min.js) tidak dimuat dengan benar. Pastikan path-nya benar dan dimuat sebelum script ini.");
-        document.getElementById('status').innerHTML = '<div style="color:#ff8080;">Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.</div>';
+        const statusBox = document.querySelector('#status'); // Get statusBox here
+        setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
     }
 
     const q = s => document.querySelector(s);
-    const statusBox = q('#status');
+    const statusBox = q('#status'); // Defined globally for setStatus
     const dropzone = q('#dropzone');
     const jsonArea = q('#json');
     let selectedFile = null;
 
-    function setStatus(msg, type='ok') {
-      statusBox.innerHTML = `<div style="padding:.5rem;color:${type==='error'?'#ff8080':'#80ff80'}">${msg}</div>`;
+    // Menyesuaikan fungsi setStatus untuk menggunakan kelas CSS
+    function setStatus(msg, type = 'info') {
+      statusBox.textContent = msg;
+      statusBox.className = `status-message ${type}`; // Menggunakan kelas CSS
+      // Opsional: Sembunyikan setelah beberapa detik
+      setTimeout(() => {
+        statusBox.className = 'status-message';
+        statusBox.textContent = '';
+      }, 5000);
     }
 
     function headerNormalize(h){return String(h||'').replace(/\s+/g,' ').replace(/[\u00A0]/g,' ').trim().toLowerCase()}
@@ -271,7 +363,7 @@
     function handleFiles(files){
       if(files && files[0]){
         selectedFile = files[0];
-        setStatus(`File dipilih: ${selectedFile.name}`);
+        setStatus(`File dipilih: ${selectedFile.name}`, 'info'); // Menggunakan setStatus baru
       }
     }
 
@@ -310,10 +402,10 @@
           return m;
         });
         const valid=rows.filter(validateRow);
-        if(!valid.length){setStatus('Tidak ada baris valid.','error');return}
+        if(!valid.length){setStatus('Tidak ada baris valid yang ditemukan dalam file ini. Pastikan format header dan data benar.','error');return}
         jsonArea.value=JSON.stringify(rowsToJSON(valid),null,4);
-        setStatus(`Berhasil mengonversi ${valid.length} baris dari sheet \"${sheetName}\".`);
-      }catch(e){console.error(e);setStatus('Gagal membaca file.','error');}
+        setStatus(`Berhasil mengonversi ${valid.length} baris dari sheet \"${sheetName}\".`, 'success');
+      }catch(e){console.error(e);setStatus('Gagal membaca file atau format tidak didukung.','error');}
     }
 
     function downloadTemplate(){
@@ -323,22 +415,26 @@
       const wb=XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb,ws,'Template');
       XLSX.writeFile(wb,'Template_Mesin_Fingerprint.xlsx');
+      setStatus('Template Excel berhasil diunduh.', 'info');
     }
 
     function downloadJSON(){
       const t=jsonArea.value.trim();
-      if(!t){setStatus('Tidak ada hasil JSON.','error');return}
+      if(!t){setStatus('Tidak ada hasil JSON untuk diunduh.','error');return}
       const b=new Blob([t],{type:'application/json'});
       const a=document.createElement('a');
       a.href=URL.createObjectURL(b);
       a.download='mesin_fingerprint.json';
       a.click();
+      setStatus('File JSON berhasil diunduh.', 'success');
     }
 
     function copyJSON(){
       const t=jsonArea.value;
-      if(!t){setStatus('Tidak ada teks.','error');return}
-      navigator.clipboard.writeText(t).then(()=>setStatus('JSON disalin.')).catch(()=>setStatus('Gagal menyalin.','error'));
+      if(!t){setStatus('Tidak ada teks untuk disalin.','error');return}
+      navigator.clipboard.writeText(t)
+        .then(()=>setStatus('JSON berhasil disalin ke clipboard.', 'success'))
+        .catch(()=>setStatus('Gagal menyalin ke clipboard. Pastikan browser Anda mendukung fitur ini.','error'));
     }
 
     q('#btnTemplate').addEventListener('click',downloadTemplate);
