@@ -244,7 +244,7 @@ td, th {
 
   <div class="main-content-wrapper">
     <div class="container" id="mainContainer">
-      <h2>Kelola Mesin Fingerprint REV</h2>
+      <h2>Kelola Mesin Fingerprint</h2>
 
       <div class="actions">
         <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
@@ -381,6 +381,16 @@ snap.forEach(docSnap => {
   const tr = document.createElement("tr");
 
   function esc(v) { return v === undefined || v === null ? "" : String(v); }
+
+  function esc(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
   tr.innerHTML = `
     <td>${index}</td>
@@ -535,6 +545,7 @@ snap.forEach(docSnap => {
     } finally {
       saveBtn.disabled = false;
     }
+
   });
 
   // handle edit / delete button clicks via delegation
@@ -736,6 +747,7 @@ discardReportBtn.addEventListener("click", () => {
 </script>
 </body>
 </html>
+
 
 
 
