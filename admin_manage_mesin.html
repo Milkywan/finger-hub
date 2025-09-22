@@ -630,29 +630,32 @@ excelFile.addEventListener("change", async (e) => {
 
     let added = 0, skipped = 0;
 
-    for (const row of machines) {
-      const [nama, ip, port] = row.map(x => String(x).trim());
 
-      if (!nama || !ip || !port) continue;
 
-      // cek apakah sudah ada mesin dengan IP yang sama
-      const qSnap = await getDocs(query(collection(db, "mesin_fp")));
-      const exists = qSnap.docs.some(d => d.data().ip === ip);
+ // Ambil semua mesin sekali
+const qSnap = await getDocs(collection(db, "mesin_fp"));
+const existingIPs = new Set(qSnap.docs.map(d => d.data().ip));
 
-      if (exists) {
-        skipped++;
-        continue;
-      }
+for (const row of machines) {
+  const [nama, ip, port] = row.map(x => String(x).trim());
+  if (!nama || !ip || !port) continue;
 
-      await addDoc(collection(db, "mesin_fp"), {
-        mesin: nama,
-        ip,
-        port: parseInt(port, 10),
-        createdAt: serverTimestamp(),
-        createdBy: auth.currentUser ? auth.currentUser.uid : "system"
-      });
-      added++;
-    }
+  if (existingIPs.has(ip)) {
+    skipped++;
+    continue;
+  }
+
+   await addDoc(collection(db, "mesin_fp"), {
+    mesin: nama,
+    ip,
+    port: parseInt(port, 10),
+    createdAt: serverTimestamp(),
+    createdBy: auth.currentUser ? auth.currentUser.uid : "system"
+  });
+
+  existingIPs.add(ip); // update set supaya baris berikutnya juga ikut dicek
+  added++;
+}
 
     alert(`Upload selesai. Ditambahkan: ${added}, dilewati: ${skipped}.`);
     loadMesin();
@@ -672,6 +675,7 @@ excelFile.addEventListener("change", async (e) => {
 </script>
 </body>
 </html>
+
 
 
 
