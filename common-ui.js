@@ -68,19 +68,12 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
     const headerPlaceholder = document.getElementById('header-placeholder');
     if (!headerPlaceholder) return;
 
-    // --- MODIFIKASI UTAMA DI SINI ---
-    // Jika halaman saat ini adalah "Menu Utama", kosongkan placeholder header dan hentikan eksekusi
-    if (currentPageTitle === 'Menu Utama') {
-        headerPlaceholder.innerHTML = '';
-        return; // Hentikan fungsi agar tidak ada header yang dirender
-    }
-    // --- AKHIR MODIFIKASI ---
-
     // Helper to create a menu item with icon and hover text
     const createHeaderMenuItem = (page, text, currentTitle) => {
         const iconPath = getIconPath(page);
         const targetAttr = page.startsWith('https://') ? 'target="_blank" rel="noopener noreferrer"' : ''; // Add rel for security
-        const isActive = (text === currentTitle); // Compare actual text with current page title
+        // Use page equality for active state on home button
+        const isActive = (page === "home.html" && currentTitle === "Menu Utama") || (page.includes(currentTitle.toLowerCase().replace(/\s/g, '_')));
         return `
             <a href="${page}" class="menu-icon-link ${isActive ? 'active' : ''}" ${targetAttr}>
                 <img src="${iconPath}" alt="${text}" class="menu-icon">
@@ -91,38 +84,35 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
 
     let adminMenuLinks = '';
     let superAdminMenuLinks = '';
-    
-    // Note: The text here must match the `pageTitle` passed to initPage function for 'active' state to work
-    // Ensure home link is always present
-    let navMenuContent = `
-        <div class="menu">
-            ${createHeaderMenuItem("home.html", "Menu Utama", currentPageTitle)}
-    `;
+    let navMenuLinksHTML = ''; // Ini akan menampung HTML untuk tautan menu ikon
 
-    if (userRole === "admin" || userRole === "super_admin") {
-        adminMenuLinks += createHeaderMenuItem("admin_upload_data.html", "Unggah Data Karyawan", currentPageTitle);
+    // Hanya membangun tautan menu utama JIKA BUKAN halaman "Menu Utama"
+    if (currentPageTitle !== 'Menu Utama') {
+        // Tautan Home selalu ada di menu navigasi utama jika menu ditampilkan
+        navMenuLinksHTML += createHeaderMenuItem("home.html", "Menu Utama", currentPageTitle);
+
+        if (userRole === "admin" || userRole === "super_admin") {
+            adminMenuLinks += createHeaderMenuItem("admin_upload_data.html", "Unggah Data Karyawan", currentPageTitle);
+        }
+
+        if (userRole === "super_admin") {
+            superAdminMenuLinks += createHeaderMenuItem("admin_manage_users.html", "Kelola Pengguna", currentPageTitle);
+            superAdminMenuLinks += createHeaderMenuItem("superadmin_settings.html", "Pengaturan Sistem", currentPageTitle);
+        }
+
+        navMenuLinksHTML += superAdminMenuLinks;
+        navMenuLinksHTML += adminMenuLinks;
+        navMenuLinksHTML += createHeaderMenuItem("flask.html", "Download Data Finger", currentPageTitle);
+        navMenuLinksHTML += createHeaderMenuItem("excel_to_json.html", "Mesin → JSON", currentPageTitle);
+        navMenuLinksHTML += createHeaderMenuItem("convert-csv.html", "Converter Xls", currentPageTitle);
+        navMenuLinksHTML += createHeaderMenuItem("https://irwanss.web.app/", "Portfolio", currentPageTitle);
     }
 
-    if (userRole === "super_admin") {
-        superAdminMenuLinks += createHeaderMenuItem("admin_manage_users.html", "Kelola Pengguna", currentPageTitle);
-        superAdminMenuLinks += createHeaderMenuItem("superadmin_settings.html", "Pengaturan Sistem", currentPageTitle);
-    }
-
-    navMenuContent += `
-            ${superAdminMenuLinks}
-            ${adminMenuLinks}
-            ${createHeaderMenuItem("flask.html", "Download Data Finger", currentPageTitle)}
-            ${createHeaderMenuItem("excel_to_json.html", "Mesin → JSON", currentPageTitle)}
-            ${createHeaderMenuItem("convert-csv.html", "Converter Xls", currentPageTitle)}
-            ${createHeaderMenuItem("https://irwanss.web.app/", "Portfolio", currentPageTitle)}
-        </div>
-    `;
-
-
+    // Selalu render struktur header dasar: brand, optional nav menu, user info, logout
     const headerHTML = `
         <nav>
             <div class="brand">🦁 Internal Tools</div>
-            ${navMenuContent}  
+            ${currentPageTitle !== 'Menu Utama' ? `<div class="menu">${navMenuLinksHTML}</div>` : ''}
             <div class="right-nav-items">
                 <div class="user-info">
                     <span>Halo, ${userName} (<span style="text-transform: capitalize;">${userRole}</span>)</span>
