@@ -7,7 +7,7 @@
 
 <title>Download Absensi Mesin</title>
 <style>
-  
+  /* Reset and Base Styles from your original flask.html */
   * { box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -16,47 +16,105 @@
     margin: 0;
     padding: 0;
     display: flex;
-    flex-direction: column; 
-    min-height: 100vh; 
+    flex-direction: column;
+    min-height: 100vh;
   }
-  
-  
+
+  /* --- Navigation Styles (Merged and Adapted for common-ui rendering) --- */
   nav {
-      display: flex; 
-      justify-content: space-between; 
+      display: flex;
+      justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(8px);
       z-index: 10;
+      box-shadow: 0 2px 3px rgba(0,0,0,0.1); /* Added from previous suggestion */
   }
-  nav .brand { font-weight: bold; font-size: 1.2rem; }
-  nav .menu { 
-      display: flex; 
-      align-items: center;
-      flex-grow: 1; 
-      justify-content: center; 
+  nav .brand {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: white; /* Ensure brand text is white */
   }
-  nav .menu a {
-      color: white; 
-      text-decoration: none; 
-      margin: 0 1rem; 
-      transition: color .3s;
-  }
-  nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
 
-  
+  /* Your original nav .menu was flex-grow: 1 and justify-content: center.
+     We retain these, but also add gap for icon links. */
+  nav .menu {
+      display: flex;
+      align-items: center;
+      flex-grow: 1;
+      justify-content: center;
+      gap: 8px; /* Spacing between icon links */
+  }
+
+  /* Styling for individual menu icon links in the header */
+  .menu-icon-link {
+      position: relative;
+      display: flex;
+      flex-direction: column; /* Stack icon and text for hover effect */
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px; /* Reduced padding */
+      text-decoration: none;
+      color: white; /* Ensure link color is white */
+      transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .menu-icon-link:hover {
+      background-color: rgba(255, 255, 255, 0.1); /* Subtle hover background */
+      border-radius: 5px;
+      color: #a5b4fc; /* Hover color from your original nav .menu a:hover */
+  }
+
+  /* Styling for the menu icons in the header */
+  .menu-icon-link .menu-icon {
+      width: 20px; /* Suggested size for header icons */
+      height: 20px;
+      object-fit: contain;
+      filter: invert(100%); /* Makes icons white, adjust if your icons are already white */
+  }
+
+  /* Styling for the hover text in the header */
+  .menu-icon-link .menu-text {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0; /* KRITIS: Tersembunyi secara default */
+      pointer-events: none; /* KRITIS: Tidak menghalangi interaksi mouse */
+      transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+      z-index: 1000;
+      top: calc(100% + 5px); /* Position below the link */
+      left: 50%;
+      transform: translateX(-50%) translateY(5px); /* Initial position for fade-down effect */
+  }
+
+  /* Show hover text on link hover */
+  .menu-icon-link:hover .menu-text {
+      opacity: 1; /* KRITIS: Terlihat saat hover */
+      transform: translateX(-50%) translateY(0); /* Move to final position */
+  }
+
+  /* Styling for the 'active' state in header navigation */
+  .menu-icon-link.active {
+      background-color: rgba(255, 255, 255, 0.2); /* Highlight active link */
+      border-radius: 5px;
+      color: #a5b4fc; /* Active color from your original nav .menu a.active */
+  }
+
   .right-nav-items {
       display: flex;
       align-items: center;
-      gap: 1rem; 
+      gap: 10px; /* Adjusted gap */
   }
   .user-info {
-      font-size: 0.9rem; 
+      font-size: 0.9em;
       color: rgba(255, 255, 255, 0.8);
-      white-space: nowrap; 
+      white-space: nowrap;
   }
-  nav .menu2 { 
+  nav .menu2 {
       color: white;
       cursor: pointer;
       padding: 0.5rem 1rem;
@@ -64,24 +122,23 @@
       background: rgba(255,255,255,0.1);
       transition: background 0.3s, transform 0.2s;
       font-weight: bold;
+      font-size: 0.9em;
   }
   nav .menu2:hover {
       background: rgba(255,255,255,0.2);
       transform: translateY(-2px);
   }
 
-  
+  /* --- Main Content and Form Styles (from your original flask.html) --- */
   .main-content-wrapper {
-    flex: 1; 
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 2rem;
   }
 
-  
-  
-  .container { 
+  .container {
     background: rgba(255,255,255,0.1);
     padding: 2rem;
     border-radius: 1rem;
@@ -92,30 +149,27 @@
     animation: fadeIn .8s ease;
   }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  
-  
+
   h2 { text-align: center; margin-top: 0; }
 
-  
   input, select {
-    width: 100%; padding: .75rem; margin-top: .5rem; 
-    border-radius: .5rem; border: none; 
-    background: rgba(255,255,255,0.15); 
-    color: white; 
+    width: 100%; padding: .75rem; margin-top: .5rem;
+    border-radius: .5rem; border: none;
+    background: rgba(255,255,255,0.15);
+    color: white;
   }
   input::placeholder {
-      color: rgba(255,255,255,0.6); 
+      color: rgba(255,255,255,0.6);
   }
-  select option { 
+  select option {
       background: #4f46e5;
       color: white;
   }
-  input[type="file"] { background: none; color: white; } 
+  input[type="file"] { background: none; color: white; }
 
-  
   button {
-    width: 100%; padding: .75rem; margin-top: .75rem; 
-    border: none; border-radius: .5rem; 
+    width: 100%; padding: .75rem; margin-top: .75rem;
+    border: none; border-radius: .5rem;
     font-weight: bold; cursor: pointer;
     transition: transform .2s, box-shadow .2s;
   }
@@ -126,60 +180,70 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }
 
-  
   .status-message {
       margin-top: 15px;
       padding: 10px;
       border-radius: 5px;
       font-size: 14px;
       text-align: center;
-      display: none; 
+      display: none;
   }
   .status-message.success { background-color: #10b981; color: white; display: block; }
   .status-message.error { background-color: #ef4444; color: white; display: block; }
   .status-message.info { background-color: #60a5fa; color: white; display: block; }
 
-  
-  footer { 
-      text-align: center; 
-      padding: 1rem; 
+  /* --- Footer Styles (from your original flask.html) --- */
+  footer {
+      text-align: center;
+      padding: 1rem;
       font-size: .9rem;
       background: rgba(255,255,255,0.08);
       backdrop-filter: blur(8px);
+      box-shadow: 0 -2px 3px rgba(0,0,0,0.1); /* Added from previous suggestion */
   }
   footer a { color: white; text-decoration: none; }
   footer a:hover { text-decoration: underline; }
 
-  
+  /* --- Media Queries (from your original flask.html) --- */
   @media (max-width: 768px) {
-      nav { 
-          padding: 1rem; 
-          flex-direction: column; 
-          align-items: flex-start; 
+      nav {
+          padding: 1rem;
+          flex-direction: column;
+          align-items: flex-start;
       }
-      nav .brand { margin-bottom: 10px; } 
-      nav .menu { 
-          width: 100%; 
-          flex-wrap: wrap; 
-          justify-content: flex-start; 
+      nav .brand { margin-bottom: 10px; }
+      nav .menu {
+          width: 100%;
+          flex-wrap: wrap;
+          justify-content: flex-start;
           margin-bottom: 10px;
+          gap: 5px; /* Adjust gap for smaller screens */
       }
-      nav .menu a { margin: 0.5rem 0.5rem; } 
+      .menu-icon-link { /* Adjust padding for smaller screens */
+          padding: 5px 8px;
+      }
+      /* Your original nav .menu a { margin: 0.5rem 0.5rem; } removed, relies on gap */
       .right-nav-items {
-          width: 100%; 
-          justify-content: space-between; 
+          width: 100%;
+          justify-content: space-between;
           margin-top: 10px;
+      }
+      .user-info {
+          font-size: 0.8em;
+      }
+      nav .menu2 {
+          padding: 0.4rem 0.8rem;
+          font-size: 0.8em;
       }
   }
 </style>
 </head>
 <body>
-  
-  <div id="header-placeholder"></div> 
 
-  
+  <div id="header-placeholder"></div>
+
   <div class="main-content-wrapper">
-    
+
     <div class="container" id="pageContainer">
       <h2>Download Absensi Mesin Fingerprint</h2>
       <label>Pilih dan Upload File JSON Mesin :</label>
@@ -192,46 +256,46 @@
       <button class="green" onclick="window.downloadSatuMesin()">⬇️ Download Mesin Terpilih</button>
       <button class="blue" onclick="window.downloadSemuaMesin()">⬇️ Download Semua Mesin</button>
 
-      
+
       <div class="status-message" id="downloadStatusMessage"></div>
     </div>
   </div>
 
-  
-  <div id="footer-placeholder"></div> 
+
+  <div id="footer-placeholder"></div>
 
 <script type="module">
-    
+
     import { initPage } from "./common-ui.js";
 
     let mesinList = {};
 
-    
-    const downloadStatusMessage = document.getElementById('downloadStatusMessage'); 
 
-    
+    const downloadStatusMessage = document.getElementById('downloadStatusMessage');
+
+
     document.addEventListener('DOMContentLoaded', () => {
       initPage(
-          "Download Data Finger", 
-          "pageContainer",          
-          "user"                    
+          "Download Data Finger",
+          "pageContainer",
+          "user"
       );
-      window.loadMachinesDefault(); 
+      window.loadMachinesDefault();
     });
 
-    
+
     function setStatus(messageElement, message, type = 'info') {
         messageElement.textContent = message;
         messageElement.className = `status-message ${type}`;
-        
+
         setTimeout(() => {
-            messageElement.className = 'status-message'; 
+            messageElement.className = 'status-message';
             messageElement.textContent = '';
-        }, 5000); 
+        }, 5000);
     }
 
     window.openNewWindow = function(url) {
-      window.open(url, '_blank', 'width=800,height=600'); 
+      window.open(url, '_blank', 'width=800,height=600');
     };
 
     window.handleFileUpload = function(event) {
@@ -258,7 +322,7 @@
       setStatus(downloadStatusMessage, "Memuat daftar mesin default...", 'info');
       try {
         const resp = await fetch('mesin.json');
-        if (!resp.ok) { 
+        if (!resp.ok) {
              throw new Error(`HTTP error! status: ${resp.status}`);
         }
         mesinList = await resp.json();
@@ -267,8 +331,8 @@
       } catch (e) {
         setStatus(downloadStatusMessage, "Gagal memuat mesin.json (normal jika file tidak ada atau tanpa server Flask/lokal). Gunakan upload JSON.", 'info');
         console.warn("Gagal memuat mesin.json:", e);
-        mesinList = {}; 
-        window.isiDropdownMesin(); 
+        mesinList = {};
+        window.isiDropdownMesin();
       }
     };
 
@@ -326,4 +390,3 @@
   </script>
 </body>
 </html>
-
