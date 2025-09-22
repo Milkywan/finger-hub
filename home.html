@@ -7,6 +7,7 @@
 
   <title>Fingerprint Data Hub — Menu Utama</title>
   <style>
+    /* Reset and Base Styles from your original home.html */
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -14,45 +15,103 @@
       background: linear-gradient(135deg, #4f46e5, #9333ea);
       color: white;
       display: flex;
-      flex-direction: column; 
-      min-height: 100vh; 
+      flex-direction: column;
+      min-height: 100vh;
     }
-    
+
+    /* --- Navigation Styles (Merged and Adapted) --- */
     nav {
-        display: flex; 
-        justify-content: space-between; 
+        display: flex;
+        justify-content: space-between;
         align-items: center;
         padding: 1rem 2rem;
         background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(8px);
         z-index: 10;
+        box-shadow: 0 2px 3px rgba(0,0,0,0.1); /* Added from my suggestion */
     }
-    nav .brand { font-weight: bold; font-size: 1.2rem; }
-    nav .menu { 
-        display: flex; 
+    nav .brand {
+        font-weight: bold;
+        font-size: 1.2rem; /* Adjusted for consistency */
+        color: white; /* Ensure brand text is white */
+    }
+
+    nav .menu {
+        display: flex;
         align-items: center;
-        flex-grow: 1; 
-        justify-content: center; 
+        flex-grow: 1;
+        justify-content: center;
+        gap: 8px; /* Added for spacing between icon links */
     }
-    nav .menu a {
-        color: white; 
-        text-decoration: none; 
-        margin: 0 1rem; 
-        transition: color .3s;
+
+    /* Styling for individual menu icon links in the header (Replaces nav .menu a) */
+    .menu-icon-link {
+        position: relative;
+        display: flex;
+        flex-direction: column; /* Stack icon and text for hover effect */
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px; /* Reduced padding */
+        text-decoration: none;
+        color: white; /* Ensure link color is white */
+        transition: background-color 0.3s ease, color 0.3s ease; /* Added color transition */
     }
-    nav .menu a:hover, nav .menu a.active { color: #a5b4fc; }
+
+    .menu-icon-link:hover {
+        background-color: rgba(255, 255, 255, 0.1); /* Subtle hover background */
+        border-radius: 5px;
+        color: #a5b4fc; /* Hover color from your original nav .menu a:hover */
+    }
+
+    /* Styling for the menu icons in the header */
+    .menu-icon-link .menu-icon {
+        width: 20px; /* Suggested size for header icons */
+        height: 20px;
+        object-fit: contain;
+        filter: invert(100%); /* Makes icons white, adjust if your icons are already white */
+    }
+
+    /* Styling for the hover text in the header */
+    .menu-icon-link .menu-text {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+        opacity: 0; /* KRITIS: Tersembunyi secara default */
+        pointer-events: none; /* KRITIS: Tidak menghalangi interaksi mouse */
+        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        z-index: 1000;
+        top: calc(100% + 5px); /* Position below the link */
+        left: 50%;
+        transform: translateX(-50%) translateY(5px); /* Initial position for fade-down effect */
+    }
+
+    /* Show hover text on link hover */
+    .menu-icon-link:hover .menu-text {
+        opacity: 1; /* KRITIS: Terlihat saat hover */
+        transform: translateX(-50%) translateY(0); /* Move to final position */
+    }
+
+    /* Styling for the 'active' state in header navigation */
+    .menu-icon-link.active {
+        background-color: rgba(255, 255, 255, 0.2); /* Highlight active link */
+        border-radius: 5px;
+        color: #a5b4fc; /* Active color from your original nav .menu a.active */
+    }
 
     .right-nav-items {
         display: flex;
         align-items: center;
-        gap: 1rem; 
+        gap: 10px; /* Adjusted gap */
     }
     .user-info {
-        font-size: 0.9rem; 
+        font-size: 0.9em; /* Adjusted size */
         color: rgba(255, 255, 255, 0.8);
-        white-space: nowrap; 
+        white-space: nowrap;
     }
-    nav .menu2 { 
+    nav .menu2 {
         color: white;
         cursor: pointer;
         padding: 0.5rem 1rem;
@@ -60,14 +119,16 @@
         background: rgba(255,255,255,0.1);
         transition: background 0.3s, transform 0.2s;
         font-weight: bold;
+        font-size: 0.9em; /* Adjusted size */
     }
     nav .menu2:hover {
         background: rgba(255,255,255,0.2);
         transform: translateY(-2px);
     }
 
+    /* --- Main Content and Menu Grid Styles (Merged and Adapted) --- */
     .main-content-wrapper {
-        flex: 1; 
+        flex: 1;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -77,7 +138,7 @@
     .container {
       max-width: 600px;
       width: 90%;
-      background: rgba(255,255,255,0.1); 
+      background: rgba(255,255,255,0.1);
       padding: 2rem;
       border-radius: 1rem;
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
@@ -85,7 +146,7 @@
       animation: fadeIn .8s ease;
       text-align: center;
     }
-    @keyframes fadeIn { 
+    @keyframes fadeIn {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
@@ -95,18 +156,30 @@
       font-size: 26px;
       font-weight: 600;
     }
-    .menu-grid {
+
+    /* Renamed .menu-grid to #mainMenuGrid to match JS */
+    #mainMenuGrid { /* Use ID selector for higher specificity */
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 20px;
     }
+
+    /* Merged .menu-card styles */
     .menu-card {
+      position: relative; /* KRITIS: Untuk menempatkan teks hover */
+      display: flex; /* KRITIS: Untuk tata letak ikon dan teks */
+      flex-direction: column; /* KRITIS: Untuk menumpuk ikon dan teks */
+      align-items: center; /* KRITIS: Untuk memusatkan item secara horizontal */
+      justify-content: center; /* KRITIS: Untuk memusatkan item secara vertikal */
+
       background: rgba(255, 255, 255, 0.1);
       padding: 20px;
       border-radius: 16px;
       cursor: pointer;
       transition: all 0.3s ease;
       backdrop-filter: blur(4px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Added from my suggestion */
+      min-height: 120px; /* Ensures consistent card height */
     }
     .menu-card:hover {
       background: rgba(255, 255, 255, 0.25);
@@ -114,63 +187,116 @@
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
 
-    footer { 
-        text-align: center; 
-        padding: 1rem; 
+    /* Styling for icons within menu cards */
+    .menu-card .card-icon {
+        width: 40px; /* Suggested size for card icons */
+        height: 40px;
+        object-fit: contain;
+        margin-bottom: 8px; /* Space between icon and text */
+        filter: none; /* Keep original icon colors for cards */
+    }
+
+    /* Styling for the hover text within menu cards */
+    .menu-card .card-text {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+        opacity: 0; /* KRITIS: Tersembunyi secara default */
+        pointer-events: none; /* KRITIS: Tidak menghalangi interaksi mouse */
+        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        z-index: 1000;
+        bottom: calc(100% + 5px); /* Position above the card */
+        left: 50%;
+        transform: translateX(-50%) translateY(5px); /* Initial position for fade-up effect */
+    }
+
+    /* Show hover text on card hover */
+    .menu-card:hover .card-text {
+        opacity: 1; /* KRITIS: Terlihat saat hover */
+        transform: translateX(-50%) translateY(0); /* Move to final position */
+    }
+
+    /* --- Footer Styles (Merged and Adapted) --- */
+    footer {
+        text-align: center;
+        padding: 1rem;
         font-size: .9rem;
         background: rgba(255,255,255,0.08);
         backdrop-filter: blur(8px);
+        box-shadow: 0 -2px 3px rgba(0,0,0,0.1); /* Added from my suggestion */
     }
     footer a { color: white; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
+    /* --- Media Queries (from your original home.html) --- */
     @media (max-width: 768px) {
-        nav { 
-            padding: 1rem; 
-            flex-direction: column; 
-            align-items: flex-start; 
+        nav {
+            padding: 1rem;
+            flex-direction: column;
+            align-items: flex-start;
         }
-        nav .brand { margin-bottom: 10px; } 
-        nav .menu { 
-            width: 100%; 
-            flex-wrap: wrap; 
-            justify-content: flex-start; 
+        nav .brand { margin-bottom: 10px; }
+        nav .menu {
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: flex-start;
             margin-bottom: 10px;
+            gap: 5px; /* Adjust gap for smaller screens */
         }
-        nav .menu a { margin: 0.5rem 0.5rem; } 
+        .menu-icon-link { /* Adjust padding for smaller screens */
+            padding: 5px 8px;
+        }
+        nav .menu a { margin: 0.5rem 0.5rem; } /* This rule might still conflict for margin, removed to rely on gap */
         .right-nav-items {
-            width: 100%; 
-            justify-content: space-between; 
+            width: 100%;
+            justify-content: space-between;
             margin-top: 10px;
+        }
+        .user-info {
+            font-size: 0.8em;
+        }
+        nav .menu2 {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8em;
+        }
+        .menu-card {
+            min-height: 100px; /* Smaller min-height for cards on mobile */
+            padding: 15px;
+        }
+        .menu-card .card-icon {
+            width: 32px; /* Smaller icon size for cards on mobile */
+            height: 32px;
         }
     }
   </style>
 </head>
 <body>
-  <div id="header-placeholder"></div> 
+  <div id="header-placeholder"></div>
 
   <div class="main-content-wrapper">
-    <div class="container" id="mainHomeContainer"> 
+    <div class="container" id="mainHomeContainer">
       <h1>Selamat Datang Di<br>Fingerprint Data Hub</h1>
       <div class="menu-grid" id="mainMenuGrid">
       </div>
     </div>
   </div>
 
-  <div id="footer-placeholder"></div> 
+  <div id="footer-placeholder"></div>
 
   <script type="module">
     import { initPage } from "./common-ui.js";
 
     document.addEventListener('DOMContentLoaded', () => {
         initPage(
-            "Menu Utama",            
-            "mainHomeContainer",     
-            "user",                 
-            "mainMenuGrid"           
+            "Menu Utama",
+            "mainHomeContainer",
+            "user",
+            "mainMenuGrid"
         );
     });
   </script>
 </body>
 </html>
-
