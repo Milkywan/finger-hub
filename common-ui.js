@@ -83,34 +83,36 @@ function renderHeader(userRole, currentPageTitle, userName = 'Pengguna') {
 
     let adminMenuLinks = '';
     let superAdminMenuLinks = '';
-    let navMenuContent = ''; 
-
     
-    if (currentPageTitle !== 'Menu Utama') { 
-        
-        if (userRole === "admin" || userRole === "super_admin") {
-            adminMenuLinks += createHeaderMenuItem("admin_upload_data.html", "Unggah Data Karyawan", currentPageTitle);
-        }
+    // --- KESALAHAN SEBELUMNYA ADA DI SINI ---
+    // --- SEKARANG, KONDISI 'if (currentPageTitle !== 'Menu Utama')' TELAH DIHAPUS
+    // --- AGAR MENU NAVIGASI SELALU TAMPIL, TERMASUK LINK HOME
+    // Note: The text here must match the `pageTitle` passed to initPage function for 'active' state to work
+    // Ensure home link is always present
+    let navMenuContent = `
+        <div class="menu">
+            ${createHeaderMenuItem("home.html", "Menu Utama", currentPageTitle)}
+    `;
 
-        
-        if (userRole === "super_admin") {
-            superAdminMenuLinks += createHeaderMenuItem("admin_manage_users.html", "Kelola Pengguna", currentPageTitle);
-            superAdminMenuLinks += createHeaderMenuItem("superadmin_settings.html", "Pengaturan Sistem", currentPageTitle);
-        }
-
-        // Note: The text here must match the `pageTitle` passed to initPage function for 'active' state to work
-        navMenuContent = `
-            <div class="menu">
-                ${createHeaderMenuItem("home.html", "Menu Utama", currentPageTitle)}
-                ${superAdminMenuLinks}
-                ${adminMenuLinks}
-                ${createHeaderMenuItem("flask.html", "Download Data Finger", currentPageTitle)}
-                ${createHeaderMenuItem("excel_to_json.html", "Mesin → JSON", currentPageTitle)}
-                ${createHeaderMenuItem("convert-csv.html", "Converter Xls", currentPageTitle)}
-                ${createHeaderMenuItem("https://irwanss.web.app/", "Portfolio", currentPageTitle)}
-            </div>
-        `;
+    if (userRole === "admin" || userRole === "super_admin") {
+        adminMenuLinks += createHeaderMenuItem("admin_upload_data.html", "Unggah Data Karyawan", currentPageTitle);
     }
+
+    if (userRole === "super_admin") {
+        superAdminMenuLinks += createHeaderMenuItem("admin_manage_users.html", "Kelola Pengguna", currentPageTitle);
+        superAdminMenuLinks += createHeaderMenuItem("superadmin_settings.html", "Pengaturan Sistem", currentPageTitle);
+    }
+
+    navMenuContent += `
+            ${superAdminMenuLinks}
+            ${adminMenuLinks}
+            ${createHeaderMenuItem("flask.html", "Download Data Finger", currentPageTitle)}
+            ${createHeaderMenuItem("excel_to_json.html", "Mesin → JSON", currentPageTitle)}
+            ${createHeaderMenuItem("convert-csv.html", "Converter Xls", currentPageTitle)}
+            ${createHeaderMenuItem("https://irwanss.web.app/", "Portfolio", currentPageTitle)}
+        </div>
+    `;
+
 
     const headerHTML = `
         <nav>
