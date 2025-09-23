@@ -332,14 +332,6 @@
                     <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Tanggal ini digunakan oleh aplikasi desktop saat offline.</small>
                 </div>
 
-                <!-- kalau mau menambahkan form-group lain di sini untuk pengaturan lainnya -->
-                <!--
-                <div class="form-group">
-                    <label for="anotherSetting">Pengaturan Lain</label>
-                    <input type="text" id="anotherSetting" placeholder="Nilai pengaturan...">
-                </div>
-                -->
-
                 <div class="controls">
                     <button class="btn btn-primary" id="saveSettingsBtn">Simpan Pengaturan Sistem</button>
 
@@ -352,20 +344,11 @@
 
             <div class="container" id="machineSettingsContainer">
                 <h2>Pengaturan & Download Mesin</h2>
-                <!-- Removed: JSON File Upload input -->
-                <!--
-                <div class="form-group">
-                    <label for="jsonFile">Pilih dan Upload File JSON Mesin:</label>
-                    <input type="file" id="jsonFile" accept=".json" onchange="window.handleFileUpload(event)">
-                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Gunakan ini untuk memuat daftar mesin dari file.</small>
-                </div>
-                -->
 
                 <div class="form-group">
                     <label for="mesinManualInput">Nama Mesin:</label>
                     <input type="text" id="mesinManualInput" list="mesinDatalist" placeholder="Ketik atau pilih mesin">
                     <datalist id="mesinDatalist"></datalist>
-                    <!-- NEW: Element to display selected machine's IP -->
                     <small id="selectedMachineIp" style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">IP Mesin: -</small>
                 </div>
 
@@ -383,8 +366,10 @@
                 </div>
 
                 <div class="controls">
-                    <button class="btn btn-danger" onclick="window.updateMachineDateTime()">Update Waktu Mesin</button>
-                    <button class="btn btn-info" onclick="window.viewMachineAbsensi()">Lihat Absensi Mesin</button>
+                    <button class="btn btn-danger" onclick="window.updateMachineDateTime()">Update Waktu Mesin (Terpilih)</button>
+                    <!-- NEW: Tombol untuk update semua mesin -->
+                    <button class="btn btn-danger" onclick="window.updateAllMachinesDateTime()">Update Waktu Semua Mesin</button>
+                    <button class="btn btn-info" onclick="window.viewMachineAbsensi()">Lihat Absensi Mesin (Terpilih)</button>
                     <button class="btn btn-success" onclick="window.downloadAllMachinesAbsensi()">Download Semua Absensi</button>
                 </div>
 
@@ -407,13 +392,11 @@
             doc,
             getDoc,
             setDoc,
-            // NEW: Import for fetching machine list from Firestore
             collection,
             getDocs
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 
-        // globalMesinList will now store full machine data keyed by machine name
         let globalMesinList = {};
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -423,7 +406,7 @@
                 "super_admin"
             );
             loadSettings();
-            loadMachinesFromFirestore(); // Changed to load from Firestore
+            loadMachinesFromFirestore();
         });
 
 
@@ -431,14 +414,11 @@
         const saveSettingsBtn = document.getElementById('saveSettingsBtn');
         const systemStatusMessage = document.getElementById('systemStatusMessage');
 
-        // Removed: jsonFileInput
-        // const jsonFileInput = document.getElementById('jsonFile');
         const mesinManualInput = document.getElementById('mesinManualInput');
         const mesinDatalist = document.getElementById('mesinDatalist');
         const baseUrlMachineInput = document.getElementById('baseUrlMachine');
         const machineSetDateTimeInput = document.getElementById('machineSetDateTime');
         const machineStatusMessage = document.getElementById('machineStatusMessage');
-        // NEW: DOM ref for IP display
         const selectedMachineIpDisplay = document.getElementById('selectedMachineIp');
 
 
@@ -511,10 +491,6 @@
         });
 
 
-        // Removed: window.handleFileUpload
-        // window.handleFileUpload = function(event) { ... };
-
-        // Renamed and modified: loadMachinesFromFirestore
         window.loadMachinesFromFirestore = async function() {
             setStatus(machineStatusMessage, "Memuat daftar mesin dari Firestore...", 'info');
             globalMesinList = {}; // Clear previous list
@@ -544,7 +520,7 @@
             }
         };
 
-        // Populate datalist with machine names
+
         function populateDatalistMesin() {
             mesinDatalist.innerHTML = "";
             Object.keys(globalMesinList).forEach(mesinName => {
@@ -556,7 +532,7 @@
             selectedMachineIpDisplay.textContent = "IP Mesin: -";
         }
 
-        // NEW: Event listener for machine selection to display IP
+
         mesinManualInput.addEventListener('input', () => {
             const selectedMesinName = mesinManualInput.value.trim();
             const machineData = globalMesinList[selectedMesinName];
@@ -594,7 +570,7 @@
                 setStatus(machineStatusMessage, `IP Address untuk mesin '${mesinName}' tidak ditemukan. Silakan pilih mesin yang valid dari daftar.`, 'error');
                 return;
             }
-            const ipAddress = machineData.ip; // Get IP from globalMesinList
+            const ipAddress = machineData.ip;
 
             if (!datetimeRaw) {
                 setStatus(machineStatusMessage, "Tanggal & Waktu harus diisi!", 'error');
@@ -607,10 +583,48 @@
 
 
             const datetime = datetimeRaw.replace('T', ' ') + ':00';
-            // Passing IP Address to the API endpoint
             let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(ipAddress)}&datetime=${encodeURIComponent(datetime)}`;
             setStatus(machineStatusMessage, `Mengirim permintaan update waktu ke mesin ${mesinName} (${ipAddress})...`, 'info');
             openNewWindow(url);
+        };
+
+        // NEW: Fungsi untuk update waktu semua mesin
+        window.updateAllMachinesDateTime = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            const datetimeRaw = machineSetDateTimeInput.value;
+
+            if (!datetimeRaw) {
+                setStatus(machineStatusMessage, "Tanggal & Waktu harus diisi untuk Update Waktu Semua Mesin!", 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+            if (Object.keys(globalMesinList).length === 0) {
+                setStatus(machineStatusMessage, "Tidak ada mesin yang terdaftar untuk diupdate waktunya.", 'error');
+                return;
+            }
+
+            const confirmation = confirm(
+                `Anda akan mengupdate waktu semua ${Object.keys(globalMesinList).length} mesin ke:\n` +
+                `${new Date(datetimeRaw).toLocaleString()}\n\n` +
+                `Tindakan ini akan membuka ${Object.keys(globalMesinList).length} tab baru di browser Anda.\nLanjutkan?`
+            );
+
+            if (!confirmation) {
+                setStatus(machineStatusMessage, "Pembatalan update waktu semua mesin.", 'info');
+                return;
+            }
+
+            setStatus(machineStatusMessage, `Mengirim permintaan update waktu ke semua ${Object.keys(globalMesinList).length} mesin...`, 'info');
+            const datetime = datetimeRaw.replace('T', ' ') + ':00';
+
+            Object.values(globalMesinList).forEach(machineData => {
+                let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(machineData.ip)}&datetime=${encodeURIComponent(datetime)}`;
+                openNewWindow(url);
+            });
+            setStatus(machineStatusMessage, "Permintaan update waktu ke semua mesin dikirim. Periksa tab baru di browser Anda.", 'success');
         };
 
 
@@ -627,14 +641,13 @@
                 setStatus(machineStatusMessage, `IP Address untuk mesin '${mesinName}' tidak ditemukan. Silakan pilih mesin yang valid dari daftar.`, 'error');
                 return;
             }
-            const ipAddress = machineData.ip; // Get IP from globalMesinList
+            const ipAddress = machineData.ip;
 
             if (!baseUrl) {
                 setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
                 return;
             }
 
-            // Passing IP Address to the API endpoint
             let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(ipAddress)}`;
             setStatus(machineStatusMessage, `Membuka absensi untuk mesin ${mesinName} (${ipAddress})...`, 'info');
             openNewWindow(url);
@@ -643,7 +656,7 @@
 
         window.downloadAllMachinesAbsensi = function() {
             const baseUrl = baseUrlMachineInput.value;
-            if (!Object.keys(globalMesinList).length) {
+            if (Object.keys(globalMesinList).length === 0) {
                 setStatus(machineStatusMessage, "Belum ada data mesin untuk Download Semua!", 'error');
                 return;
             }
@@ -652,10 +665,18 @@
                 return;
             }
 
+            const confirmation = confirm(
+                `Anda akan mendownload absensi dari semua ${Object.keys(globalMesinList).length} mesin.\n` +
+                `Tindakan ini akan membuka ${Object.keys(globalMesinList).length} tab baru di browser Anda.\nLanjutkan?`
+            );
+
+            if (!confirmation) {
+                setStatus(machineStatusMessage, "Pembatalan download semua absensi.", 'info');
+                return;
+            }
+
             setStatus(machineStatusMessage, "Membuka tab baru untuk setiap mesin yang akan didownload...", 'info');
-            // Iterate over the values (machine data objects) directly
             Object.values(globalMesinList).forEach(machineData => {
-                // Passing IP Address to the API endpoint
                 let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.ip)}`;
                 openNewWindow(url);
             });
