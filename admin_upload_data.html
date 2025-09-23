@@ -362,6 +362,33 @@
             color: #fbbf24;
         }
 
+        /* --- Summary Report Box --- */
+        #summaryReport {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            display: none; /* Default hidden, will be shown by JS */
+        }
+        #summaryReport h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #a5b4fc;
+        }
+        #activeEmployeeSummaryList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+        }
+        #activeEmployeeSummaryList li {
+            margin-bottom: 5px;
+        }
+
+
         /* --- Footer Styles --- */
         footer {
             text-align: center;
@@ -413,18 +440,24 @@
 
     <div class="main-content-wrapper">
         <div class="container" id="adminUploadContainer">
-            <h2>Kelola Data Karyawan</h2>
+            <h2>Kelola Data Karyawan Rev</h2>
 
                  <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
-                <button class="btn btn-secondary" id="downloadTemplateBtn">⬇️ Download Template</button> 
+                <button class="btn btn-secondary" id="downloadTemplateBtn">⬇️ Download Template</button>
                 <button class="btn btn-info" id="addEmployeeBtn">➕ Tambah Karyawan</button>
                 <button class="btn btn-ghost" id="refreshEmployeeDataBtn">🔄 Refresh Data</button>
                 <input type="text" id="searchInput" placeholder="Cari NIK/Nama Karyawan...">
                 <button class="btn btn-primary" id="deleteSelectedBtn" style="display:none;">🗑️ Hapus Terpilih (<span id="selectedCount">0</span>)</button>
             </div>
 
+            <div id="summaryReport">
+                <h3>Ringkasan Karyawan Aktif per Perusahaan</h3>
+                <ul id="activeEmployeeSummaryList">
+                    <!-- Ringkasan akan diisi di sini -->
+                </ul>
+            </div>
 
             <div class="status-message" id="pageStatus">Memuat data karyawan...</div>
 
@@ -524,6 +557,9 @@
     <div id="footer-placeholder"></div>
 
     <script type="module">
+        // ==========================================================
+        //  1. JavaScript: Initialisasi dan Import
+        // ==========================================================
         import { initPage } from "./common-ui.js";
         import { auth, db } from "./firebase-config.js";
         import {
@@ -542,7 +578,7 @@
                 } else {
                     currentUserData = null;
                     // Redirect ke login jika tidak ada user (opsional)
-                    // window.location.href = "/login.html"; 
+                    // window.location.href = "/login.html";
                 }
             });
             loadEmployees(); // Muat data karyawan saat halaman pertama kali dibuka
@@ -554,7 +590,9 @@
             setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
         }
 
-         // --- DOM References ---
+        // ==========================================================
+        //  2. JavaScript: Referensi Elemen DOM (HTML)
+        // ==========================================================
         const pageStatus = document.getElementById("pageStatus");
         const employeesTbody = document.getElementById("employeesTbody");
         const employeesTableHead = document.getElementById("employeesTableHead");
@@ -568,15 +606,15 @@
         // Modal elements - UPDATED
         const employeeModal = document.getElementById("employeeModal");
         const modalEmployeeTitle = document.getElementById("modalEmployeeTitle");
-        const inputIDMesin = document.getElementById("inputIDMesin"); // NEW
-        const inputNIKSebelumnya = document.getElementById("inputNIKSebelumnya"); // NEW
+        const inputIDMesin = document.getElementById("inputIDMesin");
+        const inputNIKSebelumnya = document.getElementById("inputNIKSebelumnya");
         const inputNIK = document.getElementById("inputNIK");
         const inputNama = document.getElementById("inputNama");
-        const inputStatus = document.getElementById("inputStatus"); // NEW
-        const inputPerusahaan = document.getElementById("inputPerusahaan"); // NEW
+        const inputStatus = document.getElementById("inputStatus");
+        const inputPerusahaan = document.getElementById("inputPerusahaan");
         const inputDepartment = document.getElementById("inputDepartment");
         const inputJabatan = document.getElementById("inputJabatan");
-        const inputSidikJari = document.getElementById("inputSidikJari"); // NEW
+        const inputSidikJari = document.getElementById("inputSidikJari");
         const cancelEmployeeBtn = document.getElementById("cancelEmployeeBtn");
         const saveEmployeeBtn = document.getElementById("saveEmployeeBtn");
 
@@ -587,10 +625,16 @@
         const downloadReportBtn = document.getElementById("downloadReportBtn");
         const discardReportBtn = document.getElementById("discardReportBtn");
 
-        // --- Template Download Elements ---
+        // Template Download Elements
         const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
 
-        // --- Global State Variables ---
+        // Summary Report Elements (BARU)
+        const summaryReport = document.getElementById("summaryReport");
+        const activeEmployeeSummaryList = document.getElementById("activeEmployeeSummaryList");
+
+        // ==========================================================
+        //  3. JavaScript: Variabel Global dan State
+        // ==========================================================
         let allEmployeesData = []; // Semua data karyawan dari Firestore
         let currentDisplayData = []; // Data yang sedang ditampilkan (setelah filter/sort)
         let editingEmployeeId = null; // ID dokumen yang sedang diedit
@@ -599,7 +643,9 @@
         let currentUserData = null; // Informasi user yang sedang login
         let uploadExcelReportData = []; // Data untuk report Excel upload
 
-        // --- Utility Functions ---
+        // ==========================================================
+        //  4. JavaScript: Fungsi Utility (Pembantu)
+        // ==========================================================
         function esc(str) {
             if (str === undefined || str === null) return "";
             return String(str)
@@ -660,7 +706,7 @@
                         changes[key] = { old: oldData[key], new: newData[key] };
                     }
                 }
-                
+
                 if (Object.keys(changes).length > 0) { // Only log if there were actual changes
                     logEntry.changes = changes;
                     logEntry.oldData = oldData;
@@ -674,7 +720,45 @@
             await addDoc(collection(db, "employees_logs"), logEntry);
         }
 
-        // --- Table Rendering Functions ---
+        // --- Fungsi BARU: Generate Ringkasan Karyawan Aktif ---
+        function generateActiveEmployeeSummary() {
+            const activeEmployeesByCompany = {};
+
+            // 1. Filter dan Kelompokkan
+            allEmployeesData.forEach(employee => {
+                const status = String(employee.data.Status || '').toLowerCase(); // Ambil status, jadikan lowercase
+                const perusahaan = String(employee.data.Perusahaan || 'Tanpa Perusahaan').trim(); // Ambil nama perusahaan
+
+                if (status === 'aktif') { // Asumsi 'Aktif' adalah status karyawan aktif
+                    if (!activeEmployeesByCompany[perusahaan]) {
+                        activeEmployeesByCompany[perusahaan] = 0;
+                    }
+                    activeEmployeesByCompany[perusahaan]++;
+                }
+            });
+
+            // 2. Tampilkan Hasil di UI
+            activeEmployeeSummaryList.innerHTML = ''; // Bersihkan daftar sebelumnya
+            if (Object.keys(activeEmployeesByCompany).length === 0) {
+                activeEmployeeSummaryList.innerHTML = '<li>Tidak ada karyawan aktif ditemukan.</li>';
+                summaryReport.style.display = 'block'; // Tampilkan walaupun kosong
+                return;
+            }
+
+            let totalAktif = 0;
+            for (const perusahaan in activeEmployeesByCompany) {
+                const count = activeEmployeesByCompany[perusahaan];
+                activeEmployeeSummaryList.innerHTML += `<li><strong>${esc(perusahaan)}</strong>: ${count} karyawan aktif</li>`;
+                totalAktif += count;
+            }
+            activeEmployeeSummaryList.innerHTML += `<li style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;"><strong>Total Karyawan Aktif: ${totalAktif}</strong></li>`;
+            summaryReport.style.display = 'block'; // Tampilkan summary box
+        }
+
+
+        // ==========================================================
+        //  5. JavaScript: Logika Rendering Tabel & Filter/Sort
+        // ==========================================================
         function renderTable(employeesToRender) {
             employeesTbody.innerHTML = "";
             if (employeesToRender.length === 0) {
@@ -852,7 +936,9 @@
             return isDuplicate;
         }
 
-        // --- Main Data Loading Function ---
+        // ==========================================================
+        //  6. JavaScript: Fungsi Utama Pengelolaan Data (Firestore)
+        // ==========================================================
         async function loadEmployees() {
             setStatus("Memuat data karyawan...", 'info');
             try {
@@ -866,15 +952,19 @@
                 });
 
                 applySortAndFilter(); // Terapkan sorting dan filter awal
+                generateActiveEmployeeSummary(); // Panggil fungsi ringkasan di sini (BARU)
                 setStatus(`Selesai memuat (${allEmployeesData.length} karyawan).`, 'success');
             } catch (err) {
                 console.error(err);
                 setStatus("Gagal memuat data karyawan. Cek konsol.", 'error');
                 employeesTbody.innerHTML = `<tr><td colspan="14" class="muted">Error saat memuat data.</td></tr>`;
+                summaryReport.style.display = 'none'; // Sembunyikan summary jika ada error (BARU)
             }
         }
 
-        // --- Event Listeners ---
+        // ==========================================================
+        //  7. JavaScript: Event Listeners
+        // ==========================================================
 
         // Refresh Data Karyawan
         refreshEmployeeDataBtn.addEventListener("click", () => {
@@ -888,16 +978,16 @@
         addEmployeeBtn.addEventListener("click", () => {
             editingEmployeeId = null;
             modalEmployeeTitle.textContent = "Tambah Karyawan Baru";
-            inputIDMesin.value = ""; 
-            inputNIKSebelumnya.value = ""; 
+            inputIDMesin.value = "";
+            inputNIKSebelumnya.value = "";
             inputNIK.value = "";
             inputNIK.disabled = false; // NIK bisa diisi saat tambah baru
             inputNama.value = "";
-            inputStatus.value = ""; 
-            inputPerusahaan.value = ""; 
+            inputStatus.value = "";
+            inputPerusahaan.value = "";
             inputDepartment.value = "";
             inputJabatan.value = "";
-            inputSidikJari.value = ""; 
+            inputSidikJari.value = "";
             openEmployeeModal();
         });
 
@@ -906,15 +996,15 @@
 
         // Save Employee (Add/Edit) - UPDATED
         saveEmployeeBtn.addEventListener("click", async () => {
-            const idMesin = inputIDMesin.value.trim(); 
-            const nikSebelumnya = inputNIKSebelumnya.value.trim(); 
+            const idMesin = inputIDMesin.value.trim();
+            const nikSebelumnya = inputNIKSebelumnya.value.trim();
             const nik = inputNIK.value.trim();
             const nama = inputNama.value.trim();
-            const status = inputStatus.value.trim(); 
-            const perusahaan = inputPerusahaan.value.trim(); 
+            const status = inputStatus.value.trim();
+            const perusahaan = inputPerusahaan.value.trim();
             const department = inputDepartment.value.trim();
             const jabatan = inputJabatan.value.trim();
-            const sidikJari = inputSidikJari.value.trim(); 
+            const sidikJari = inputSidikJari.value.trim();
 
             if (!nik || !nama) {
                 alert("NIK dan Nama Karyawan wajib diisi.");
@@ -1000,16 +1090,16 @@
                     const d = snap.data();
                     editingEmployeeId = id;
                     modalEmployeeTitle.textContent = "Edit Karyawan";
-                    inputIDMesin.value = d['ID Mesin'] || ""; 
-                    inputNIKSebelumnya.value = d['NIK Sebelumnya'] || ""; 
+                    inputIDMesin.value = d['ID Mesin'] || "";
+                    inputNIKSebelumnya.value = d['NIK Sebelumnya'] || "";
                     inputNIK.value = d.NIK || "";
                     inputNIK.disabled = true; // NIK tidak bisa diedit setelah dibuat
                     inputNama.value = d.Nama || "";
-                    inputStatus.value = d.Status || ""; 
-                    inputPerusahaan.value = d.Perusahaan || ""; 
+                    inputStatus.value = d.Status || "";
+                    inputPerusahaan.value = d.Perusahaan || "";
                     inputDepartment.value = d.Department || "";
                     inputJabatan.value = d.Jabatan || "";
-                    inputSidikJari.value = d['Sidik Jari'] || ""; 
+                    inputSidikJari.value = d['Sidik Jari'] || "";
                     openEmployeeModal();
                 } catch (err) {
                     console.error(err);
@@ -1263,7 +1353,7 @@
                                 dataToProcessFromExcel[header] = obj[header];
                             }
                         });
-                        
+
                         if (existingNIKsMap.has(nik)) {
                             // NIK sudah ada, ini adalah pembaruan
                             const oldData = existingNIKsMap.get(nik);
@@ -1273,7 +1363,7 @@
                             for (const key of expectedHeaders) {
                                 const oldValue = (oldData[key] !== null && oldData[key] !== undefined) ? String(oldData[key]).trim() : null;
                                 const newValue = (dataToProcessFromExcel[key] !== null && dataToProcessFromExcel[key] !== undefined) ? String(dataToProcessFromExcel[key]).trim() : null;
-                                
+
                                 if (oldValue !== newValue) {
                                     hasActualDataChanges = true;
                                     break;
@@ -1284,7 +1374,7 @@
                                 // Data sama, tidak perlu update. Lewati baris ini.
                                 uploadSkippedCount++;
                                 uploadExcelReportData.push({ NIK: nik, Nama: oldData.Nama || '-', Reason: "Data sama, tidak ada perubahan" });
-                                continue; 
+                                continue;
                             }
 
                             // Jika ada perubahan, update updatedAt/updatedBy
@@ -1304,7 +1394,7 @@
                                 createdBy: userName,
                                 source: "excel_upload"
                             };
-                            const newData = { ...dataToProcessFromExcel, ...creationMetadata }; 
+                            const newData = { ...dataToProcessFromExcel, ...creationMetadata };
                             batch.set(doc(collection(db, "employees_mapping"), nik), newData);
                             await logEmployeeAction("create_from_excel", nik, null, newData, { source: "excel_upload" });
                             newAddedCount++;
