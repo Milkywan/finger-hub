@@ -188,7 +188,7 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
         return;
     }
 
-    
+    // Sembunyikan konten utama sampai otorisasi selesai
     mainContentElement.style.display = 'none';
 
     onAuthStateChanged(auth, async (user) => {
@@ -210,15 +210,27 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
                     localStorage.setItem('userRole', 'user');
                 }
 
-                
+                // --- BAGIAN OTOISASI YANG DIPERBAIKI ---
                 let authorized = false;
-                if (requiredRole === "user") { 
+
+                // Jika tidak ada peran yang spesifik diminta, atau diminta "all_authenticated", izinkan semua yang login
+                if (!requiredRole || requiredRole === "all_authenticated") { 
                     authorized = true;
-                } else if (requiredRole === "admin" && (userRole === "admin" || userRole === "super_admin")) { 
+                } 
+                // Jika peran "user" diminta, izinkan hanya jika userRole adalah "user"
+                else if (requiredRole === "user" && userRole === "user") { 
                     authorized = true;
-                } else if (requiredRole === "super_admin" && userRole === "super_admin") { 
+                } 
+                // Jika peran "admin" diminta, izinkan jika userRole adalah "admin" atau "super_admin"
+                else if (requiredRole === "admin" && (userRole === "admin" || userRole === "super_admin")) { 
+                    authorized = true;
+                } 
+                // Jika peran "super_admin" diminta, izinkan hanya jika userRole adalah "super_admin"
+                else if (requiredRole === "super_admin" && userRole === "super_admin") { 
                     authorized = true;
                 }
+                // --- AKHIR BAGIAN OTOISASI YANG DIPERBAIKI ---
+
 
                 if (authorized) {
                     renderHeader(userRole, pageTitle, userName); 
@@ -240,11 +252,9 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
                 clearTimeout(inactivityTimer); 
             }
         } else {
-            
+            // Pengguna tidak login, arahkan ke halaman login
             window.location.href = "index.html";
             clearTimeout(inactivityTimer); 
         }
     });
 }
-
-
