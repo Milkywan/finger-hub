@@ -263,7 +263,10 @@
       <!-- PERUBAHAN: Ganti <select> dengan <input type="text" dan <datalist> -->
       <label for="mesinInput">Pilih Mesin:</label>
       <input type="text" id="mesinInput" list="mesinDatalist" placeholder="Ketik atau pilih mesin">
-      <datalist id="mesinDatalist"></datalist><br>
+      <datalist id="mesinDatalist"></datalist>
+      <!-- BARU: Elemen untuk menampilkan IP Mesin -->
+      <small id="selectedMachineIp" style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">IP Mesin: -</small>
+      <br>
 
       <button class="green" id="downloadSatuMesinBtn" onclick="window.downloadSatuMesin()">⬇️ Download Mesin Terpilih</button>
       <button class="blue" id="downloadSemuaMesinBtn" onclick="window.downloadSemuaMesin()">⬇️ Download Semua Mesin</button>
@@ -286,9 +289,10 @@
     const jsonFileUploadDiv = document.getElementById('jsonFileUploadDiv');
     const firestoreLoadDiv = document.getElementById('firestoreLoadDiv');
     const jsonFile = document.getElementById('jsonFile');
-    // PERUBAHAN: Referensi ke input dan datalist baru
     const mesinInput = document.getElementById("mesinInput");
     const mesinDatalist = document.getElementById("mesinDatalist");
+    // BARU: Referensi ke elemen IP Mesin
+    const selectedMachineIpDisplay = document.getElementById('selectedMachineIp');
 
     const downloadSatuBtn = document.getElementById("downloadSatuMesinBtn");
     const downloadSemuaBtn = document.getElementById("downloadSemuaMesinBtn");
@@ -303,7 +307,8 @@
                 setStatus(downloadStatusMessage, "Pengguna tidak terautentikasi. Silakan login.", 'error');
                 jsonFileUploadDiv.style.display = 'none';
                 firestoreLoadDiv.style.display = 'none';
-                mesinInput.disabled = true; // PERUBAHAN: disable input
+                mesinInput.disabled = true;
+                selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
                 downloadSatuBtn.disabled = true;
                 downloadSemuaBtn.disabled = true;
             }
@@ -347,7 +352,8 @@
                     setStatus(downloadStatusMessage, "Peran pengguna tidak dikenal atau tidak berhak. Hubungi administrator.", 'error');
                     jsonFileUploadDiv.style.display = 'none';
                     firestoreLoadDiv.style.display = 'none';
-                    mesinInput.disabled = true; // PERUBAHAN: disable input
+                    mesinInput.disabled = true;
+                    selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
                     downloadSatuBtn.disabled = true;
                     downloadSemuaBtn.disabled = true;
                 }
@@ -355,7 +361,8 @@
                 setStatus(downloadStatusMessage, "Peran pengguna tidak ditemukan. Hubungi administrator.", 'error');
                 jsonFileUploadDiv.style.display = 'none';
                 firestoreLoadDiv.style.display = 'none';
-                mesinInput.disabled = true; // PERUBAHAN: disable input
+                mesinInput.disabled = true;
+                selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
                 downloadSatuBtn.disabled = true;
                 downloadSemuaBtn.disabled = true;
             }
@@ -364,7 +371,8 @@
             console.error("Error getting user role:", e);
             jsonFileUploadDiv.style.display = 'none';
             firestoreLoadDiv.style.display = 'none';
-            mesinInput.disabled = true; // PERUBAHAN: disable input
+            mesinInput.disabled = true;
+            selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
             downloadSatuBtn.disabled = true;
             downloadSemuaBtn.disabled = true;
         }
@@ -374,7 +382,8 @@
         firestoreLoadDiv.style.display = 'none';
         jsonFileUploadDiv.style.display = 'block';
         setStatus(downloadStatusMessage, "Silakan unggah file JSON mesin Anda.", 'info');
-        mesinInput.disabled = true; // PERUBAHAN: disable input sampai JSON diunggah
+        mesinInput.disabled = true;
+        selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
         downloadSatuBtn.disabled = true;
         downloadSemuaBtn.disabled = true;
     }
@@ -392,15 +401,17 @@
                 mesinList = uploadedData;
                 isiDropdownMesin();
                 setStatus(downloadStatusMessage, "Data mesin berhasil dimuat dari file JSON!", 'success');
-                mesinInput.disabled = false; // PERUBAHAN: enable input setelah JSON diunggah
+                mesinInput.disabled = false;
                 downloadSatuBtn.disabled = false;
                 downloadSemuaBtn.disabled = false;
+                selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
             } catch (err) {
                 setStatus(downloadStatusMessage, `JSON tidak valid: ${err.message}`, 'error');
                 console.error("Error parsing JSON file:", err);
                 mesinList = {};
                 isiDropdownMesin();
-                mesinInput.disabled = true; // PERUBAHAN: disable input jika error
+                mesinInput.disabled = true;
+                selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
                 downloadSatuBtn.disabled = true;
                 downloadSemuaBtn.disabled = true;
             }
@@ -418,7 +429,8 @@
             const querySnapshot = await getDocs(collection(db, "mesin_fp"));
             if (querySnapshot.empty) {
                 setStatus(downloadStatusMessage, "Tidak ada mesin ditemukan di Firestore.", 'info');
-                mesinInput.disabled = true; // PERUBAHAN: disable input
+                mesinInput.disabled = true;
+                selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
                 downloadSatuBtn.disabled = true;
                 downloadSemuaBtn.disabled = true;
             } else {
@@ -431,27 +443,27 @@
                 });
                 isiDropdownMesin();
                 setStatus(downloadStatusMessage, `Daftar mesin berhasil dimuat dari Firestore! (${Object.keys(mesinList).length} mesin)`, 'success');
-                mesinInput.disabled = false; // PERUBAHAN: enable input
+                mesinInput.disabled = false;
                 downloadSatuBtn.disabled = false;
                 downloadSemuaBtn.disabled = false;
+                selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
             }
         } catch (e) {
             setStatus(downloadStatusMessage, `Gagal memuat mesin dari Firestore: ${e.message}`, 'error');
             console.error("Gagal memuat mesin dari Firestore:", e);
             mesinList = {};
             isiDropdownMesin();
-            mesinInput.disabled = true; // PERUBAHAN: disable input
+            mesinInput.disabled = true;
+            selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display
             downloadSatuBtn.disabled = true;
             downloadSemuaBtn.disabled = true;
         }
     }
 
-    // PERUBAHAN: Fungsi untuk mengisi datalist
+    // Fungsi untuk mengisi datalist
     window.isiDropdownMesin = function() {
         mesinDatalist.innerHTML = "";
         if (Object.keys(mesinList).length === 0) {
-            // Jika tidak ada data, datalist akan kosong, dan input akan menampilkan placeholder.
-            // Tidak perlu menambahkan opsi "Belum ada data" ke datalist.
             mesinInput.placeholder = "-- Belum ada data --";
         } else {
             Object.keys(mesinList).forEach(m => {
@@ -459,21 +471,32 @@
                 opt.value = m;
                 mesinDatalist.appendChild(opt);
             });
-            mesinInput.placeholder = "Ketik atau pilih mesin"; // Reset placeholder
+            mesinInput.placeholder = "Ketik atau pilih mesin";
         }
-        // Pastikan input dikosongkan setelah datalist diisi ulang
         mesinInput.value = "";
+        selectedMachineIpDisplay.textContent = "IP Mesin: -"; // BARU: reset IP display saat datalist diisi ulang
     };
+
+    // BARU: Event listener untuk memperbarui tampilan IP saat input berubah
+    mesinInput.addEventListener('input', () => {
+        const selectedMesinName = mesinInput.value.trim();
+        const machineData = mesinList[selectedMesinName];
+        if (machineData && machineData.ip) {
+            selectedMachineIpDisplay.textContent = `IP Mesin: ${machineData.ip}`;
+        } else {
+            selectedMachineIpDisplay.textContent = "IP Mesin: -";
+        }
+    });
 
     window.downloadSatuMesin = function() {
         const baseUrl = document.getElementById("base_url").value;
-        const selectedMesinName = mesinInput.value.trim(); // PERUBAHAN: ambil dari input
+        const selectedMesinName = mesinInput.value.trim();
 
         if (!selectedMesinName) {
-            setStatus(downloadStatusMessage, "Ketik atau pilih mesin dulu!", 'error'); // PERUBAHAN pesan
+            setStatus(downloadStatusMessage, "Ketik atau pilih mesin dulu!", 'error');
             return;
         }
-        // PERUBAHAN: Cek apakah nama mesin yang diketik valid (ada di mesinList)
+        
         if (!mesinList[selectedMesinName]) {
             setStatus(downloadStatusMessage, "Mesin yang Anda ketik tidak ditemukan dalam daftar.", 'error');
             return;
