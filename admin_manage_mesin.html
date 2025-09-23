@@ -244,7 +244,7 @@ td, th {
 
   <div class="main-content-wrapper">
     <div class="container" id="mainContainer">
-      <h2>Kelola Mesin Fingerprint</h2>
+      <h2>Kelola Mesin Fingerprint REV GEM</h2>
 
       <div class="actions">
         <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
@@ -343,6 +343,18 @@ td, th {
 
   let editingId = null; // null => tambah, otherwise edit
 
+  // **Fungsi `esc` dipindahkan ke sini agar bisa diakses secara global di dalam modul**
+  // Fungsi ini menangani nilai null/undefined menjadi string kosong, lalu melakukan HTML escaping.
+  function esc(str) {
+    if (str === undefined || str === null) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   // helper: show status
   function setStatus(msg, isError=false) {
     pageStatus.textContent = msg;
@@ -371,41 +383,29 @@ td, th {
         tbody.innerHTML = `<tr><td colspan="6" class="muted">Belum ada mesin terdaftar.</td></tr>`;
       } else {
         let index = 0;
-snap.forEach(docSnap => {
-  index++;
-  const d = docSnap.data();
-  const id = docSnap.id;
-  const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
-  const created = createdDate ? createdDate.toLocaleString() : "-";
+        snap.forEach(docSnap => {
+          index++;
+          const d = docSnap.data();
+          const id = docSnap.id;
+          const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
+          const created = createdDate ? createdDate.toLocaleString() : "-";
 
-  const tr = document.createElement("tr");
+          const tr = document.createElement("tr");
 
-  function esc(v) { return v === undefined || v === null ? "" : String(v); }
-
-  function esc(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-  tr.innerHTML = `
-    <td>${index}</td>
-    <td>${esc(d.mesin)}</td>
-    <td>${esc(d.ip)}</td>
-    <td>${esc(d.port)}</td>
-    <td class="muted">${created}</td>
-    <td>
-      <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
-      <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
-    </td>
-  `;
-  tbody.appendChild(tr);
-});
-
+          // Gunakan fungsi esc yang sudah didefinisikan secara global
+          tr.innerHTML = `
+            <td>${index}</td>
+            <td>${esc(d.mesin)}</td>
+            <td>${esc(d.ip)}</td>
+            <td>${esc(d.port)}</td>
+            <td class="muted">${created}</td>
+            <td>
+              <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
+              <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
       }
       setStatus(`Selesai memuat (${snap.size} mesin).`);
     } catch (err) {
@@ -482,13 +482,15 @@ snap.forEach(docSnap => {
 
         // create logs per changed field
         const changes = [];
+        // Gunakan fungsi esc global untuk perbandingan, ini juga akan menangani null/undefined
         if (esc(before.mesin) !== nama) {
           changes.push({ field: "mesin", old: before.mesin || "", neu: nama });
         }
         if (esc(before.ip) !== ip) {
           changes.push({ field: "ip", old: before.ip || "", neu: ip });
         }
-        if (esc(before.port) !== String(portNum)) { // Bandingkan port sebagai string untuk log
+        // Bandingkan port setelah diubah ke string agar konsisten dengan `esc` behavior
+        if (esc(String(before.port)) !== String(portNum)) {
           changes.push({ field: "port", old: before.port || "", neu: portNum });
         }
 
@@ -737,9 +739,6 @@ discardReportBtn.addEventListener("click", () => {
   }
 });
 
-
-
-
   // initial load (call after small delay to let initPage render header)
   setTimeout(() => {
     loadMesin();
@@ -747,15 +746,3 @@ discardReportBtn.addEventListener("click", () => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
