@@ -285,6 +285,15 @@ td, th {
   .sort-arrow.desc::after {
       content: ' ▼'; /* Down arrow for descending */
   }
+
+  /* NEW: Styling for duplicate entries */
+  .duplicate-entry {
+    background-color: rgba(255, 0, 0, 0.15); /* A subtle red tint for duplicates */
+    border-left: 4px solid #ef4444; /* Red border on the left */
+  }
+  .duplicate-entry:hover {
+    background-color: rgba(255, 0, 0, 0.25); /* Darker red on hover */
+  }
 </style>
 </head>
 <body>
@@ -299,10 +308,10 @@ td, th {
         <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
         <button id="uploadBtn" class="btn btn-ghost">⬆️ Upload Excel</button>
         <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none">
-        <button id="templateBtn" class="btn btn-ghost">⬇️ Download Template</button> 
+        <button id="templateBtn" class="btn btn-ghost">⬇️ Download Template</button>
         <button id="refreshBtn" class="btn btn-ghost">🔄 Refresh</button>
         <input type="text" id="searchInput" placeholder="Cari Nama/IP Mesin...">
-        <button id="downloadAllBtn" class="btn btn-ghost">⬇️ Download Semua Mesin</button> <!-- NEW: Download All Button -->
+        <button id="downloadAllBtn" class="btn btn-ghost">⬇️ Download Semua Mesin</button>
 
         <div class="status" id="pageStatus">Memuat data...</div>
       </div>
@@ -370,16 +379,13 @@ td, th {
   </div>
 
 <script type="module">
-  // gunakan existing initPage & firebase-config
   import { initPage } from "./common-ui.js";
   import { auth, db } from "./firebase-config.js";
   import {
     collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc,
-    serverTimestamp, query, orderBy
+    serverTimestamp, query, where, orderBy
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  // inisialisasi page - tidak mengubah common-ui.js
-  // Pastikan peran pengguna yang sesuai (misalnya 'admin') dapat mengakses halaman ini
   initPage("Kelola Mesin Fingerprint", "mainContainer", "admin");
 
   // DOM refs
@@ -389,7 +395,7 @@ td, th {
   const refreshBtn = document.getElementById("refreshBtn");
   const searchInput = document.getElementById("searchInput");
   const mesinTableHead = document.getElementById("mesinTableHead");
-  const downloadAllBtn = document.getElementById("downloadAllBtn"); // NEW: Download All Button ref
+  const downloadAllBtn = document.getElementById("downloadAllBtn");
 
   const modal = document.getElementById("mesinModal");
   const modalTitle = document.getElementById("modalTitle");
@@ -399,14 +405,11 @@ td, th {
   const cancelBtn = document.getElementById("cancelBtn");
   const saveBtn = document.getElementById("saveBtn");
 
-  let editingId = null; // null => tambah, otherwise edit
-  let allMesinData = []; // To store all fetched machines
-  let currentDisplayData = []; // NEW: To store data after filter/sort for rendering AND for export
-  // State for current sorting (default: sort by createdAt descending)
+  let editingId = null;
+  let allMesinData = [];
   let sortState = { column: 'createdAt', direction: 'desc' };
+  let duplicateMesinIds = new Set(); // NEW: Set to store IDs of duplicate entries
 
-  // Fungsi `esc` dipindahkan ke sini agar bisa diakses secara global di dalam modul
-  // Fungsi ini menangani nilai null/undefined menjadi string kosong, lalu melakukan HTML escaping.
   function esc(str) {
     if (str === undefined || str === null) return "";
     return String(str)
@@ -417,13 +420,11 @@ td, th {
       .replace(/'/g, "&#039;");
   }
 
-  // helper: show status
   function setStatus(msg, isError=false) {
     pageStatus.textContent = msg;
-    pageStatus.style.color = isError ? "#fca5a5" : "#c7d2fe"; // Warna konsisten
+    pageStatus.style.color = isError ? "#fca5a5" : "#c7d2fe";
   }
 
-  // show/hide modal
   function openModal() {
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
@@ -433,9 +434,8 @@ td, th {
     modal.setAttribute("aria-hidden", "true");
   }
 
-  // Function to render the table based on provided data
   function renderTable(machinesToRender) {
-    tbody.innerHTML = ""; // Clear existing rows
+    tbody.innerHTML = "";
     if (machinesToRender.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="muted">Belum ada mesin terdaftar atau tidak ditemukan.</td></tr>`;
       return;
@@ -444,7 +444,7 @@ td, th {
     let index = 0;
     machinesToRender.forEach(machine => {
       index++;
-      const d = machine.data; // The original data object
+      const d = machine.data;
       const id = machine.id;
       const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
       const created = createdDate ? createdDate.toLocaleString() : "-";
@@ -456,6 +456,12 @@ td, th {
       if (d.updatedAt) {
           tr.classList.add("updated-row");
       }
+      // NEW: Add duplicate class if this machine's ID is in the duplicate list
+      if (duplicateMesinIds.has(id)) {
+          tr.classList.add("duplicate-entry");
+          tr.title = "Nama mesin atau IP Address ini duplikat dengan entri lain."; // Tooltip
+      }
+
 
       tr.innerHTML = `
         <td>${index}</td>
@@ -473,11 +479,10 @@ td, th {
     });
   }
 
-  // Function to apply filtering and sorting, then render the table
   function applySortAndFilter() {
-    let dataToProcess = [...allMesinData]; // Start with a copy of all data
+    let dataToProcess = [...allMesinData];
 
-    // 1. Apply filter (if search term exists)
+    // 1. Apply filter
     const searchTerm = searchInput.value.toLowerCase().trim();
     if (searchTerm !== "") {
         dataToProcess = dataToProcess.filter(machine => {
@@ -491,7 +496,6 @@ td, th {
     if (sortState.column) {
         dataToProcess.sort((a, b) => {
             let valA, valB;
-            // Handle nested properties and different data types for sorting
             if (sortState.column === 'mesin' || sortState.column === 'ip') {
                 valA = (a.data[sortState.column] || '').toLowerCase();
                 valB = (b.data[sortState.column] || '').toLowerCase();
@@ -499,7 +503,6 @@ td, th {
                 valA = parseInt(a.data[sortState.column]) || 0;
                 valB = parseInt(b.data[sortState.column]) || 0;
             } else if (sortState.column === 'createdAt' || sortState.column === 'updatedAt') {
-                // Convert Firestore Timestamp to Date objects for comparison (get milliseconds)
                 valA = a.data[sortState.column] ? (a.data[sortState.column].toDate ? a.data[sortState.column].toDate().getTime() : new Date(a.data[sortState.column]).getTime()) : 0;
                 valB = b.data[sortState.column] ? (b.data[sortState.column].toDate ? b.data[sortState.column].toDate().getTime() : new Date(b.data[sortState.column]).getTime()) : 0;
             } else {
@@ -507,11 +510,8 @@ td, th {
                 valB = b.data[sortState.column];
             }
 
-            // Fallback for null/undefined values during comparison for non-timestamp fields
-            // For strings, empty string comes first for 'asc', last for 'desc'
             if (typeof valA === 'string' && (valA === null || valA === undefined || valA === '')) valA = sortState.direction === 'asc' ? '' : 'zzzzz';
             if (typeof valB === 'string' && (valB === null || valB === undefined || valB === '')) valB = sortState.direction === 'asc' ? '' : 'zzzzz';
-            // For numbers/dates, 0 is a reasonable default for null/undefined, as handled above
 
             if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
             if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
@@ -519,12 +519,11 @@ td, th {
         });
     }
 
-    currentDisplayData = dataToProcess; // Store the processed data for rendering AND export
-    renderTable(currentDisplayData); // Render the filtered and sorted data
-    updateSortArrows(); // Update arrow icons on table headers
+    currentDisplayData = dataToProcess;
+    renderTable(currentDisplayData);
+    updateSortArrows();
   }
 
-  // Function to update sort arrow indicators in the table header
   function updateSortArrows() {
     mesinTableHead.querySelectorAll('.sort-arrow').forEach(arrow => {
         arrow.classList.remove('active', 'asc', 'desc');
@@ -539,21 +538,66 @@ td, th {
     }
   }
 
-  // load mesin list (modified to use applySortAndFilter)
+  // NEW: Function to detect existing duplicates in allMesinData
+  function detectAndMarkDuplicates() {
+      duplicateMesinIds.clear();
+      const namaMesinCount = new Map();
+      const ipAddressCount = new Map();
+
+      // First pass: count occurrences and collect IDs of first instance
+      allMesinData.forEach(machine => {
+          const nama = machine.data.mesin.toLowerCase();
+          const ip = machine.data.ip;
+
+          if (!namaMesinCount.has(nama)) {
+              namaMesinCount.set(nama, []);
+          }
+          namaMesinCount.get(nama).push(machine.id);
+
+          if (!ipAddressCount.has(ip)) {
+              ipAddressCount.set(ip, []);
+          }
+          ipAddressCount.get(ip).push(machine.id);
+      });
+
+      // Second pass: identify duplicates (more than one ID for a given name/IP)
+      namaMesinCount.forEach((ids, nama) => {
+          if (ids.length > 1) {
+              ids.forEach(id => duplicateMesinIds.add(id));
+              console.warn(`Duplikasi nama mesin ditemukan: '${nama}' (${ids.length} entri).`);
+          }
+      });
+
+      ipAddressCount.forEach((ids, ip) => {
+          if (ids.length > 1) {
+              ids.forEach(id => duplicateMesinIds.add(id));
+              console.warn(`Duplikasi IP Address ditemukan: '${ip}' (${ids.length} entri).`);
+          }
+      });
+
+      if (duplicateMesinIds.size > 0) {
+          setStatus(`Peringatan: ${duplicateMesinIds.size} entri duplikat (nama mesin/IP) ditemukan. Cek highlight merah pada tabel.`, true);
+      } else {
+          // If no duplicates, ensure status reflects normal load.
+          setStatus(`Selesai memuat (${allMesinData.length} mesin).`);
+      }
+  }
+
   async function loadMesin() {
     try {
       setStatus("Memuat data mesin...");
-      const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc")); // Initial query is still ordered
+      const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
 
-      allMesinData = []; // Clear previous data
+      allMesinData = [];
       if (!snap.empty) {
         snap.forEach(docSnap => {
           allMesinData.push({ id: docSnap.id, data: docSnap.data() });
         });
       }
-      applySortAndFilter(); // Apply current sort and filter, then render
-      setStatus(`Selesai memuat (${allMesinData.length} mesin).`);
+      detectAndMarkDuplicates(); // NEW: Detect and mark duplicates before rendering
+      applySortAndFilter();
+      // Status message is now set by detectAndMarkDuplicates
     } catch (err) {
       console.error(err);
       setStatus("Gagal memuat data mesin. Cek konsol.", true);
@@ -561,7 +605,40 @@ td, th {
     }
   }
 
-  // prepare "add" flow
+  // NEW: Helper to check for duplicate name or IP in Firestore
+  async function checkDuplicateExistence(nama, ip, currentDocId = null) {
+      // Query for documents with the same 'mesin' name
+      const qNama = query(collection(db, "mesin_fp"), where("mesin", "==", nama));
+      const snapNama = await getDocs(qNama);
+
+      // Query for documents with the same 'ip' address
+      const qIp = query(collection(db, "mesin_fp"), where("ip", "==", ip));
+      const snapIp = await getDocs(qIp);
+
+      let isNamaDuplicate = false;
+      snapNama.forEach(doc => {
+          if (doc.id !== currentDocId) { // Ignore the current document if we're editing
+              isNamaDuplicate = true;
+          }
+      });
+
+      let isIpDuplicate = false;
+      snapIp.forEach(doc => {
+          if (doc.id !== currentDocId) { // Ignore the current document if we're editing
+              isIpDuplicate = true;
+          }
+      });
+
+      if (isNamaDuplicate && isIpDuplicate) {
+          return "Nama mesin dan IP Address sudah ada.";
+      } else if (isNamaDuplicate) {
+          return "Nama mesin sudah ada.";
+      } else if (isIpDuplicate) {
+          return "IP Address sudah ada.";
+      }
+      return null; // No duplicate found
+  }
+
   addBtn.addEventListener("click", () => {
     editingId = null;
     modalTitle.textContent = "Tambah Mesin";
@@ -571,19 +648,16 @@ td, th {
     openModal();
   });
 
-  // Refresh button functionality
   refreshBtn.addEventListener("click", () => {
-    searchInput.value = ""; // Clear search input on manual refresh
-    sortState = { column: 'createdAt', direction: 'desc' }; // Reset sort to default on manual refresh
-    loadMesin(); // Re-fetch and re-render
+    searchInput.value = "";
+    sortState = { column: 'createdAt', direction: 'desc' };
+    loadMesin();
   });
 
-  // cancel
   cancelBtn.addEventListener("click", () => {
     closeModal();
   });
 
-  // SAVE (tambah / edit)
   saveBtn.addEventListener("click", async () => {
     const nama = inputNama.value.trim();
     const ip = inputIP.value.trim();
@@ -593,61 +667,57 @@ td, th {
       alert("Isi semua field (Nama, IP, Port).");
       return;
     }
-    // Validasi IP Address (basic)
     const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     if (!ipRegex.test(ip)) {
         alert("Format IP Address tidak valid.");
         return;
     }
-    // Validasi Port
     const portNum = parseInt(port, 10);
     if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
         alert("Port harus berupa angka antara 1 dan 65535.");
         return;
     }
 
-
     saveBtn.disabled = true;
     try {
-      // get current user info for log
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error("Pengguna belum terautentikasi. Silakan login kembali.");
 
-      // get username from users collection (so we can store updatedname)
       const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
       const updatedName = (userDocSnap.exists() && userDocSnap.data().username) ? userDocSnap.data().username : currentUser.email || currentUser.uid;
 
+      // NEW: Check for duplicates before saving
+      const duplicateError = await checkDuplicateExistence(nama, ip, editingId);
+      if (duplicateError) {
+          alert(`Gagal menyimpan: ${duplicateError}`);
+          return; // Stop the save process
+      }
+
       if (editingId) {
-        // edit: compare fields and write logs per-field if ada perubahan
         const ref = doc(db, "mesin_fp", editingId);
         const beforeSnap = await getDoc(ref);
         if (!beforeSnap.exists()) throw new Error("Dokumen mesin tidak ditemukan (saat update).");
 
         const before = beforeSnap.data();
-        // update doc
         await updateDoc(ref, {
           mesin: nama,
           ip: ip,
-          port: portNum, // Simpan sebagai nomor
+          port: portNum,
           updatedAt: serverTimestamp(),
           updatedBy: currentUser.uid
         });
 
-        // create logs per changed field
         const changes = [];
-        // Gunakan fungsi esc global untuk perbandingan, ini juga akan menangani null/undefined
         if (esc(before.mesin) !== nama) {
           changes.push({ field: "mesin", old: before.mesin || "", neu: nama });
         }
         if (esc(before.ip) !== ip) {
           changes.push({ field: "ip", old: before.ip || "", neu: ip });
         }
-        // Bandingkan port setelah diubah ke string agar konsisten dengan `esc` behavior
         if (esc(String(before.port)) !== String(portNum)) {
           changes.push({ field: "port", old: before.port || "", neu: portNum });
         }
 
-        // write a log doc for each changed field
         for (const ch of changes) {
           const log = {
             mesin_id: editingId,
@@ -665,17 +735,15 @@ td, th {
 
         setStatus("Mesin berhasil diperbarui.");
       } else {
-        // create
         const payload = {
           mesin: nama,
           ip: ip,
-          port: portNum, // Simpan sebagai nomor
+          port: portNum,
           createdAt: serverTimestamp(),
           createdBy: currentUser.uid
         };
         const newRef = await addDoc(collection(db, "mesin_fp"), payload);
 
-        // log create action (single log document)
         const log = {
           mesin_id: newRef.id,
           mesin_nama: nama,
@@ -693,8 +761,7 @@ td, th {
       }
 
       closeModal();
-      await loadMesin(); // Reload all data after save/update. This will also re-apply filter/sort.
-      // searchInput.value = ""; // Tidak perlu kosongkan search input, biarkan filter/sort yang aktif tetap berlaku
+      await loadMesin();
     } catch (err) {
       console.error(err);
       alert("Gagal menyimpan: " + (err.message || err));
@@ -702,10 +769,8 @@ td, th {
     } finally {
       saveBtn.disabled = false;
     }
-
   });
 
-  // handle edit / delete button clicks via delegation
   tbody.addEventListener("click", async (ev) => {
     const btn = ev.target.closest("button");
     if (!btn) return;
@@ -725,7 +790,7 @@ td, th {
         modalTitle.textContent = "Edit Mesin";
         inputNama.value = d.mesin || "";
         inputIP.value = d.ip || "";
-        inputPort.value = d.port || ""; // Mengambil nilai port yang sudah ada
+        inputPort.value = d.port || "";
         openModal();
       } catch (err) {
         console.error(err);
@@ -748,10 +813,8 @@ td, th {
         }
         const before = beforeSnap.data();
 
-        // delete doc
         await deleteDoc(ref);
 
-        // create single delete log (contains old values)
         const log = {
           mesin_id: id,
           mesin_nama: before.mesin || "",
@@ -766,41 +829,34 @@ td, th {
         await addDoc(collection(db, "mesin_logs"), log);
 
         setStatus("Mesin berhasil dihapus.");
-        await loadMesin(); // Reload all data after delete. This will also re-apply filter/sort.
-        // searchInput.value = ""; // Tidak perlu kosongkan search input
+        await loadMesin();
       } catch (err) {
         console.error(err);
         alert("Gagal menghapus mesin: " + (err.message || err));
         setStatus("Gagal menghapus.", true);
       } finally {
-        // saveBtn.disabled = false;
       }
     }
   });
 
-// Search functionality (now calls applySortAndFilter)
 searchInput.addEventListener("input", () => {
   applySortAndFilter();
 });
 
-// Sortable table headers
 mesinTableHead.addEventListener("click", (e) => {
     const targetTh = e.target.closest("th[data-sort-by]");
     if (!targetTh) return;
 
     const column = targetTh.dataset.sortBy;
     if (sortState.column === column) {
-        // If clicking the same column, toggle direction
         sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
     } else {
-        // If clicking a new column, set it as active and default to ascending
         sortState.column = column;
         sortState.direction = 'asc';
     }
-    applySortAndFilter(); // Re-apply sort and filter, then re-render
+    applySortAndFilter();
 });
 
-// NEW: Download All Machines button functionality
 downloadAllBtn.addEventListener("click", () => {
   if (currentDisplayData.length === 0) {
     alert("Tidak ada data mesin untuk diunduh.");
@@ -840,23 +896,21 @@ const uploadReport = document.getElementById("uploadReport");
 const downloadReportBtn = document.getElementById("downloadReportBtn");
 const discardReportBtn = document.getElementById("discardReportBtn");
 
-// Download template Excel
 templateBtn.addEventListener("click", () => {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    ["Nama Mesin", "IP Address", "Port"], // header
-    ["HR110", "10.30.39.189", "4370"]     // contoh
+    ["Nama Mesin", "IP Address", "Port"],
+    ["HR110", "10.30.39.189", "4370"]
   ]);
   XLSX.utils.book_append_sheet(wb, ws, "Template");
   XLSX.writeFile(wb, "template_mesin.xlsx");
 });
 
-// Trigger file input
 uploadBtn.addEventListener("click", () => {
   excelFile.click();
 });
 
-// Upload Excel & proses data
+// Upload Excel & proses data (diperbarui untuk deteksi duplikat nama dan IP)
 excelFile.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -872,18 +926,34 @@ excelFile.addEventListener("change", async (e) => {
     let added = 0, skipped = 0;
     const skippedList = [];
 
+    // Fetch existing IPs and Names from Firestore ONCE
     const qSnap = await getDocs(collection(db, "mesin_fp"));
     const existingIPs = new Set(qSnap.docs.map(d => d.data().ip));
+    const existingMesinNames = new Set(qSnap.docs.map(d => d.data().mesin));
 
     let processed = 0;
     for (const row of machines) {
       processed++;
       const [nama, ip, port] = row.map(x => String(x).trim());
-      if (!nama || !ip || !port) continue;
+      if (!nama || !ip || !port) {
+          skipped++;
+          skippedList.push(`Baris ${processed+1} (${row.join(", ")}): Data tidak lengkap`);
+          continue;
+      }
 
+      let skipReason = "";
+      // Check for IP duplication (already present in Firestore or already added in this batch)
       if (existingIPs.has(ip)) {
-        skipped++;
-        skippedList.push(`${nama} (${ip})`);
+          skipReason += "IP Address sudah ada. ";
+      }
+      // Check for Mesin Name duplication (already present in Firestore or already added in this batch)
+      if (existingMesinNames.has(nama)) {
+          skipReason += "Nama Mesin sudah ada. ";
+      }
+      
+      if (skipReason !== "") {
+          skipped++;
+          skippedList.push(`${nama} (${ip}): ${skipReason.trim()}`);
       } else {
         await addDoc(collection(db, "mesin_fp"), {
           mesin: nama,
@@ -892,14 +962,14 @@ excelFile.addEventListener("change", async (e) => {
           createdAt: serverTimestamp(),
           createdBy: auth.currentUser ? auth.currentUser.uid : "system"
         });
-        existingIPs.add(ip);
+        existingIPs.add(ip); // Add to the set to prevent duplicates in the same upload batch
+        existingMesinNames.add(nama); // Add to the set to prevent duplicates in the same upload batch
         added++;
       }
 
       setStatus(`Memproses ${processed}/${machines.length} baris...`);
     }
 
-    // summary
     let msg = `Upload selesai.\nDitambahkan: ${added}, dilewati: ${skipped}.`;
     if (skippedList.length > 0) {
       msg += `\n\nMesin yang dilewati:\n- ${skippedList.join("\n- ")}`;
@@ -911,8 +981,7 @@ excelFile.addEventListener("change", async (e) => {
 
     uploadReport.textContent = msg;
     setStatus("Upload selesai.");
-    await loadMesin(); // Reload all data after upload
-    // searchInput.value = ""; // Tidak perlu kosongkan search input
+    await loadMesin();
   } catch (err) {
     console.error(err);
     alert("Gagal memproses file Excel: " + err.message);
@@ -922,28 +991,33 @@ excelFile.addEventListener("change", async (e) => {
   }
 });
 
-// handle download
 downloadReportBtn.addEventListener("click", () => {
   const skippedList = JSON.parse(downloadReportBtn.dataset.skipped || "[]");
   if (skippedList.length === 0) return;
 
   const wbReport = XLSX.utils.book_new();
   const wsReport = XLSX.utils.aoa_to_sheet([
-    ["Nama Mesin", "IP Address"],
+    ["Nama Mesin", "IP Address", "Alasan Dilewati"],
     ...skippedList.map(item => {
-      const parts = item.match(/^(.*) \((.*)\)$/);
-      return parts ? [parts[1], parts[2]] : [item, ""];
+      // Improved parsing for skippedList items
+      const match = item.match(/^(.*) \((.*)\): (.*)$/); // Expecting "Nama (IP): Alasan"
+      if (match) {
+        return [match[1].trim(), match[2].trim(), match[3].trim()];
+      }
+      const simpleMatch = item.match(/^(.*) \((.*)\)$/); // Fallback for simple "Nama (IP)"
+      if (simpleMatch) {
+        return [simpleMatch[1].trim(), simpleMatch[2].trim(), "Duplikat"];
+      }
+      return [item, "", ""]; // Fallback for unparsed items
     })
   ]);
-  XLSX.utils.book_append_sheet(wbReport, wsReport, "Skipped");
+  XLSX.utils.book_append_append(wbReport, wsReport, "Skipped Report");
   XLSX.writeFile(wbReport, "report_skipped.xlsx");
 
-  // auto clear setelah download
   reportBox.style.display = "none";
   uploadReport.textContent = "";
 });
 
-// handle discard
 discardReportBtn.addEventListener("click", () => {
   if (confirm("Yakin mau buang report ini tanpa download? Report akan hilang permanen.")) {
     reportBox.style.display = "none";
@@ -952,11 +1026,9 @@ discardReportBtn.addEventListener("click", () => {
 });
 
 
-  // initial load (call after small delay to let initPage render header)
   setTimeout(() => {
     loadMesin();
   }, 300);
 </script>
 </body>
 </html>
-
