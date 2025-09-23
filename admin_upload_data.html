@@ -196,7 +196,6 @@
         .btn { 
             width: auto; 
             padding: .75rem; 
-            /* margin-top: .75rem; /* Dihapus karena gap di controls */
             border: none;
             border-radius: .5rem; 
             font-weight: bold;
@@ -213,8 +212,8 @@
         .btn-primary:hover { background: #4338ca; }
         .btn-secondary { background: #f59e0b; color: #fff; } 
         .btn-secondary:hover { background: #d97706; }
-        .btn-info { background: #3b82f6; color: #fff; }
-        .btn-info:hover { background: #2563eb; }
+        .btn-info { background: #3b82f6; color: #fff; } /* Added for 'View Existing Data' button */
+        .btn-info:hover { background: #2563eb; } /* Added for 'View Existing Data' button */
 
         
         .status-message {
@@ -326,6 +325,7 @@
             <div class="controls">
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
                 <button class="btn btn-secondary" id="previewBtn">Preview Data</button>
+                <button class="btn btn-info" id="viewExistingBtn">Lihat Data Karyawan</button> <!-- Tombol BARU -->
                 <button class="btn btn-primary" id="uploadToFirestoreBtn">Unggah ke Firestore</button>
             </div>
 
@@ -369,12 +369,14 @@
             collection,
             doc,
             writeBatch, 
-            setDoc
+            setDoc,
+            getDocs // BARU: import getDocs untuk membaca koleksi
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
         import { db } from "./firebase-config.js"; 
 
         const excelFile = document.getElementById('excelFile');
         const previewBtn = document.getElementById('previewBtn');
+        const viewExistingBtn = document.getElementById('viewExistingBtn'); // BARU: referensi tombol
         const uploadToFirestoreBtn = document.getElementById('uploadToFirestoreBtn');
         const statusMessage = document.getElementById('statusMessage');
         const dataTableHead = document.querySelector('#dataTable thead');
@@ -401,8 +403,13 @@
                 return;
             }
 
-            
-            const headers = Object.keys(data[0]);
+            // Dapatkan semua header unik dari semua objek data
+            const allHeaders = new Set();
+            data.forEach(row => {
+                Object.keys(row).forEach(header => allHeaders.add(header));
+            });
+            const headers = Array.from(allHeaders); // Konversi Set ke Array
+
             let headerRow = '<tr>';
             headers.forEach(header => {
                 headerRow += `<th>${header}</th>`;
@@ -414,7 +421,9 @@
             data.forEach(row => {
                 let dataRow = '<tr>';
                 headers.forEach(header => {
-                    dataRow += `<td>${row[header] !== undefined ? row[header] : ''}</td>`;
+                    // Pastikan nilai ditampilkan sebagai string kosong jika undefined/null
+                    const cellValue = row[header] !== undefined && row[header] !== null ? row[header] : '';
+                    dataRow += `<td>${cellValue}</td>`;
                 });
                 dataRow += '</tr>';
                 dataTableBody.innerHTML += dataRow;
@@ -458,9 +467,14 @@
                         let obj = {};
                         headers.forEach((header, index) => {
                             let value = row[index];
+                            // Di sini kita tidak lagi menghapus undefined, tapi kita pastikan value menjadi null atau string kosong
+                            // jika undefined. Ini agar preview terlihat rapi.
+                            // Penghapusan undefined akan dilakukan saat upload ke Firestore.
                             if (typeof value === 'string') {
                                 value = value.trim();
-                            } 
+                            } else if (value === undefined) {
+                                value = null; // Ganti undefined dengan null untuk preview/pemrosesan awal
+                            }
                             obj[header] = value;
                         });
                         return obj;
@@ -492,14 +506,14 @@
             const collectionRef = collection(db, "employees_mapping"); 
             const batchSize = 400; 
             let totalSuccess = 0;
-            let totalError = 0;
+            let totalSkipped = 0; // Mengubah totalError menjadi totalSkipped
 
             try {
                 for (let i = 0; i < excelData.length; i += batchSize) {
                     const batch = writeBatch(db);
                     const currentBatchData = excelData.slice(i, i + batchSize);
                     let batchSuccess = 0;
-                    let batchError = 0;
+                    let batchSkipped = 0;
 
                     currentBatchData.forEach(row => {
                         const nik = row['NIK']; 
@@ -514,24 +528,32 @@
                         }
                         
                         if (docId) {
-                            const dataToSave = { ...row };
-                            delete dataToSave['No']; 
+                            const dataToSave = {};
+                            // BARU: Saring properti dengan nilai undefined sebelum menyimpan ke Firestore
+                            for (const key in row) {
+                                if (row.hasOwnProperty(key) && key !== 'No') { // Pastikan properti milik objek itu sendiri dan bukan 'No'
+                                    const value = row[key];
+                                    if (value !== undefined) { // HANYA sertakan nilai yang bukan undefined
+                                        dataToSave[key] = value;
+                                    }
+                                }
+                            }
                             
                             batch.set(doc(collectionRef, docId), dataToSave); 
                             batchSuccess++;
                         } else {
                             console.warn("Baris dilewati karena NIK dan ID NumberMesin kosong:", row);
-                            batchError++;
+                            batchSkipped++;
                         }
                     });
 
                     await batch.commit();
                     totalSuccess += batchSuccess;
-                    totalError += batchError;
-                    setStatus(`Batch ${Math.ceil((i + batchSize) / batchSize)} berhasil diunggah. Sukses: ${totalSuccess}, Dilewati: ${totalError}.`, 'info');
+                    totalSkipped += batchSkipped;
+                    setStatus(`Batch ${Math.ceil((i + batchSize) / batchSize)} berhasil diunggah. Sukses: ${totalSuccess}, Dilewati: ${totalSkipped}.`, 'info');
                 }
                 
-                setStatus(`Semua data berhasil diunggah! Total ${totalSuccess} baris sukses, ${totalError} dilewati.`, 'success');
+                setStatus(`Semua data berhasil diunggah! Total ${totalSuccess} baris sukses, ${totalSkipped} dilewati.`, 'success');
                 excelData = []; 
                 clearTable();
 
@@ -540,6 +562,37 @@
                 console.error(error);
             } finally {
                 uploadToFirestoreBtn.disabled = false; 
+            }
+        });
+
+        // BARU: Fungsi untuk memuat data karyawan yang sudah ada dari Firestore
+        viewExistingBtn.addEventListener('click', async () => {
+            setStatus("Memuat data karyawan dari Firestore...", 'info');
+            clearTable(); // Bersihkan tabel sebelum memuat yang baru
+            viewExistingBtn.disabled = true; // Nonaktifkan tombol saat memuat
+
+            try {
+                const collectionRef = collection(db, "employees_mapping");
+                const querySnapshot = await getDocs(collectionRef);
+
+                const employeesData = [];
+                if (querySnapshot.empty) {
+                    setStatus("Tidak ada data karyawan ditemukan di Firestore.", 'info');
+                } else {
+                    querySnapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        // Tambahkan doc.id sebagai properti (opsional, bisa digunakan sebagai "ID Dokumen" di tabel)
+                        employeesData.push({ ...data, 'Doc ID (Firestore)': docSnap.id }); // Contoh: menambahkan ID Firestore
+                    });
+                    
+                    displayTable(employeesData); // Tampilkan data yang diambil
+                    setStatus(`Data karyawan dari Firestore berhasil dimuat. Ditemukan ${employeesData.length} entri.`, 'success');
+                }
+            } catch (error) {
+                setStatus(`Gagal memuat data karyawan dari Firestore: ${error.message}`, 'error');
+                console.error("Error loading existing employees:", error);
+            } finally {
+                viewExistingBtn.disabled = false; // Aktifkan kembali tombol
             }
         });
     </script>
