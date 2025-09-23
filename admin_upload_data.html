@@ -405,15 +405,16 @@
         <div class="container" id="adminUploadContainer">
             <h2>Kelola Data Karyawan</h2>
 
-            <div class="controls">
+                 <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
-                <!-- Tombol Download Template dihilangkan sesuai permintaan -->
+                <button class="btn btn-secondary" id="downloadTemplateBtn">⬇️ Download Template</button> 
                 <button class="btn btn-info" id="addEmployeeBtn">➕ Tambah Karyawan</button>
                 <button class="btn btn-ghost" id="refreshEmployeeDataBtn">🔄 Refresh Data</button>
                 <input type="text" id="searchInput" placeholder="Cari NIK/Nama Karyawan...">
                 <button class="btn btn-primary" id="deleteSelectedBtn" style="display:none;">🗑️ Hapus Terpilih (<span id="selectedCount">0</span>)</button>
             </div>
+
 
             <div class="status-message" id="pageStatus">Memuat data karyawan...</div>
 
@@ -426,7 +427,7 @@
                             <th data-sort-by="NIK">NIK <span class="sort-arrow"></span></th>
                             <th data-sort-by="Nama">Nama Karyawan <span class="sort-arrow"></span></th>
                             <th data-sort-by="Jabatan">Jabatan <span class="sort-arrow"></span></th>
-                            <th data-sort-by="Departemen">Departemen <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Department">Department <span class="sort-arrow"></span></th>
                             <th data-sort-by="createdAt">Dibuat <span class="sort-arrow"></span></th>
                             <th data-sort-by="updatedAt">Diperbarui <span class="sort-arrow"></span></th>
                             <th style="width:150px">Aksi</th>
@@ -471,8 +472,8 @@
                 <input id="inputJabatan" type="text" placeholder="Jabatan Karyawan">
             </div>
             <div class="form-row">
-                <label for="inputDepartemen">Departemen</label>
-                <input id="inputDepartemen" type="text" placeholder="Departemen Karyawan">
+                <label for="inputDepartment">Department</label>
+                <input id="inputDepartment" type="text" placeholder="Department Karyawan">
             </div>
             <!-- Tambahkan field lain sesuai kebutuhan dari excelData kamu -->
 
@@ -533,7 +534,7 @@
         const inputNIK = document.getElementById("inputNIK");
         const inputNama = document.getElementById("inputNama");
         const inputJabatan = document.getElementById("inputJabatan");
-        const inputDepartemen = document.getElementById("inputDepartemen");
+        const inputDepartment = document.getElementById("inputDepartment");
         const cancelEmployeeBtn = document.getElementById("cancelEmployeeBtn");
         const saveEmployeeBtn = document.getElementById("saveEmployeeBtn");
 
@@ -650,7 +651,7 @@
                     <td>${esc(d.NIK || '-')}</td>
                     <td>${esc(d.Nama || '-')}</td>
                     <td>${esc(d.Jabatan || '-')}</td>
-                    <td>${esc(d.Departemen || '-')}</td>
+                    <td>${esc(d.Department || '-')}</td>
                     <td class="muted">${created}</td>
                     <td class="muted">${updated}</td>
                     <td>
@@ -696,8 +697,8 @@
                     const nik = (employee.data.NIK || "").toLowerCase();
                     const nama = (employee.data.Nama || "").toLowerCase();
                     const jabatan = (employee.data.Jabatan || "").toLowerCase();
-                    const departemen = (employee.data.Departemen || "").toLowerCase();
-                    return nik.includes(searchTerm) || nama.includes(searchTerm) || jabatan.includes(searchTerm) || departemen.includes(searchTerm);
+                    const Department = (employee.data.Department || "").toLowerCase();
+                    return nik.includes(searchTerm) || nama.includes(searchTerm) || jabatan.includes(searchTerm) || Department.includes(searchTerm);
                 });
             }
 
@@ -705,7 +706,7 @@
             if (sortState.column) {
                 dataToProcess.sort((a, b) => {
                     let valA, valB;
-                    if (['NIK', 'Nama', 'Jabatan', 'Departemen'].includes(sortState.column)) {
+                    if (['NIK', 'Nama', 'Jabatan', 'Department'].includes(sortState.column)) {
                         valA = (a.data[sortState.column] || '').toLowerCase();
                         valB = (b.data[sortState.column] || '').toLowerCase();
                     } else if (sortState.column === 'createdAt' || sortState.column === 'updatedAt') {
@@ -797,7 +798,7 @@
             inputNIK.disabled = false; // NIK bisa diisi saat tambah baru
             inputNama.value = "";
             inputJabatan.value = "";
-            inputDepartemen.value = "";
+            inputDepartment.value = "";
             // ... clear any other fields
             openEmployeeModal();
         });
@@ -810,7 +811,7 @@
             const nik = inputNIK.value.trim();
             const nama = inputNama.value.trim();
             const jabatan = inputJabatan.value.trim();
-            const departemen = inputDepartemen.value.trim();
+            const Department = inputDepartment.value.trim();
 
             if (!nik || !nama) {
                 alert("NIK dan Nama Karyawan wajib diisi.");
@@ -823,7 +824,7 @@
                     NIK: nik,
                     Nama: nama,
                     Jabatan: jabatan,
-                    Departemen: departemen,
+                    Department: Department,
                     // ... tambahkan field lain yang relevan
                 };
 
@@ -892,7 +893,7 @@
                     inputNIK.disabled = true; // NIK tidak bisa diedit setelah dibuat
                     inputNama.value = d.Nama || "";
                     inputJabatan.value = d.Jabatan || "";
-                    inputDepartemen.value = d.Departemen || "";
+                    inputDepartment.value = d.Department || "";
                     // ... fill other fields
                     openEmployeeModal();
                 } catch (err) {
@@ -1178,6 +1179,46 @@
             };
             reader.readAsArrayBuffer(file);
         });
+        // ... (Kode yang sudah ada di bagian Excel Upload Elements)
+        const excelFile = document.getElementById('excelFile');
+        // const templateBtn = document.getElementById('templateBtn'); // DIHILANGKAN - ini dulu, sekarang kita punya id baru
+        const reportBox = document.getElementById("reportBox");
+        const uploadReport = document.getElementById("uploadReport");
+        const downloadReportBtn = document.getElementById("downloadReportBtn");
+        const discardReportBtn = document.getElementById("discardReportBtn");
+
+        // --- New: Template Download Elements ---
+        const downloadTemplateBtn = document.getElementById("downloadTemplateBtn"); // Referensi tombol baru
+
+        // --- New: Template Download Listener ---
+        downloadTemplateBtn.addEventListener("click", () => {
+            if (typeof XLSX === 'undefined') {
+                setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
+                return;
+            }
+
+            const headers = [
+                "ID Mesin",
+                "NIK Sebelumnya",
+                "NIK",
+                "Nama",
+                "Status",
+                "Perusahaan",
+                "Department", // Perbaiki menjadi "Department" agar konsisten dengan field lain
+                "Jabatan",
+                "Sidik Jari"
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet([headers]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template Karyawan");
+            XLSX.writeFile(wb, "template_data_karyawan.xlsx");
+
+            setStatus("Template Excel berhasil diunduh.", 'success');
+        });
+
+        // excelFile.addEventListener sekarang berfungsi untuk langsung memproses dan mengupload data
+        // ... (Sisa kode JS Anda)
 
 
         // Download Skipped/Overwritten Report
@@ -1210,3 +1251,4 @@
     </script>
 </body>
 </html>
+
