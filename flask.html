@@ -71,7 +71,6 @@
       width: 33px; /* Suggested size for header icons */
       height: 33px;
       object-fit: contain;
-      /* filter: invert(10%); /*<--- BARIS INI KITA HAPUS! */
   }
 
   /* Styling for the hover text in the header */
@@ -246,151 +245,273 @@
 
     <div class="container" id="pageContainer">
       <h2>Download Absensi Mesin Fingerprint</h2>
-      <label>Pilih dan Upload File JSON Mesin :</label>
-      <input type="file" id="jsonFile" accept=".json" onchange="window.handleFileUpload(event)"><br>
+
+      <!-- UI untuk peran 'user': Unggah JSON -->
+      <div id="jsonFileUploadDiv" style="display: none;">
+          <label>Pilih dan Upload File JSON Mesin:</label>
+          <input type="file" id="jsonFile" accept=".json" onchange="window.handleFileUpload(event)"><br>
+      </div>
+
+      <!-- UI untuk peran 'admin'/'super_admin': Informasi muat dari Firestore -->
+      <div id="firestoreLoadDiv" style="display: none;">
+          <p>Data mesin dimuat dari Firebase Firestore secara otomatis.</p>
+      </div>
+
       <label>Base URL:</label>
       <input type="text" id="base_url" value="http://10.30.32.16:5000/"><br>
       <label>Pilih Mesin:</label>
       <select id="mesin"><option value="">-- Belum ada data --</option></select><br>
 
-      <button class="green" onclick="window.downloadSatuMesin()">⬇️ Download Mesin Terpilih</button>
-      <button class="blue" onclick="window.downloadSemuaMesin()">⬇️ Download Semua Mesin</button>
-
+      <button class="green" id="downloadSatuMesinBtn" onclick="window.downloadSatuMesin()">⬇️ Download Mesin Terpilih</button>
+      <button class="blue" id="downloadSemuaMesinBtn" onclick="window.downloadSemuaMesin()">⬇️ Download Semua Mesin</button>
 
       <div class="status-message" id="downloadStatusMessage"></div>
     </div>
   </div>
 
-
   <div id="footer-placeholder"></div>
 
 <script type="module">
-
     import { initPage } from "./common-ui.js";
+    import { auth, db } from "./firebase-config.js";
+    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    let mesinList = {};
-
+    let mesinList = {}; // Akan diisi dari JSON atau Firestore
+    let currentUserRole = null; // Menyimpan peran pengguna
 
     const downloadStatusMessage = document.getElementById('downloadStatusMessage');
-
+    const jsonFileUploadDiv = document.getElementById('jsonFileUploadDiv');
+    const firestoreLoadDiv = document.getElementById('firestoreLoadDiv');
+    const jsonFile = document.getElementById('jsonFile');
+    const mesinSelect = document.getElementById("mesin");
+    const downloadSatuBtn = document.getElementById("downloadSatuMesinBtn");
+    const downloadSemuaBtn = document.getElementById("downloadSemuaMesinBtn");
 
     document.addEventListener('DOMContentLoaded', () => {
-      initPage(
-          "Download Data Finger",
-          "pageContainer",
-          "user"
-      );
-      window.loadMachinesDefault();
+        // initPage di common-ui.js harus mendukung otentikasi dan pemuatan pengguna
+        initPage("Download Data Finger", "pageContainer", "all_authenticated"); // Bisa diubah jika common-ui punya spesifik role checks
+        
+        // Menunggu auth state berubah dan pengguna tersedia
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                checkUserRoleAndLoadMachines();
+            } else {
+                setStatus(downloadStatusMessage, "Pengguna tidak terautentikasi. Silakan login.", 'error');
+                // Sembunyikan semua elemen UI yang membutuhkan otentikasi/peran
+                jsonFileUploadDiv.style.display = 'none';
+                firestoreLoadDiv.style.display = 'none';
+                mesinSelect.disabled = true;
+                downloadSatuBtn.disabled = true;
+                downloadSemuaBtn.disabled = true;
+            }
+        });
     });
 
-
+    // Helper function untuk menampilkan pesan status
     function setStatus(messageElement, message, type = 'info') {
         messageElement.textContent = message;
         messageElement.className = `status-message ${type}`;
-
+        // Hapus pesan setelah 5 detik
         setTimeout(() => {
             messageElement.className = 'status-message';
             messageElement.textContent = '';
         }, 5000);
     }
 
+    // Helper function untuk membuka jendela baru
     window.openNewWindow = function(url) {
-      window.open(url, '_blank', 'width=800,height=600');
+        window.open(url, '_blank', 'width=800,height=600');
     };
 
-    window.handleFileUpload = function(event) {
-      const file = event.target.files[0];
-      if (!file) {
-          setStatus(downloadStatusMessage, "Tidak ada file yang dipilih.", 'info');
-          return;
-      }
-      const reader = new FileReader();
-      reader.onload = function(e) {
+    // Fungsi utama untuk memeriksa peran dan memuat mesin
+    async function checkUserRoleAndLoadMachines() {
+        setStatus(downloadStatusMessage, "Mengecek peran pengguna...", 'info');
         try {
-          mesinList = JSON.parse(e.target.result);
-          window.isiDropdownMesin();
-          setStatus(downloadStatusMessage, "Data mesin berhasil dimuat dari file JSON!", 'success');
-        } catch (err) {
-          setStatus(downloadStatusMessage, `JSON tidak valid: ${err.message}`, 'error');
-          console.error("Error parsing JSON file:", err);
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                setStatus(downloadStatusMessage, "Pengguna tidak terautentikasi.", 'error');
+                return;
+            }
+
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists() && userDocSnap.data().role) {
+                currentUserRole = userDocSnap.data().role;
+                setStatus(downloadStatusMessage, `Peran pengguna terdeteksi: ${currentUserRole}`, 'info');
+
+                if (currentUserRole === 'user') {
+                    setupUserMachineLoading();
+                } else if (currentUserRole === 'admin' || currentUserRole === 'super_admin') {
+                    await loadMachinesFromFirestore();
+                } else {
+                    setStatus(downloadStatusMessage, "Peran pengguna tidak dikenal atau tidak berhak. Hubungi administrator.", 'error');
+                    jsonFileUploadDiv.style.display = 'none';
+                    firestoreLoadDiv.style.display = 'none';
+                    mesinSelect.disabled = true;
+                    downloadSatuBtn.disabled = true;
+                    downloadSemuaBtn.disabled = true;
+                }
+            } else {
+                setStatus(downloadStatusMessage, "Peran pengguna tidak ditemukan. Hubungi administrator.", 'error');
+                jsonFileUploadDiv.style.display = 'none';
+                firestoreLoadDiv.style.display = 'none';
+                mesinSelect.disabled = true;
+                downloadSatuBtn.disabled = true;
+                downloadSemuaBtn.disabled = true;
+            }
+        } catch (e) {
+            setStatus(downloadStatusMessage, `Gagal mendapatkan peran pengguna: ${e.message}`, 'error');
+            console.error("Error getting user role:", e);
+            jsonFileUploadDiv.style.display = 'none';
+            firestoreLoadDiv.style.display = 'none';
+            mesinSelect.disabled = true;
+            downloadSatuBtn.disabled = true;
+            downloadSemuaBtn.disabled = true;
         }
-      };
-      reader.readAsText(file);
+    }
+
+    // Fungsi untuk setup UI peran 'user'
+    function setupUserMachineLoading() {
+        firestoreLoadDiv.style.display = 'none';
+        jsonFileUploadDiv.style.display = 'block'; // Tampilkan input upload JSON
+        setStatus(downloadStatusMessage, "Silakan unggah file JSON mesin Anda.", 'info');
+        downloadSatuBtn.disabled = true; // Nonaktifkan tombol sampai JSON diunggah
+        downloadSemuaBtn.disabled = true; // Nonaktifkan tombol sampai JSON diunggah
+    }
+
+    // Handler untuk upload file JSON (dari user)
+    window.handleFileUpload = function(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            setStatus(downloadStatusMessage, "Tidak ada file yang dipilih.", 'info');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const uploadedData = JSON.parse(e.target.result);
+                mesinList = uploadedData; // Asumsikan format JSON sudah benar { "Nama Mesin": { "ip": "...", "port": "..." } }
+                isiDropdownMesin();
+                setStatus(downloadStatusMessage, "Data mesin berhasil dimuat dari file JSON!", 'success');
+                downloadSatuBtn.disabled = false; // Aktifkan tombol setelah berhasil
+                downloadSemuaBtn.disabled = false; // Aktifkan tombol setelah berhasil
+            } catch (err) {
+                setStatus(downloadStatusMessage, `JSON tidak valid: ${err.message}`, 'error');
+                console.error("Error parsing JSON file:", err);
+                mesinList = {};
+                isiDropdownMesin(); // Kosongkan dropdown jika error
+                downloadSatuBtn.disabled = true;
+                downloadSemuaBtn.disabled = true;
+            }
+        };
+        reader.readAsText(file);
     };
 
-    window.loadMachinesDefault = async function() {
-      setStatus(downloadStatusMessage, "Memuat daftar mesin default...", 'info');
-      try {
-        const resp = await fetch('mesin.json');
-        if (!resp.ok) {
-             throw new Error(`HTTP error! status: ${resp.status}`);
-        }
-        mesinList = await resp.json();
-        window.isiDropdownMesin();
-        setStatus(downloadStatusMessage, `Daftar mesin default berhasil dimuat! (${Object.keys(mesinList).length} mesin)`, 'success');
-      } catch (e) {
-        setStatus(downloadStatusMessage, "Gagal memuat mesin.json (normal jika file tidak ada atau tanpa server Flask/lokal). Gunakan upload JSON.", 'info');
-        console.warn("Gagal memuat mesin.json:", e);
-        mesinList = {};
-        window.isiDropdownMesin();
-      }
-    };
+    // Fungsi untuk memuat mesin dari Firestore (untuk admin/super_admin)
+    async function loadMachinesFromFirestore() {
+        jsonFileUploadDiv.style.display = 'none';
+        firestoreLoadDiv.style.display = 'block'; // Tampilkan pesan bahwa dimuat dari Firestore
+        setStatus(downloadStatusMessage, "Memuat daftar mesin dari Firestore...", 'info');
+        mesinList = {}; // Bersihkan list yang ada
 
+        try {
+            const querySnapshot = await getDocs(collection(db, "mesin_fp"));
+            if (querySnapshot.empty) {
+                setStatus(downloadStatusMessage, "Tidak ada mesin ditemukan di Firestore.", 'info');
+                downloadSatuBtn.disabled = true;
+                downloadSemuaBtn.disabled = true;
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Gunakan nama mesin sebagai kunci
+                    mesinList[data.mesin] = {
+                        ip: data.ip,
+                        port: data.port // port mungkin tidak selalu dibutuhkan untuk URL download
+                    };
+                });
+                isiDropdownMesin();
+                setStatus(downloadStatusMessage, `Daftar mesin berhasil dimuat dari Firestore! (${Object.keys(mesinList).length} mesin)`, 'success');
+                downloadSatuBtn.disabled = false;
+                downloadSemuaBtn.disabled = false;
+            }
+        } catch (e) {
+            setStatus(downloadStatusMessage, `Gagal memuat mesin dari Firestore: ${e.message}`, 'error');
+            console.error("Gagal memuat mesin dari Firestore:", e);
+            mesinList = {};
+            isiDropdownMesin(); // Kosongkan dropdown jika error
+            downloadSatuBtn.disabled = true;
+            downloadSemuaBtn.disabled = true;
+        }
+    }
+
+    // Fungsi untuk mengisi dropdown mesin
     window.isiDropdownMesin = function() {
-      const mesinSelect = document.getElementById("mesin");
-      mesinSelect.innerHTML = "";
-      Object.keys(mesinList).forEach(m => {
-        const opt = document.createElement("option");
-        opt.value = m;
-        opt.textContent = m;
-        mesinSelect.appendChild(opt);
-      });
-      if (Object.keys(mesinList).length === 0) {
-        let opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "-- Belum ada data --";
-        mesinSelect.appendChild(opt);
-      }
+        mesinSelect.innerHTML = "";
+        if (Object.keys(mesinList).length === 0) {
+            let opt = document.createElement("option");
+            opt.value = "";
+            opt.textContent = "-- Belum ada data --";
+            mesinSelect.appendChild(opt);
+            downloadSatuBtn.disabled = true;
+            downloadSemuaBtn.disabled = true;
+        } else {
+            Object.keys(mesinList).forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m;
+                opt.textContent = m;
+                mesinSelect.appendChild(opt);
+            });
+            downloadSatuBtn.disabled = false;
+            downloadSemuaBtn.disabled = false;
+        }
     };
 
+    // Fungsi untuk download satu mesin terpilih
     window.downloadSatuMesin = function() {
-      const baseUrl = document.getElementById("base_url").value;
-      const mesin = document.getElementById("mesin").value;
-      if (!mesin) {
-          setStatus(downloadStatusMessage, "Pilih mesin dulu!", 'error');
-          return;
-      }
-      if (!baseUrl) {
-          setStatus(downloadStatusMessage, "Base URL harus diisi!", 'error');
-          return;
-      }
-      setStatus(downloadStatusMessage, `Membuka tab baru untuk absensi mesin ${mesin}...`, 'info');
-      let url = `${baseUrl}/lihat_absensi?mesin=${mesin}`;
-      window.openNewWindow(url);
-      setStatus(downloadStatusMessage, `Permintaan download untuk ${mesin} dikirim. Periksa tab baru di browser Anda.`, 'success');
+        const baseUrl = document.getElementById("base_url").value;
+        const selectedMesinName = mesinSelect.value;
+
+        if (!selectedMesinName) {
+            setStatus(downloadStatusMessage, "Pilih mesin dulu!", 'error');
+            return;
+        }
+        const machineData = mesinList[selectedMesinName];
+        if (!machineData || !machineData.ip) {
+            setStatus(downloadStatusMessage, `IP Address untuk mesin '${selectedMesinName}' tidak ditemukan.`, 'error');
+            return;
+        }
+        const ipAddress = machineData.ip;
+
+        if (!baseUrl) {
+            setStatus(downloadStatusMessage, "Base URL harus diisi!", 'error');
+            return;
+        }
+        setStatus(downloadStatusMessage, `Membuka tab baru untuk absensi mesin ${selectedMesinName} (${ipAddress})...`, 'info');
+        let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(ipAddress)}`;
+        window.openNewWindow(url);
+        setStatus(downloadStatusMessage, `Permintaan download untuk ${selectedMesinName} dikirim. Periksa tab baru di browser Anda.`, 'success');
     };
 
+    // Fungsi untuk download semua mesin
     window.downloadSemuaMesin = function() {
-      const baseUrl = document.getElementById("base_url").value;
-      if (!Object.keys(mesinList).length) {
-          setStatus(downloadStatusMessage, "Belum ada data mesin yang dimuat untuk di-download!", 'error');
-          return;
-      }
-      if (!baseUrl) {
-          setStatus(downloadStatusMessage, "Base URL harus diisi!", 'error');
-          return;
-      }
-      setStatus(downloadStatusMessage, "Membuka tab baru untuk setiap mesin yang akan di-download...", 'info');
-      Object.keys(mesinList).forEach(m => {
-        let url = `${baseUrl}/lihat_absensi?mesin=${m}`;
-        window.openNewWindow(url);
-      });
-      setStatus(downloadStatusMessage, "Permintaan download semua absensi dikirim. Periksa tab baru di browser Anda.", 'success');
+        const baseUrl = document.getElementById("base_url").value;
+        if (Object.keys(mesinList).length === 0) {
+            setStatus(downloadStatusMessage, "Belum ada data mesin yang dimuat untuk di-download!", 'error');
+            return;
+        }
+        if (!baseUrl) {
+            setStatus(downloadStatusMessage, "Base URL harus diisi!", 'error');
+            return;
+        }
+        setStatus(downloadStatusMessage, "Membuka tab baru untuk setiap mesin yang akan di-download...", 'info');
+        
+        Object.values(mesinList).forEach(machineData => {
+            let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.ip)}`;
+            window.openNewWindow(url);
+        });
+        setStatus(downloadStatusMessage, "Permintaan download semua absensi dikirim. Periksa tab baru di browser Anda.", 'success');
     };
-  </script>
+</script>
 </body>
 </html>
-
-
-
-
