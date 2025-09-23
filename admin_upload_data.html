@@ -292,6 +292,18 @@
             user-select: none;
             position: relative;
         }
+                /* --- Table specific styling --- */
+        /* ... (CSS yang sudah ada) ... */
+
+        .sidik-jari-terdaftar {
+            background-color: rgba(144, 238, 144, 0.1); /* Light green soft */
+            color: #90ee90; /* Matching text color */
+        }
+        .sidik-jari-belum-terdaftar {
+            background-color: rgba(255, 99, 71, 0.1); /* Tomato red soft */
+            color: #ff6347; /* Matching text color */
+        }
+
         .sort-arrow {
             margin-left: 5px;
             font-size: 0.8em;
@@ -403,7 +415,7 @@
 
     <div class="main-content-wrapper">
         <div class="container" id="adminUploadContainer">
-            <h2>Kelola Data Karyawan</h2>
+            <h2>Kelola Data Karyawan Rev</h2>
 
                  <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
@@ -420,19 +432,25 @@
 
             <div class="table-wrap">
                 <table id="employeesTable">
-                    <thead id="employeesTableHead">
+                     <thead id="employeesTableHead">
                         <tr>
                             <th style="width: 30px;"><input type="checkbox" id="selectAllCheckbox"></th>
                             <th style="width:50px">No</th>
+                            <th data-sort-by="ID Mesin">ID Mesin <span class="sort-arrow"></span></th>
+                            <th data-sort-by="NIK Sebelumnya">NIK Sebelumnya <span class="sort-arrow"></span></th>
                             <th data-sort-by="NIK">NIK <span class="sort-arrow"></span></th>
                             <th data-sort-by="Nama">Nama Karyawan <span class="sort-arrow"></span></th>
-                            <th data-sort-by="Jabatan">Jabatan <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Status">Status <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Perusahaan">Perusahaan <span class="sort-arrow"></span></th>
                             <th data-sort-by="Department">Department <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Jabatan">Jabatan <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Sidik Jari Status">Sidik Jari <span class="sort-arrow"></span></th> <!-- Kolom baru untuk status sidik jari -->
                             <th data-sort-by="createdAt">Dibuat <span class="sort-arrow"></span></th>
                             <th data-sort-by="updatedAt">Diperbarui <span class="sort-arrow"></span></th>
                             <th style="width:150px">Aksi</th>
                         </tr>
                     </thead>
+
                     <tbody id="employeesTbody">
                         <!-- rows inserted here -->
                     </tbody>
@@ -645,13 +663,32 @@
                 // if (isDuplicateNIK(id)) { tr.classList.add("duplicate-entry"); tr.title = "NIK ini duplikat."; }
 
 
+                                // Logika untuk status sidik jari
+                const sidikJariValue = d['Sidik Jari'] || '';
+                let sidikJariDisplay = '';
+                let sidikJariClass = '';
+
+                if (sidikJariValue && sidikJariValue !== '') {
+                    sidikJariDisplay = 'Terdaftar';
+                    sidikJariClass = 'sidik-jari-terdaftar'; // Kita akan definisikan CSS ini
+                } else {
+                    sidikJariDisplay = 'Belum Terdaftar';
+                    sidikJariClass = 'sidik-jari-belum-terdaftar'; // Kita akan definisikan CSS ini
+                }
+
+
                 tr.innerHTML = `
                     <td><input type="checkbox" class="employee-checkbox" data-id="${id}" ${isSelected ? 'checked' : ''}></td>
                     <td>${index}</td>
+                    <td>${esc(d['ID Mesin'] || '-')}</td>
+                    <td>${esc(d['NIK Sebelumnya'] || '-')}</td>
                     <td>${esc(d.NIK || '-')}</td>
                     <td>${esc(d.Nama || '-')}</td>
-                    <td>${esc(d.Jabatan || '-')}</td>
+                    <td>${esc(d.Status || '-')}</td>
+                    <td>${esc(d.Perusahaan || '-')}</td>
                     <td>${esc(d.Department || '-')}</td>
+                    <td>${esc(d.Jabatan || '-')}</td>
+                    <td class="${sidikJariClass}">${sidikJariDisplay}</td> <!-- Tampilkan status Sidik Jari -->
                     <td class="muted">${created}</td>
                     <td class="muted">${updated}</td>
                     <td>
@@ -659,6 +696,7 @@
                         <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
                     </td>
                 `;
+
                 employeesTbody.appendChild(tr);
             });
             updateSelectAllCheckboxState(); // Update status checkbox select all
@@ -693,22 +731,46 @@
             // 1. Apply filter
             const searchTerm = searchInput.value.toLowerCase().trim();
             if (searchTerm !== "") {
-                dataToProcess = dataToProcess.filter(employee => {
-                    const nik = (employee.data.NIK || "").toLowerCase();
-                    const nama = (employee.data.Nama || "").toLowerCase();
-                    const jabatan = (employee.data.Jabatan || "").toLowerCase();
-                    const Department = (employee.data.Department || "").toLowerCase();
-                    return nik.includes(searchTerm) || nama.includes(searchTerm) || jabatan.includes(searchTerm) || Department.includes(searchTerm);
+                                dataToProcess = dataToProcess.filter(employee => {
+                    const d = employee.data;
+                    const idMesin = (d['ID Mesin'] || "").toLowerCase();
+                    const nikSebelumnya = (d['NIK Sebelumnya'] || "").toLowerCase();
+                    const nik = (d.NIK || "").toLowerCase();
+                    const nama = (d.Nama || "").toLowerCase();
+                    const status = (d.Status || "").toLowerCase();
+                    const perusahaan = (d.Perusahaan || "").toLowerCase();
+                    const Department = (d.Department || "").toLowerCase();
+                    const jabatan = (d.Jabatan || "").toLowerCase();
+                    // Untuk pencarian sidik jari, bisa cari 'terdaftar'/'belum terdaftar'
+                    const sidikJariStatus = (d['Sidik Jari'] && d['Sidik Jari'] !== '') ? 'terdaftar' : 'belum terdaftar';
+
+
+                    return idMesin.includes(searchTerm) ||
+                           nikSebelumnya.includes(searchTerm) ||
+                           nik.includes(searchTerm) ||
+                           nama.includes(searchTerm) ||
+                           status.includes(searchTerm) ||
+                           perusahaan.includes(searchTerm) ||
+                           Department.includes(searchTerm) ||
+                           jabatan.includes(searchTerm) ||
+                           sidikJariStatus.includes(searchTerm); // Tambahkan pencarian untuk status sidik jari
                 });
+
             }
 
             // 2. Apply sort
             if (sortState.column) {
                 dataToProcess.sort((a, b) => {
                     let valA, valB;
-                    if (['NIK', 'Nama', 'Jabatan', 'Department'].includes(sortState.column)) {
-                        valA = (a.data[sortState.column] || '').toLowerCase();
-                        valB = (b.data[sortState.column] || '').toLowerCase();
+                    if (['ID Mesin', 'NIK Sebelumnya', 'NIK', 'Nama', 'Status', 'Perusahaan', 'Department', 'Jabatan', 'Sidik Jari Status'].includes(sortState.column)) {
+                        // Khusus untuk 'Sidik Jari Status', kita perlu nilai boolean atau string untuk sorting
+                        if (sortState.column === 'Sidik Jari Status') {
+                            valA = (a.data['Sidik Jari'] && a.data['Sidik Jari'] !== '') ? 'terdaftar' : 'belum terdaftar';
+                            valB = (b.data['Sidik Jari'] && b.data['Sidik Jari'] !== '') ? 'terdaftar' : 'belum terdaftar';
+                        } else {
+                            valA = (a.data[sortState.column] || '').toLowerCase();
+                            valB = (b.data[sortState.column] || '').toLowerCase();
+                        }
                     } else if (sortState.column === 'createdAt' || sortState.column === 'updatedAt') {
                         valA = a.data[sortState.column] ? (a.data[sortState.column].toDate ? a.data[sortState.column].toDate().getTime() : new Date(a.data[sortState.column]).getTime()) : 0;
                         valB = b.data[sortState.column] ? (b.data[sortState.column].toDate ? b.data[sortState.column].toDate().getTime() : new Date(b.data[sortState.column]).getTime()) : 0;
@@ -1249,5 +1311,6 @@
     </script>
 </body>
 </html>
+
 
 
