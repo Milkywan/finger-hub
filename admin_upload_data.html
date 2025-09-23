@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="icon" type="image/png" href="images/icon.png">
 
-    <title>Unggah & Kelola Data Karyawan</title>
-    
-    
+    <title>Kelola Data Karyawan</title>
+
     <script src="./xlsx.full.min.js"></script>
 
     <style>
-        
+        /* --- General & Body Styles --- */
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -20,10 +19,10 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column; 
-            min-height: 100vh; 
+            flex-direction: column;
+            min-height: 100vh;
         }
-        
+
         /* --- Navigation Styles (Diadaptasi dari skrip pertama untuk konsep menu ikon) --- */
         nav {
             display: flex;
@@ -33,22 +32,20 @@
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(8px);
             z-index: 10;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.1); /* Ditambahkan untuk konsistensi */
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
         }
         nav .brand {
             font-weight: bold;
             font-size: 1.2rem;
-            color: white; /* Pastikan teks brand putih */
+            color: white;
         }
-
         nav .menu {
             display: flex;
             align-items: center;
             flex-grow: 1;
             justify-content: center;
-            gap: 8px; /* Spasi antar ikon menu */
+            gap: 8px;
         }
-
         .menu-icon-link {
             position: relative;
             display: flex;
@@ -60,19 +57,16 @@
             color: white;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-
         .menu-icon-link:hover {
             background-color: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
             color: #a5b4fc;
         }
-
         .menu-icon-link .menu-icon {
             width: 33px;
             height: 33px;
             object-fit: contain;
         }
-
         .menu-icon-link .menu-text {
             position: absolute;
             background-color: rgba(0, 0, 0, 0.8);
@@ -88,18 +82,15 @@
             left: 50%;
             transform: translateX(-50%) translateY(5px);
         }
-
         .menu-icon-link:hover .menu-text {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
-
         .menu-icon-link.active {
             background-color: rgba(255, 255, 255, 0.2);
             border-radius: 5px;
             color: #a5b4fc;
         }
-
         .right-nav-items {
             display: flex;
             align-items: center;
@@ -118,104 +109,111 @@
             background: rgba(255,255,255,0.1);
             transition: background 0.3s, transform 0.2s;
             font-weight: bold;
-            font-size: 0.9em; /* Ukuran font disamakan */
+            font-size: 0.9em;
         }
         nav .menu2:hover {
             background: rgba(255,255,255,0.2);
             transform: translateY(-2px);
         }
 
-        
+        /* --- Main Content Layout --- */
         .main-content-wrapper {
-            flex: 1; 
+            flex: 1;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* Align to top */
             padding: 2rem;
         }
-
-        
-        .container { 
-            background: rgba(255,255,255,0.1); 
-            padding: 2rem; 
-            border-radius: 1rem; 
+        .container {
+            background: rgba(255,255,255,0.06); /* Lebih transparan */
+            padding: 1.25rem; /* Sedikit lebih kecil */
+            border-radius: 12px; /* Lebih halus */
             width: 100%;
-            max-width: 900px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
-            backdrop-filter: blur(8px); 
-            animation: fadeIn .8s ease; 
+            max-width: 1100px; /* Lebih lebar */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35); /* Lebih tegas */
+            backdrop-filter: blur(6px); /* Blur lebih sedikit */
         }
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        
-        h2 { 
+        h2 {
             text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
             font-size: 26px;
         }
 
-        
+        /* --- Controls & Buttons --- */
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px; /* Jarak antar item */
             margin-bottom: 20px;
-            justify-content: center;
             align-items: center;
+            justify-content: flex-start; /* Sejajarkan ke kiri */
         }
-        input[type="file"] {
-            display: block;
-            width: 100%;
-            max-width: 300px;
-            padding: .75rem; 
-            border: none; 
-            border-radius: .5rem; 
-            background: rgba(255,255,255,0.15); 
-            color: white;
-            box-sizing: border-box;
-            cursor: pointer;
-        }
-        input[type="file"]::-webkit-file-upload-button {
-            background: #f59e0b;
-            color: white;
+        .btn {
+            padding: 8px 12px; /* Lebih kecil */
             border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
+            border-radius: 8px; /* Lebih halus */
+            font-weight: 600; /* Lebih tebal */
             cursor: pointer;
-            outline: none;
+            transition: background 0.2s, transform 0.2s;
+            font-size: 14px;
         }
-        input[type="file"]::-webkit-file-upload-button:hover {
-            background: #d97706;
+        .btn:hover {
+            transform: translateY(-1px);
         }
-
-        
-        .btn { 
-            width: auto; 
-            padding: .75rem; 
-            border: none;
-            border-radius: .5rem; 
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform .2s, box-shadow .2s;
-            font-size: 15px; 
-        }
-        .btn:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-        
         .btn-primary { background: #4f46e5; color: #fff; }
         .btn-primary:hover { background: #4338ca; }
-        .btn-secondary { background: #f59e0b; color: #fff; } 
+        .btn-secondary { background: #f59e0b; color: #fff; }
         .btn-secondary:hover { background: #d97706; }
-        .btn-info { background: #3b82f6; color: #fff; } /* Added for 'View Existing Data' button */
-        .btn-info:hover { background: #2563eb; } /* Added for 'View Existing Data' button */
+        .btn-info { background: #3b82f6; color: #fff; }
+        .btn-info:hover { background: #2563eb; }
+        .btn-ghost {
+            background: rgba(255,255,255,0.06);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
 
-        
+        /* --- Form Input (for Modal and Search) --- */
+        input[type="file"] {
+            display: none; /* Sembunyikan input file asli */
+        }
+        .file-input-label { /* Label kustom untuk input file */
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.2s;
+            font-size: 14px;
+        }
+        .file-input-label:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        #searchInput {
+            flex-grow: 1; /* Agar search input bisa mengisi ruang */
+            min-width: 200px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.06);
+            color: white;
+            font-size: 14px;
+        }
+        #searchInput::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        #searchInput:focus {
+            outline: none;
+            border-color: #a5b4fc;
+            box-shadow: 0 0 0 2px rgba(165, 180, 252, 0.3);
+        }
+
+        /* --- Status Message --- */
         .status-message {
             margin-top: 15px;
             padding: 10px;
@@ -228,48 +226,145 @@
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
 
-        
-        .data-preview {
+        /* --- Table Styles --- */
+        .table-wrap {
             margin-top: 20px;
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
-            padding: 15px;
-            max-height: 400px;
+            max-height: 520px;
             overflow-y: auto;
             border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
         }
         table {
             width: 100%;
             border-collapse: collapse;
             color: white;
+            min-width: 900px; /* Minimum width for the table */
         }
         th, td {
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 8px 12px;
+            border: 1px solid rgba(255,255,255,0.15); /* Border lebih halus */
+            padding: 10px 12px; /* Padding lebih banyak */
             text-align: left;
             font-size: 13px;
         }
         th {
-            background: rgba(255,255,255,0.2);
-            font-weight: 600;
+            background: rgba(255,255,255,0.1); /* Background header */
+            font-weight: 700;
             position: sticky;
             top: 0;
-            z-index: 1;
+            z-index: 2; /* Pastikan header sticky di atas konten lain saat scroll */
+        }
+        tbody tr:nth-child(odd) { background: rgba(255, 255, 255, 0.04); }
+        tbody tr:hover { background: rgba(255, 255, 255, 0.08); }
+
+        .icon-btn {
+            background:transparent;
+            border:1px solid rgba(255,255,255,0.06);
+            padding:6px 8px;
+            border-radius:6px;
+            cursor:pointer;
+            color:white;
+            font-size: 12px;
+            margin-right: 4px; /* Untuk jarak antar tombol */
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); }
+
+        /* --- Table specific styling --- */
+        .muted { color: rgba(255,255,255,0.7); font-size:13px; }
+        .updated-row {
+            background-color: rgba(255, 255, 0, 0.08); /* A subtle yellow tint */
+        }
+        .updated-row:hover {
+            background-color: rgba(255, 255, 0, 0.15); /* Slightly darker on hover */
+        }
+        .duplicate-entry {
+            background-color: rgba(255, 0, 0, 0.15); /* A subtle red tint for duplicates */
+            border-left: 4px solid #ef4444; /* Red border on the left */
+        }
+        .duplicate-entry:hover {
+            background-color: rgba(255, 0, 0, 0.25); /* Darker red on hover */
         }
 
-        
+        /* Sortable table headers */
+        th[data-sort-by] {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        .sort-arrow {
+            margin-left: 5px;
+            font-size: 0.8em;
+            vertical-align: middle;
+            opacity: 0.5;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .sort-arrow.active { opacity: 1; }
+        .sort-arrow.asc::after { content: ' ▲'; }
+        .sort-arrow.desc::after { content: ' ▼'; }
+
+        /* --- Modal Styles --- */
+        .modal {
+            position:fixed;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(0,0,0,0.5);
+            z-index:1000;
+        }
+        .modal-card {
+            background: white;
+            color: #111827;
+            width: 460px; /* Lebih lebar untuk form karyawan */
+            max-width: 94%;
+            border-radius: 10px;
+            padding:20px; /* Lebih banyak padding */
+            box-shadow:0 12px 36px rgba(0,0,0,0.4);
+        }
+        .modal-card h3 { margin:0 0 12px 0; font-size:20px; } /* Lebih besar */
+        .form-row { margin-bottom:12px; }
+        .form-row label { display:block; font-size:13px; margin-bottom:6px; color:#374151; }
+        .form-row input {
+            width:100%;
+            padding:10px 12px;
+            border-radius:8px;
+            border:1px solid #d1d5db;
+            box-sizing:border-box;
+            font-size:14px;
+            color: #111827;
+        }
+        .form-row input::placeholder { color: #6b7280; }
+        .hidden { display:none; }
+
+        /* --- Report Box (for Excel Upload) --- */
+        #reportBox {
+            margin-top: 1rem;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+        }
+        #uploadReport {
+            white-space: pre-wrap;
+            font-size: 14px;
+            color: #fbbf24;
+        }
+
+        /* --- Footer Styles --- */
         footer {
             text-align: center;
             padding: 1rem;
             font-size: .9rem;
             background: rgba(255,255,255,0.08);
             backdrop-filter: blur(8px);
-            box-shadow: 0 -2px 3px rgba(0,0,0,0.1); /* Ditambahkan untuk konsistensi */
+            box-shadow: 0 -2px 3px rgba(0,0,0,0.1);
         }
         footer a { color: white; text-decoration: none; }
         footer a:hover { text-decoration: underline; }
 
-        
+        /* --- Media Queries --- */
         @media (max-width: 768px) {
             nav {
                 padding: 1rem;
@@ -282,164 +377,659 @@
                 flex-wrap: wrap;
                 justify-content: flex-start;
                 margin-bottom: 10px;
-                gap: 5px; /* Spasi disesuaikan untuk layar kecil */
+                gap: 5px;
             }
-            .menu-icon-link { /* Padding disesuaikan untuk layar kecil */
-                padding: 5px 8px;
-            }
+            .menu-icon-link { padding: 5px 8px; }
             .right-nav-items {
                 width: 100%;
                 justify-content: space-between;
                 margin-top: 10px;
             }
-            .user-info {
-                font-size: 0.8em;
-            }
-            nav .menu2 {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8em;
-            }
+            .user-info { font-size: 0.8em; }
+            nav .menu2 { padding: 0.4rem 0.8rem; font-size: 0.8em; }
+            .container { padding: 12px; }
             .controls {
                 flex-direction: column;
                 align-items: stretch;
             }
-            input[type="file"] {
-                max-width: none;
-            }
-            .btn {
-                width: 100%;
-            }
+            #searchInput { min-width: unset; width: 100%; }
+            .btn, .file-input-label { width: 100%; }
+            table { min-width: 600px; } /* Sesuaikan agar tetap readable */
         }
     </style>
 </head>
 <body>
-    
-    <div id="header-placeholder"></div> 
+    <div id="header-placeholder"></div>
 
-    
     <div class="main-content-wrapper">
-        
         <div class="container" id="adminUploadContainer">
-            <h2>Unggah & Kelola Data Karyawan REVISI</h2> 
+            <h2>Kelola Data Karyawan</h2>
 
             <div class="controls">
+                <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
-                <button class="btn btn-secondary" id="previewBtn">Preview Data</button>
-                <button class="btn btn-info" id="viewExistingBtn">Lihat Data Karyawan</button> <!-- Tombol BARU -->
-                <button class="btn btn-primary" id="uploadToFirestoreBtn">Unggah ke Firestore</button>
+                <button class="btn btn-secondary" id="templateBtn">⬇️ Download Template</button>
+                <button class="btn btn-info" id="addEmployeeBtn">➕ Tambah Karyawan</button>
+                <button class="btn btn-ghost" id="refreshEmployeeDataBtn">🔄 Refresh Data</button>
+                <input type="text" id="searchInput" placeholder="Cari NIK/Nama Karyawan...">
+                <button class="btn btn-primary" id="deleteSelectedBtn" style="display:none;">🗑️ Hapus Terpilih (<span id="selectedCount">0</span>)</button>
             </div>
 
-            <div class="status-message" id="statusMessage">Pilih file Excel (.xlsx/.xls) dan klik Preview Data.</div>
+            <div class="status-message" id="pageStatus">Memuat data karyawan...</div>
 
-            <div class="data-preview">
-                <table id="dataTable">
-                    <thead></thead>
-                    <tbody></tbody>
+            <div class="table-wrap">
+                <table id="employeesTable">
+                    <thead id="employeesTableHead">
+                        <tr>
+                            <th style="width: 30px;"><input type="checkbox" id="selectAllCheckbox"></th>
+                            <th style="width:50px">No</th>
+                            <th data-sort-by="NIK">NIK <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Nama">Nama Karyawan <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Jabatan">Jabatan <span class="sort-arrow"></span></th>
+                            <th data-sort-by="Departemen">Departemen <span class="sort-arrow"></span></th>
+                            <th data-sort-by="createdAt">Dibuat <span class="sort-arrow"></span></th>
+                            <th data-sort-by="updatedAt">Diperbarui <span class="sort-arrow"></span></th>
+                            <th style="width:150px">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeesTbody">
+                        <!-- rows inserted here -->
+                    </tbody>
                 </table>
+            </div>
+
+            <!-- Report Box for Excel Upload -->
+            <div id="reportBox" style="margin-top:1rem; display:none;">
+                <div id="uploadReport" style="white-space:pre-wrap; font-size:14px; color:#fbbf24;"></div>
+                <div style="margin-top:8px; display:flex; gap:8px;">
+                    <button id="downloadReportBtn" class="btn btn-ghost small">
+                        ⬇️ Download Report Skipped/Overwritten
+                    </button>
+                    <button id="discardReportBtn" class="btn btn-ghost small">
+                        ❌ Buang Report
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal: Add/Edit Karyawan -->
+    <div id="employeeModal" class="modal hidden" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalEmployeeTitle">
+            <h3 id="modalEmployeeTitle">Tambah Karyawan</h3>
+            <div class="form-row">
+                <label for="inputNIK">NIK</label>
+                <input id="inputNIK" type="text" placeholder="Nomor Induk Karyawan">
+            </div>
+            <div class="form-row">
+                <label for="inputNama">Nama Karyawan</label>
+                <input id="inputNama" type="text" placeholder="Nama Lengkap Karyawan">
+            </div>
+            <div class="form-row">
+                <label for="inputJabatan">Jabatan</label>
+                <input id="inputJabatan" type="text" placeholder="Jabatan Karyawan">
+            </div>
+            <div class="form-row">
+                <label for="inputDepartemen">Departemen</label>
+                <input id="inputDepartemen" type="text" placeholder="Departemen Karyawan">
+            </div>
+            <!-- Tambahkan field lain sesuai kebutuhan dari excelData kamu -->
+
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+                <button id="cancelEmployeeBtn" class="btn btn-ghost small">Batal</button>
+                <button id="saveEmployeeBtn" class="btn btn-primary small">Simpan</button>
             </div>
         </div>
     </div>
 
-    
-    <div id="footer-placeholder"></div> 
+    <div id="footer-placeholder"></div>
 
     <script type="module">
-        
         import { initPage } from "./common-ui.js";
+        import { auth, db } from "./firebase-config.js";
+        import {
+            collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc,
+            serverTimestamp, query, where, orderBy, writeBatch
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        
+        // Inisialisasi halaman (ini akan memuat header/footer dan set judul)
         document.addEventListener('DOMContentLoaded', () => {
-            initPage(
-                "Unggah Data Karyawan", 
-                "adminUploadContainer",  
-                "admin"                  
-            );
+            initPage("Kelola Data Karyawan", "adminUploadContainer", "admin");
+            // Autentikasi dan dapatkan data pengguna
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    const userDocSnap = await getDoc(doc(db, "users", user.uid));
+                    currentUserData = userDocSnap.exists() ? userDocSnap.data() : { username: user.email || user.uid };
+                } else {
+                    currentUserData = null;
+                    // Redirect ke login jika tidak ada user
+                    // window.location.href = "/login.html"; // Sesuaikan path login
+                }
+            });
+            loadEmployees(); // Muat data karyawan saat halaman pertama kali dibuka
         });
 
-        
-        const XLSX = window.XLSX; 
+        const XLSX = window.XLSX;
         if (!XLSX) {
             console.error("SheetJS (xlsx.full.min.js) tidak dimuat dengan benar. Pastikan path-nya benar dan dimuat sebelum script ini.");
             setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
         }
 
-        
-        
-        import {
-            collection,
-            doc,
-            writeBatch, 
-            setDoc,
-            getDocs // BARU: import getDocs untuk membaca koleksi
-        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { db } from "./firebase-config.js"; 
+        // --- DOM References ---
+        const pageStatus = document.getElementById("pageStatus");
+        const employeesTbody = document.getElementById("employeesTbody");
+        const employeesTableHead = document.getElementById("employeesTableHead");
+        const addEmployeeBtn = document.getElementById("addEmployeeBtn");
+        const refreshEmployeeDataBtn = document.getElementById("refreshEmployeeDataBtn");
+        const searchInput = document.getElementById("searchInput");
+        const selectAllCheckbox = document.getElementById("selectAllCheckbox");
+        const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
+        const selectedCountSpan = document.getElementById("selectedCount");
 
+        // Modal elements
+        const employeeModal = document.getElementById("employeeModal");
+        const modalEmployeeTitle = document.getElementById("modalEmployeeTitle");
+        const inputNIK = document.getElementById("inputNIK");
+        const inputNama = document.getElementById("inputNama");
+        const inputJabatan = document.getElementById("inputJabatan");
+        const inputDepartemen = document.getElementById("inputDepartemen");
+        const cancelEmployeeBtn = document.getElementById("cancelEmployeeBtn");
+        const saveEmployeeBtn = document.getElementById("saveEmployeeBtn");
+
+        // Excel Upload Elements
         const excelFile = document.getElementById('excelFile');
-        const previewBtn = document.getElementById('previewBtn');
-        const viewExistingBtn = document.getElementById('viewExistingBtn'); // BARU: referensi tombol
-        const uploadToFirestoreBtn = document.getElementById('uploadToFirestoreBtn');
-        const statusMessage = document.getElementById('statusMessage');
-        const dataTableHead = document.querySelector('#dataTable thead');
-        const dataTableBody = document.querySelector('#dataTable tbody');
-        
+        const templateBtn = document.getElementById('templateBtn');
+        const reportBox = document.getElementById("reportBox");
+        const uploadReport = document.getElementById("uploadReport");
+        const downloadReportBtn = document.getElementById("downloadReportBtn");
+        const discardReportBtn = document.getElementById("discardReportBtn");
 
-        let excelData = []; 
+        // --- Global State Variables ---
+        let allEmployeesData = []; // Semua data karyawan dari Firestore
+        let currentDisplayData = []; // Data yang sedang ditampilkan (setelah filter/sort)
+        let editingEmployeeId = null; // ID dokumen yang sedang diedit
+        let currentSelectedEmployeeIds = new Set(); // ID dokumen yang dipilih untuk hapus banyak
+        let sortState = { column: 'createdAt', direction: 'desc' }; // State sorting tabel
+        let currentUserData = null; // Informasi user yang sedang login
+        let uploadExcelReportData = []; // Data untuk report Excel upload
 
-        
+        // --- Utility Functions ---
+        function esc(str) {
+            if (str === undefined || str === null) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         function setStatus(message, type = 'info') {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`;
+            pageStatus.textContent = message;
+            pageStatus.className = `status-message ${type}`;
         }
 
-        function clearTable() {
-            dataTableHead.innerHTML = '';
-            dataTableBody.innerHTML = '';
+        function openEmployeeModal() {
+            employeeModal.classList.remove("hidden");
+            employeeModal.setAttribute("aria-hidden", "false");
+            inputNIK.focus(); // Fokus ke NIK saat modal dibuka
         }
 
-        function displayTable(data) {
-            clearTable();
-            if (data.length === 0) {
-                setStatus("Tidak ada data untuk ditampilkan.");
+        function closeEmployeeModal() {
+            employeeModal.classList.add("hidden");
+            employeeModal.setAttribute("aria-hidden", "true");
+        }
+
+        // --- Logging Function ---
+        async function logEmployeeAction(action, docId, oldData, newData, context = {}) {
+            if (!auth.currentUser || !currentUserData) {
+                console.warn("Tidak dapat membuat log: Pengguna tidak terautentikasi atau data pengguna tidak tersedia.");
                 return;
             }
 
-            // Dapatkan semua header unik dari semua objek data
-            const allHeaders = new Set();
-            data.forEach(row => {
-                Object.keys(row).forEach(header => allHeaders.add(header));
-            });
-            const headers = Array.from(allHeaders); // Konversi Set ke Array
+            const logEntry = {
+                collection: "employees_mapping",
+                documentId: docId,
+                action: action,
+                timestamp: serverTimestamp(),
+                changedByUid: auth.currentUser.uid,
+                changedByName: currentUserData.username || auth.currentUser.email,
+                ...context // Tambahkan konteks tambahan seperti 'source: "excel_upload"'
+            };
 
-            let headerRow = '<tr>';
-            headers.forEach(header => {
-                headerRow += `<th>${header}</th>`;
-            });
-            headerRow += '</tr>';
-            dataTableHead.innerHTML = headerRow;
+            if (action === "create" || action === "create_from_excel") {
+                logEntry.newData = newData;
+            } else if (action === "update") {
+                const changes = {};
+                for (const key in newData) {
+                    if (key !== 'updatedAt' && key !== 'updatedBy' && oldData[key] !== newData[key]) {
+                        changes[key] = { old: oldData[key], new: newData[key] };
+                    }
+                }
+                logEntry.changes = changes;
+                logEntry.oldData = oldData;
+                logEntry.newData = newData;
+            } else if (action === "delete" || action === "delete_batch") {
+                logEntry.oldData = oldData;
+            }
+            await addDoc(collection(db, "employees_logs"), logEntry);
+        }
 
-            
-            data.forEach(row => {
-                let dataRow = '<tr>';
-                headers.forEach(header => {
-                    // Pastikan nilai ditampilkan sebagai string kosong jika undefined/null
-                    const cellValue = row[header] !== undefined && row[header] !== null ? row[header] : '';
-                    dataRow += `<td>${cellValue}</td>`;
+        // --- Table Rendering Functions ---
+        function renderTable(employeesToRender) {
+            employeesTbody.innerHTML = "";
+            if (employeesToRender.length === 0) {
+                employeesTbody.innerHTML = `<tr><td colspan="9" class="muted">Belum ada karyawan terdaftar atau tidak ditemukan.</td></tr>`;
+                return;
+            }
+
+            let index = 0;
+            employeesToRender.forEach(employee => {
+                index++;
+                const d = employee.data;
+                const id = employee.id;
+
+                const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
+                const created = createdDate ? createdDate.toLocaleString() : "-";
+                const updatedDate = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : (d.updatedAt instanceof Date ? d.updatedAt : null);
+                const updated = updatedDate ? updatedDate.toLocaleString() : "-";
+
+                const isSelected = currentSelectedEmployeeIds.has(id);
+                const tr = document.createElement("tr");
+                if (d.updatedAt) { // Untuk perbedaan warna baris terupdate
+                    tr.classList.add("updated-row");
+                }
+                // Jika ada kondisi duplikat NIK, bisa tambahkan kelas 'duplicate-entry' di sini
+                // if (isDuplicateNIK(id)) { tr.classList.add("duplicate-entry"); tr.title = "NIK ini duplikat."; }
+
+
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="employee-checkbox" data-id="${id}" ${isSelected ? 'checked' : ''}></td>
+                    <td>${index}</td>
+                    <td>${esc(d.NIK || '-')}</td>
+                    <td>${esc(d.Nama || '-')}</td>
+                    <td>${esc(d.Jabatan || '-')}</td>
+                    <td>${esc(d.Departemen || '-')}</td>
+                    <td class="muted">${created}</td>
+                    <td class="muted">${updated}</td>
+                    <td>
+                        <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
+                        <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
+                    </td>
+                `;
+                employeesTbody.appendChild(tr);
+            });
+            updateSelectAllCheckboxState(); // Update status checkbox select all
+            updateDeleteSelectedButtonVisibility(); // Update status tombol hapus banyak
+        }
+
+        function updateSelectAllCheckboxState() {
+            const allCheckboxes = document.querySelectorAll(".employee-checkbox");
+            if (allCheckboxes.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+                return;
+            }
+            const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+            const anyChecked = Array.from(allCheckboxes).some(cb => cb.checked);
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = anyChecked && !allChecked;
+        }
+
+        function updateDeleteSelectedButtonVisibility() {
+            selectedCountSpan.textContent = currentSelectedEmployeeIds.size;
+            if (currentSelectedEmployeeIds.size > 0) {
+                deleteSelectedBtn.style.display = "inline-block";
+            } else {
+                deleteSelectedBtn.style.display = "none";
+            }
+        }
+
+        function applySortAndFilter() {
+            let dataToProcess = [...allEmployeesData];
+
+            // 1. Apply filter
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            if (searchTerm !== "") {
+                dataToProcess = dataToProcess.filter(employee => {
+                    const nik = (employee.data.NIK || "").toLowerCase();
+                    const nama = (employee.data.Nama || "").toLowerCase();
+                    const jabatan = (employee.data.Jabatan || "").toLowerCase();
+                    const departemen = (employee.data.Departemen || "").toLowerCase();
+                    return nik.includes(searchTerm) || nama.includes(searchTerm) || jabatan.includes(searchTerm) || departemen.includes(searchTerm);
                 });
-                dataRow += '</tr>';
-                dataTableBody.innerHTML += dataRow;
-            });
-            setStatus(`Preview berhasil. Ditemukan ${data.length} baris data.`, 'success');
+            }
+
+            // 2. Apply sort
+            if (sortState.column) {
+                dataToProcess.sort((a, b) => {
+                    let valA, valB;
+                    if (['NIK', 'Nama', 'Jabatan', 'Departemen'].includes(sortState.column)) {
+                        valA = (a.data[sortState.column] || '').toLowerCase();
+                        valB = (b.data[sortState.column] || '').toLowerCase();
+                    } else if (sortState.column === 'createdAt' || sortState.column === 'updatedAt') {
+                        valA = a.data[sortState.column] ? (a.data[sortState.column].toDate ? a.data[sortState.column].toDate().getTime() : new Date(a.data[sortState.column]).getTime()) : 0;
+                        valB = b.data[sortState.column] ? (b.data[sortState.column].toDate ? b.data[sortState.column].toDate().getTime() : new Date(b.data[sortState.column]).getTime()) : 0;
+                    } else {
+                        valA = a.data[sortState.column];
+                        valB = b.data[sortState.column];
+                    }
+
+                    if (typeof valA === 'string' && (valA === null || valA === undefined || valA === '')) valA = sortState.direction === 'asc' ? '' : 'zzzzz';
+                    if (typeof valB === 'string' && (valB === null || valB === undefined || valB === '')) valB = sortState.direction === 'asc' ? '' : 'zzzzz';
+
+                    if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            currentDisplayData = dataToProcess;
+            renderTable(currentDisplayData);
+            updateSortArrows();
         }
 
-        
-        previewBtn.addEventListener('click', () => {
-            const file = excelFile.files[0];
-            if (!file) {
-                setStatus("Pilih file Excel terlebih dahulu.", 'error');
+        function updateSortArrows() {
+            employeesTableHead.querySelectorAll('.sort-arrow').forEach(arrow => {
+                arrow.classList.remove('active', 'asc', 'desc');
+            });
+
+            const activeTh = employeesTableHead.querySelector(`th[data-sort-by="${sortState.column}"]`);
+            if (activeTh) {
+                const activeArrow = activeTh.querySelector('.sort-arrow');
+                if (activeArrow) {
+                    activeArrow.classList.add('active', sortState.direction);
+                }
+            }
+        }
+
+        // Helper to check for duplicate NIK
+        async function checkDuplicateNIK(nik, currentDocId = null) {
+            const q = query(collection(db, "employees_mapping"), where("NIK", "==", nik));
+            const snap = await getDocs(q);
+            let isDuplicate = false;
+            snap.forEach(doc => {
+                if (doc.id !== currentDocId) {
+                    isDuplicate = true;
+                }
+            });
+            return isDuplicate;
+        }
+
+        // --- Main Data Loading Function ---
+        async function loadEmployees() {
+            setStatus("Memuat data karyawan...", 'info');
+            try {
+                // Default sorting order
+                const q = query(collection(db, "employees_mapping"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+
+                allEmployeesData = [];
+                snap.forEach(docSnap => {
+                    allEmployeesData.push({ id: docSnap.id, data: docSnap.data() });
+                });
+
+                applySortAndFilter(); // Terapkan sorting dan filter awal
+                setStatus(`Selesai memuat (${allEmployeesData.length} karyawan).`, 'success');
+            } catch (err) {
+                console.error(err);
+                setStatus("Gagal memuat data karyawan. Cek konsol.", 'error');
+                employeesTbody.innerHTML = `<tr><td colspan="9" class="muted">Error saat memuat data.</td></tr>`;
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Refresh Data Karyawan
+        refreshEmployeeDataBtn.addEventListener("click", () => {
+            searchInput.value = ""; // Clear search
+            sortState = { column: 'createdAt', direction: 'desc' }; // Reset sort
+            currentSelectedEmployeeIds.clear(); // Clear selections
+            loadEmployees();
+        });
+
+        // Add New Employee Button
+        addEmployeeBtn.addEventListener("click", () => {
+            editingEmployeeId = null;
+            modalEmployeeTitle.textContent = "Tambah Karyawan Baru";
+            inputNIK.value = "";
+            inputNIK.disabled = false; // NIK bisa diisi saat tambah baru
+            inputNama.value = "";
+            inputJabatan.value = "";
+            inputDepartemen.value = "";
+            // ... clear any other fields
+            openEmployeeModal();
+        });
+
+        // Cancel Employee Modal Button
+        cancelEmployeeBtn.addEventListener("click", closeEmployeeModal);
+
+        // Save Employee (Add/Edit)
+        saveEmployeeBtn.addEventListener("click", async () => {
+            const nik = inputNIK.value.trim();
+            const nama = inputNama.value.trim();
+            const jabatan = inputJabatan.value.trim();
+            const departemen = inputDepartemen.value.trim();
+
+            if (!nik || !nama) {
+                alert("NIK dan Nama Karyawan wajib diisi.");
                 return;
             }
 
-            
+            saveEmployeeBtn.disabled = true;
+            try {
+                const employeeData = {
+                    NIK: nik,
+                    Nama: nama,
+                    Jabatan: jabatan,
+                    Departemen: departemen,
+                    // ... tambahkan field lain yang relevan
+                };
+
+                if (editingEmployeeId) { // Edit Existing
+                    const ref = doc(db, "employees_mapping", editingEmployeeId);
+                    const beforeSnap = await getDoc(ref);
+                    const beforeData = beforeSnap.exists() ? beforeSnap.data() : {};
+
+                    await updateDoc(ref, {
+                        ...employeeData,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: currentUserData?.username || auth.currentUser.uid
+                    });
+                    await logEmployeeAction("update", editingEmployeeId, beforeData, employeeData);
+
+                    setStatus("Data karyawan berhasil diperbarui.", 'success');
+                } else { // Add New
+                    // Check for duplicate NIK before adding
+                    const isDuplicate = await checkDuplicateNIK(nik);
+                    if (isDuplicate) {
+                        alert("NIK ini sudah ada. Harap gunakan NIK yang unik.");
+                        saveEmployeeBtn.disabled = false;
+                        return;
+                    }
+
+                    // Use NIK as the document ID
+                    await setDoc(doc(db, "employees_mapping", nik), {
+                        ...employeeData,
+                        createdAt: serverTimestamp(),
+                        createdBy: currentUserData?.username || auth.currentUser.uid
+                    });
+                    await logEmployeeAction("create", nik, null, employeeData);
+
+                    setStatus("Karyawan baru berhasil ditambahkan.", 'success');
+                }
+                closeEmployeeModal();
+                await loadEmployees(); // Reload data to show changes
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menyimpan data karyawan: " + (err.message || err));
+                setStatus("Gagal menyimpan.", 'error');
+            } finally {
+                saveEmployeeBtn.disabled = false;
+            }
+        });
+
+        // Table Body Click Listener (for Edit/Delete single item)
+        employeesTbody.addEventListener("click", async (ev) => {
+            const btn = ev.target.closest("button");
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+            if (!action || !id) return;
+
+            if (action === "edit") {
+                try {
+                    const snap = await getDoc(doc(db, "employees_mapping", id));
+                    if (!snap.exists()) {
+                        alert("Data karyawan tidak ditemukan.");
+                        return;
+                    }
+                    const d = snap.data();
+                    editingEmployeeId = id;
+                    modalEmployeeTitle.textContent = "Edit Karyawan";
+                    inputNIK.value = d.NIK || "";
+                    inputNIK.disabled = true; // NIK tidak bisa diedit setelah dibuat
+                    inputNama.value = d.Nama || "";
+                    inputJabatan.value = d.Jabatan || "";
+                    inputDepartemen.value = d.Departemen || "";
+                    // ... fill other fields
+                    openEmployeeModal();
+                } catch (err) {
+                    console.error(err);
+                    alert("Gagal memuat data karyawan untuk edit.");
+                }
+            } else if (action === "delete") {
+                if (!confirm("Yakin ingin menghapus karyawan ini? Tindakan ini tidak bisa dibatalkan.")) return;
+
+                try {
+                    const ref = doc(db, "employees_mapping", id);
+                    const beforeSnap = await getDoc(ref);
+                    if (!beforeSnap.exists()) {
+                        alert("Karyawan sudah tidak ada.");
+                        return;
+                    }
+                    const before = beforeSnap.data(); // Simpan data sebelum dihapus
+
+                    await deleteDoc(ref);
+                    await logEmployeeAction("delete", id, before, null);
+
+                    setStatus("Karyawan berhasil dihapus.", 'success');
+                    await loadEmployees(); // Reload data to show changes
+                    currentSelectedEmployeeIds.delete(id); // Hapus dari seleksi jika ada
+                    updateDeleteSelectedButtonVisibility();
+                } catch (err) {
+                    console.error(err);
+                    alert("Gagal menghapus karyawan: " + (err.message || err));
+                    setStatus("Gagal menghapus.", 'error');
+                }
+            }
+        });
+
+        // Individual Checkbox Click Listener
+        employeesTbody.addEventListener("change", (e) => {
+            if (e.target.classList.contains("employee-checkbox")) {
+                const id = e.target.dataset.id;
+                if (e.target.checked) {
+                    currentSelectedEmployeeIds.add(id);
+                } else {
+                    currentSelectedEmployeeIds.delete(id);
+                }
+                updateSelectAllCheckboxState();
+                updateDeleteSelectedButtonVisibility();
+            }
+        });
+
+        // Select All Checkbox
+        selectAllCheckbox.addEventListener("change", (e) => {
+            const isChecked = e.target.checked;
+            document.querySelectorAll(".employee-checkbox").forEach(checkbox => {
+                checkbox.checked = isChecked;
+                if (isChecked) {
+                    currentSelectedEmployeeIds.add(checkbox.dataset.id);
+                } else {
+                    currentSelectedEmployeeIds.delete(checkbox.dataset.id);
+                }
+            });
+            updateDeleteSelectedButtonVisibility();
+        });
+
+        // Delete Selected Button
+        deleteSelectedBtn.addEventListener("click", async () => {
+            if (currentSelectedEmployeeIds.size === 0) {
+                alert("Tidak ada karyawan yang dipilih untuk dihapus.");
+                return;
+            }
+            if (!confirm(`Yakin ingin menghapus ${currentSelectedEmployeeIds.size} karyawan terpilih? Tindakan ini tidak bisa dibatalkan.`)) return;
+
+            setStatus(`Menghapus ${currentSelectedEmployeeIds.size} karyawan terpilih...`, 'info');
+            deleteSelectedBtn.disabled = true;
+            const batch = writeBatch(db);
+            let deletedCount = 0;
+
+            try {
+                for (const id of currentSelectedEmployeeIds) {
+                    const ref = doc(db, "employees_mapping", id);
+                    const beforeSnap = await getDoc(ref);
+                    if (beforeSnap.exists()) {
+                        batch.delete(ref);
+                        await logEmployeeAction("delete_batch", id, beforeSnap.data(), null);
+                        deletedCount++;
+                    } else {
+                        console.warn(`Dokumen dengan ID ${id} tidak ditemukan, mungkin sudah dihapus.`);
+                    }
+                }
+                await batch.commit();
+                setStatus(`${deletedCount} karyawan berhasil dihapus.`, 'success');
+                currentSelectedEmployeeIds.clear(); // Clear selection
+                await loadEmployees(); // Reload data
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menghapus karyawan terpilih: " + (err.message || err));
+                setStatus("Gagal menghapus beberapa karyawan.", 'error');
+            } finally {
+                deleteSelectedBtn.disabled = false;
+            }
+        });
+
+        // Search Input Listener
+        searchInput.addEventListener("input", () => {
+            applySortAndFilter();
+        });
+
+        // Table Header Click Listener (for Sorting)
+        employeesTableHead.addEventListener("click", (e) => {
+            const targetTh = e.target.closest("th[data-sort-by]");
+            if (!targetTh) return;
+
+            const column = targetTh.dataset.sortBy;
+            if (sortState.column === column) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.column = column;
+                sortState.direction = 'asc';
+            }
+            applySortAndFilter();
+        });
+
+        // --- Excel Upload & Template Functions ---
+
+        // Download Template Excel
+        templateBtn.addEventListener("click", () => {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([
+                ["NIK", "Nama", "Jabatan", "Departemen"],
+                ["12345678", "Budi Santoso", "Staff HRD", "Human Resources"]
+            ]);
+            XLSX.utils.book_append_sheet(wb, ws, "Template Karyawan");
+            XLSX.writeFile(wb, "template_karyawan.xlsx");
+        });
+
+        // Excel File Input Change (Trigger Preview and then Upload)
+        excelFile.addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
             if (typeof XLSX === 'undefined') {
                 setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
                 return;
@@ -448,43 +1038,144 @@
             setStatus("Membaca file Excel...", 'info');
             const reader = new FileReader();
 
-            reader.onload = (e) => {
+            reader.onload = async (e) => { // Perubahan di sini, jadi async
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0]; 
+                    const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
-                    
-                    
-                    excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true }); 
-                    
-                    
-                    const headers = excelData[0];
-                    const rows = excelData.slice(1);
-                    
-                    
-                    excelData = rows.map(row => {
+
+                    // Convert to JSON with header row as keys
+                    const rawExcelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
+
+                    if (rawExcelData.length < 2) { // Minimum 1 header + 1 data row
+                        setStatus("File Excel kosong atau hanya berisi header.", 'error');
+                        excelFile.value = ""; // Reset file input
+                        return;
+                    }
+
+                    const headers = rawExcelData[0].map(h => String(h).trim()); // Trim headers
+                    const rows = rawExcelData.slice(1);
+
+                    let processedExcelData = [];
+                    let uploadSkippedCount = 0;
+                    let uploadOverwrittenCount = 0;
+                    uploadExcelReportData = []; // Reset report data
+
+                    // Fetch existing NIKs for conflict checking
+                    const existingNIKsSnap = await getDocs(collection(db, "employees_mapping"));
+                    const existingNIKsMap = new Map(); // NIK -> docId
+                    existingNIKsSnap.forEach(doc => {
+                        existingNIKsMap.set(doc.id, doc.data()); // Assuming NIK is doc.id
+                    });
+
+                    const batch = writeBatch(db);
+                    const batchSize = 400; // Firestore limit 500 ops per batch
+                    let currentBatchOps = 0;
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
                         let obj = {};
+                        let isEmptyRow = true;
                         headers.forEach((header, index) => {
                             let value = row[index];
-                            // Di sini kita tidak lagi menghapus undefined, tapi kita pastikan value menjadi null atau string kosong
-                            // jika undefined. Ini agar preview terlihat rapi.
-                            // Penghapusan undefined akan dilakukan saat upload ke Firestore.
                             if (typeof value === 'string') {
                                 value = value.trim();
-                            } else if (value === undefined) {
-                                value = null; // Ganti undefined dengan null untuk preview/pemrosesan awal
+                            }
+                            if (value !== undefined && value !== null && value !== '') {
+                                isEmptyRow = false;
                             }
                             obj[header] = value;
                         });
-                        return obj;
-                    });
-                    
-                    displayTable(excelData);
 
+                        if (isEmptyRow) {
+                            uploadSkippedCount++;
+                            uploadExcelReportData.push({
+                                NIK: obj['NIK'] || '-',
+                                Nama: obj['Nama'] || '-',
+                                Reason: "Baris kosong dilewati"
+                            });
+                            continue;
+                        }
+
+                        const nik = String(obj['NIK'] || '').trim();
+                        if (!nik) {
+                            uploadSkippedCount++;
+                            uploadExcelReportData.push({
+                                NIK: obj['NIK'] || '-',
+                                Nama: obj['Nama'] || '-',
+                                Reason: "NIK kosong, baris dilewati"
+                            });
+                            continue;
+                        }
+
+                        const dataToSave = {};
+                        // Filter out undefined/null/empty string values for Firestore
+                        for (const key in obj) {
+                            if (obj.hasOwnProperty(key) && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') {
+                                dataToSave[key] = obj[key];
+                            }
+                        }
+
+                        // Add creation/update timestamps and user info
+                        const commonFields = {
+                            updatedAt: serverTimestamp(), // Selalu ada saat update/create
+                            updatedBy: currentUserData?.username || auth.currentUser.uid,
+                            source: "excel_upload" // Tambahkan tanda dari Excel
+                        };
+
+                        if (existingNIKsMap.has(nik)) {
+                            // NIK already exists, this is an update/overwrite
+                            const oldData = existingNIKsMap.get(nik);
+                            const updatedData = { ...oldData, ...dataToSave, ...commonFields };
+                            batch.set(doc(collection(db, "employees_mapping"), nik), updatedData);
+                            await logEmployeeAction("update_from_excel", nik, oldData, updatedData, { source: "excel_upload" });
+                            uploadOverwrittenCount++;
+                        } else {
+                            // New NIK, this is a creation
+                            const newData = { ...dataToSave, createdAt: serverTimestamp(), createdBy: commonFields.updatedBy, ...commonFields };
+                            batch.set(doc(collection(db, "employees_mapping"), nik), newData);
+                            await logEmployeeAction("create_from_excel", nik, null, newData, { source: "excel_upload" });
+                            processedExcelData.push(newData); // Only add new data to display table if we're not overwriting
+                        }
+                        currentBatchOps++;
+
+                        if (currentBatchOps >= batchSize) {
+                            await batch.commit();
+                            setStatus(`Mengunggah batch... ${processedExcelData.length} baru, ${uploadOverwrittenCount} diubah.`, 'info');
+                            currentBatchOps = 0;
+                            // Re-initialize batch for next set of operations
+                            // batch = writeBatch(db); // Ini tidak perlu karena batch sudah di-commit dan kita buat batch baru di iterasi outer loop.
+                        }
+                    }
+
+                    // Commit any remaining operations in the last batch
+                    if (currentBatchOps > 0) {
+                        await batch.commit();
+                    }
+
+                    let msg = `Unggah Excel selesai.\n`;
+                    if (processedExcelData.length > 0) msg += `Ditambahkan baru: ${processedExcelData.length}.\n`;
+                    if (uploadOverwrittenCount > 0) msg += `Data diubah/ditimpa: ${uploadOverwrittenCount}.\n`;
+                    if (uploadSkippedCount > 0) msg += `Baris dilewati: ${uploadSkippedCount}.`;
+
+                    if (uploadExcelReportData.length > 0) {
+                        msg += `\n\nBeberapa baris dilewati atau diubah. Lihat detail di Report Box.`;
+                        reportBox.style.display = "block";
+                        downloadReportBtn.dataset.skipped = JSON.stringify(uploadExcelReportData);
+                    } else {
+                        reportBox.style.display = "none";
+                    }
+
+                    uploadReport.textContent = msg;
+                    setStatus("Unggah Excel selesai.", 'success');
+                    await loadEmployees(); // Reload main table
+                    excelFile.value = ""; // Reset file input
                 } catch (error) {
-                    setStatus(`Gagal membaca file Excel: ${error.message}. Pastikan format file benar dan library Excel dimuat.`, 'error');
+                    setStatus(`Gagal memproses file Excel: ${error.message}. Pastikan format file benar dan kolom NIK ada.`, 'error');
                     console.error(error);
+                } finally {
+                    excelFile.value = ""; // Selalu reset input file
                 }
             };
             reader.onerror = (error) => {
@@ -494,107 +1185,34 @@
             reader.readAsArrayBuffer(file);
         });
 
-        uploadToFirestoreBtn.addEventListener('click', async () => {
-            if (excelData.length === 0) {
-                setStatus("Tidak ada data untuk diunggah. Silakan preview data terlebih dahulu.", 'error');
-                return;
-            }
 
-            setStatus(`Mengunggah ${excelData.length} baris data ke Firestore...`, 'info');
-            uploadToFirestoreBtn.disabled = true; 
+        // Download Skipped/Overwritten Report
+        downloadReportBtn.addEventListener("click", () => {
+            const reportList = JSON.parse(downloadReportBtn.dataset.skipped || "[]");
+            if (reportList.length === 0) return;
 
-            const collectionRef = collection(db, "employees_mapping"); 
-            const batchSize = 400; 
-            let totalSuccess = 0;
-            let totalSkipped = 0; // Mengubah totalError menjadi totalSkipped
+            const wbReport = XLSX.utils.book_new();
+            const wsReport = XLSX.utils.aoa_to_sheet([
+                ["NIK", "Nama", "Alasan"],
+                ...reportList.map(item => [item.NIK, item.Nama, item.Reason])
+            ]);
+            XLSX.utils.book_append_sheet(wbReport, wsReport, "Report Upload");
+            XLSX.writeFile(wbReport, "report_upload_karyawan.xlsx");
 
-            try {
-                for (let i = 0; i < excelData.length; i += batchSize) {
-                    const batch = writeBatch(db);
-                    const currentBatchData = excelData.slice(i, i + batchSize);
-                    let batchSuccess = 0;
-                    let batchSkipped = 0;
+            reportBox.style.display = "none";
+            uploadReport.textContent = "";
+        });
 
-                    currentBatchData.forEach(row => {
-                        const nik = row['NIK']; 
-                        const idNumberMesin = row['ID NumberMesin']; 
-
-                        let docId = null;
-                        if (nik && String(nik).trim() !== '') {
-                            docId = String(nik).trim();
-                        } else if (idNumberMesin && String(idNumberMesin).trim() !== '') {
-                            docId = String(idNumberMesin).trim();
-                            console.warn(`Menggunakan 'ID NumberMesin' (${docId}) sebagai ID dokumen karena NIK kosong.`);
-                        }
-                        
-                        if (docId) {
-                            const dataToSave = {};
-                            // BARU: Saring properti dengan nilai undefined sebelum menyimpan ke Firestore
-                            for (const key in row) {
-                                if (row.hasOwnProperty(key) && key !== 'No') { // Pastikan properti milik objek itu sendiri dan bukan 'No'
-                                    const value = row[key];
-                                    if (value !== undefined) { // HANYA sertakan nilai yang bukan undefined
-                                        dataToSave[key] = value;
-                                    }
-                                }
-                            }
-                            
-                            batch.set(doc(collectionRef, docId), dataToSave); 
-                            batchSuccess++;
-                        } else {
-                            console.warn("Baris dilewati karena NIK dan ID NumberMesin kosong:", row);
-                            batchSkipped++;
-                        }
-                    });
-
-                    await batch.commit();
-                    totalSuccess += batchSuccess;
-                    totalSkipped += batchSkipped;
-                    setStatus(`Batch ${Math.ceil((i + batchSize) / batchSize)} berhasil diunggah. Sukses: ${totalSuccess}, Dilewati: ${totalSkipped}.`, 'info');
-                }
-                
-                setStatus(`Semua data berhasil diunggah! Total ${totalSuccess} baris sukses, ${totalSkipped} dilewati.`, 'success');
-                excelData = []; 
-                clearTable();
-
-            } catch (error) {
-                setStatus(`Terjadi kesalahan saat mengunggah data: ${error.message}`, 'error');
-                console.error(error);
-            } finally {
-                uploadToFirestoreBtn.disabled = false; 
+        // Discard Report
+        discardReportBtn.addEventListener("click", () => {
+            if (confirm("Yakin mau buang report ini tanpa download? Report akan hilang permanen.")) {
+                reportBox.style.display = "none";
+                uploadReport.textContent = "";
+                uploadExcelReportData = [];
+                downloadReportBtn.dataset.skipped = "[]";
             }
         });
 
-        // BARU: Fungsi untuk memuat data karyawan yang sudah ada dari Firestore
-        viewExistingBtn.addEventListener('click', async () => {
-            setStatus("Memuat data karyawan dari Firestore...", 'info');
-            clearTable(); // Bersihkan tabel sebelum memuat yang baru
-            viewExistingBtn.disabled = true; // Nonaktifkan tombol saat memuat
-
-            try {
-                const collectionRef = collection(db, "employees_mapping");
-                const querySnapshot = await getDocs(collectionRef);
-
-                const employeesData = [];
-                if (querySnapshot.empty) {
-                    setStatus("Tidak ada data karyawan ditemukan di Firestore.", 'info');
-                } else {
-                    querySnapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        // Tambahkan doc.id sebagai properti (opsional, bisa digunakan sebagai "ID Dokumen" di tabel)
-                        employeesData.push({ ...data, 'Doc ID (Firestore)': docSnap.id }); // Contoh: menambahkan ID Firestore
-                    });
-                    
-                    displayTable(employeesData); // Tampilkan data yang diambil
-                    setStatus(`Data karyawan dari Firestore berhasil dimuat. Ditemukan ${employeesData.length} entri.`, 'success');
-                }
-            } catch (error) {
-                setStatus(`Gagal memuat data karyawan dari Firestore: ${error.message}`, 'error');
-                console.error("Error loading existing employees:", error);
-            } finally {
-                viewExistingBtn.disabled = false; // Aktifkan kembali tombol
-            }
-        });
     </script>
 </body>
 </html>
