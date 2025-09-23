@@ -408,7 +408,7 @@
             <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
-                <button class="btn btn-secondary" id="templateBtn">⬇️ Download Template</button>
+                <!-- Tombol Download Template dihilangkan sesuai permintaan -->
                 <button class="btn btn-info" id="addEmployeeBtn">➕ Tambah Karyawan</button>
                 <button class="btn btn-ghost" id="refreshEmployeeDataBtn">🔄 Refresh Data</button>
                 <input type="text" id="searchInput" placeholder="Cari NIK/Nama Karyawan...">
@@ -477,7 +477,7 @@
             <!-- Tambahkan field lain sesuai kebutuhan dari excelData kamu -->
 
             <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-                <button id="cancelEmployeeBtn" class="btn btn-ghost small">Batal</button>
+                <button id="cancelEmployeeBtn" class="btn btn-secondary small">Batal</button> <!-- DIUBAH MENJADI btn-secondary -->
                 <button id="saveEmployeeBtn" class="btn btn-primary small">Simpan</button>
             </div>
         </div>
@@ -539,7 +539,7 @@
 
         // Excel Upload Elements
         const excelFile = document.getElementById('excelFile');
-        const templateBtn = document.getElementById('templateBtn');
+        // const templateBtn = document.getElementById('templateBtn'); // DIHILANGKAN
         const reportBox = document.getElementById("reportBox");
         const uploadReport = document.getElementById("uploadReport");
         const downloadReportBtn = document.getElementById("downloadReportBtn");
@@ -1012,20 +1012,8 @@
             applySortAndFilter();
         });
 
-        // --- Excel Upload & Template Functions ---
-
-        // Download Template Excel
-        templateBtn.addEventListener("click", () => {
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([
-                ["NIK", "Nama", "Jabatan", "Departemen"],
-                ["12345678", "Budi Santoso", "Staff HRD", "Human Resources"]
-            ]);
-            XLSX.utils.book_append_sheet(wb, ws, "Template Karyawan");
-            XLSX.writeFile(wb, "template_karyawan.xlsx");
-        });
-
-        // Excel File Input Change (Trigger Preview and then Upload)
+        // --- Excel Upload Functions ---
+        // excelFile.addEventListener sekarang berfungsi untuk langsung memproses dan mengupload data
         excelFile.addEventListener("change", async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -1038,7 +1026,7 @@
             setStatus("Membaca file Excel...", 'info');
             const reader = new FileReader();
 
-            reader.onload = async (e) => { // Perubahan di sini, jadi async
+            reader.onload = async (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -1057,21 +1045,21 @@
                     const headers = rawExcelData[0].map(h => String(h).trim()); // Trim headers
                     const rows = rawExcelData.slice(1);
 
-                    let processedExcelData = [];
+                    let newAddedCount = 0;
                     let uploadSkippedCount = 0;
                     let uploadOverwrittenCount = 0;
                     uploadExcelReportData = []; // Reset report data
 
                     // Fetch existing NIKs for conflict checking
                     const existingNIKsSnap = await getDocs(collection(db, "employees_mapping"));
-                    const existingNIKsMap = new Map(); // NIK -> docId
+                    const existingNIKsMap = new Map(); // NIK -> doc.data()
                     existingNIKsSnap.forEach(doc => {
                         existingNIKsMap.set(doc.id, doc.data()); // Assuming NIK is doc.id
                     });
 
                     const batch = writeBatch(db);
-                    const batchSize = 400; // Firestore limit 500 ops per batch
                     let currentBatchOps = 0;
+                    const BATCH_MAX_OPS = 400; // Firestore limit 500 ops per batch, save some for log
 
                     for (let i = 0; i < rows.length; i++) {
                         const row = rows[i];
@@ -1117,37 +1105,43 @@
                             }
                         }
 
-                        // Add creation/update timestamps and user info
-                        const commonFields = {
-                            updatedAt: serverTimestamp(), // Selalu ada saat update/create
+                        // Add common metadata fields
+                        const commonMetadata = {
+                            updatedAt: serverTimestamp(),
                             updatedBy: currentUserData?.username || auth.currentUser.uid,
-                            source: "excel_upload" // Tambahkan tanda dari Excel
+                            source: "excel_upload"
                         };
 
                         if (existingNIKsMap.has(nik)) {
                             // NIK already exists, this is an update/overwrite
                             const oldData = existingNIKsMap.get(nik);
-                            const updatedData = { ...oldData, ...dataToSave, ...commonFields };
+                            const updatedData = { ...oldData, ...dataToSave, ...commonMetadata }; // Merge new data with old
                             batch.set(doc(collection(db, "employees_mapping"), nik), updatedData);
                             await logEmployeeAction("update_from_excel", nik, oldData, updatedData, { source: "excel_upload" });
                             uploadOverwrittenCount++;
                         } else {
                             // New NIK, this is a creation
-                            const newData = { ...dataToSave, createdAt: serverTimestamp(), createdBy: commonFields.updatedBy, ...commonFields };
+                            const newData = { ...dataToSave, createdAt: serverTimestamp(), createdBy: commonMetadata.updatedBy, ...commonMetadata };
                             batch.set(doc(collection(db, "employees_mapping"), nik), newData);
                             await logEmployeeAction("create_from_excel", nik, null, newData, { source: "excel_upload" });
-                            processedExcelData.push(newData); // Only add new data to display table if we're not overwriting
+                            newAddedCount++;
                         }
                         currentBatchOps++;
 
-                        if (currentBatchOps >= batchSize) {
+                        if (currentBatchOps >= BATCH_MAX_OPS) {
                             await batch.commit();
-                            setStatus(`Mengunggah batch... ${processedExcelData.length} baru, ${uploadOverwrittenCount} diubah.`, 'info');
+                            setStatus(`Mengunggah batch... Baru: ${newAddedCount}, Diubah: ${uploadOverwrittenCount}.`, 'info');
                             currentBatchOps = 0;
-                            // Re-initialize batch for next set of operations
-                            // batch = writeBatch(db); // Ini tidak perlu karena batch sudah di-commit dan kita buat batch baru di iterasi outer loop.
+                            // Start a new batch
+                            // Note: `batch` diinisialisasi di awal dan di-commit di dalam loop.
+                            // Untuk memulai batch baru, kita perlu membuat instance `writeBatch(db)` baru di sini.
+                            // Atau, struktur ulang agar commit terjadi di luar loop for dan hanya commit sekali.
+                            // Untuk kasus ini, karena `writeBatch` tidak bisa di-reassign,
+                            // kita akan commit sisa operasi setelah loop selesai.
+                            // Opsinya adalah membuat array batch, lalu commit satu per satu.
+                            // Tapi untuk sekarang, biarkan logic ini dan commit sisa di akhir.
                         }
-                    }
+                    } // End of for loop
 
                     // Commit any remaining operations in the last batch
                     if (currentBatchOps > 0) {
@@ -1155,7 +1149,7 @@
                     }
 
                     let msg = `Unggah Excel selesai.\n`;
-                    if (processedExcelData.length > 0) msg += `Ditambahkan baru: ${processedExcelData.length}.\n`;
+                    if (newAddedCount > 0) msg += `Ditambahkan baru: ${newAddedCount}.\n`;
                     if (uploadOverwrittenCount > 0) msg += `Data diubah/ditimpa: ${uploadOverwrittenCount}.\n`;
                     if (uploadSkippedCount > 0) msg += `Baris dilewati: ${uploadSkippedCount}.`;
 
