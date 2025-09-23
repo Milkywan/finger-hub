@@ -415,7 +415,7 @@
 
     <div class="main-content-wrapper">
         <div class="container" id="adminUploadContainer">
-            <h2>Kelola Data Karyawan Rev</h2>
+            <h2>Kelola Data Karyawan</h2>
 
                  <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
@@ -535,7 +535,7 @@
             setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
         }
 
-        // --- DOM References ---
+         // --- DOM References ---
         const pageStatus = document.getElementById("pageStatus");
         const employeesTbody = document.getElementById("employeesTbody");
         const employeesTableHead = document.getElementById("employeesTableHead");
@@ -557,12 +557,17 @@
         const saveEmployeeBtn = document.getElementById("saveEmployeeBtn");
 
         // Excel Upload Elements
-        const excelFile = document.getElementById('excelFile');
-        // const templateBtn = document.getElementById('templateBtn'); // DIHILANGKAN
+        const excelFile = document.getElementById('excelFile'); // <--- Pastikan hanya ada SATU deklarasi ini
         const reportBox = document.getElementById("reportBox");
         const uploadReport = document.getElementById("uploadReport");
         const downloadReportBtn = document.getElementById("downloadReportBtn");
         const discardReportBtn = document.getElementById("discardReportBtn");
+
+        // --- Template Download Elements (ini sudah benar di bawahnya) ---
+        const downloadTemplateBtn = document.getElementById("downloadTemplateBtn"); 
+
+        // ... (Lanjutan kode Anda)
+
 
         // --- Global State Variables ---
         let allEmployeesData = []; // Semua data karyawan dari Firestore
@@ -1311,6 +1316,7 @@
     </script>
 </body>
 </html>
+
 
 
 
