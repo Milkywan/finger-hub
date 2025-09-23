@@ -297,9 +297,10 @@ td, th {
 
       <div class="actions">
         <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
-        <button id="refreshBtn" class="btn btn-ghost">🔄 Refresh</button> <!-- NEW: Refresh Button -->
+        <button id="refreshBtn" class="btn btn-ghost">🔄 Refresh</button>
         <div class="status" id="pageStatus">Memuat data...</div>
         <input type="text" id="searchInput" placeholder="Cari Nama/IP Mesin...">
+        <button id="downloadAllBtn" class="btn btn-ghost">⬇️ Download Semua Mesin</button> <!-- NEW: Download All Button -->
         <button id="uploadBtn" class="btn btn-ghost">⬆️ Upload Excel</button>
         <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none">
         <button id="templateBtn" class="btn btn-ghost">⬇️ Download Template</button>
@@ -384,9 +385,10 @@ td, th {
   const pageStatus = document.getElementById("pageStatus");
   const tbody = document.getElementById("mesinTbody");
   const addBtn = document.getElementById("addMesinBtn");
-  const refreshBtn = document.getElementById("refreshBtn"); // NEW: Refresh button reference
+  const refreshBtn = document.getElementById("refreshBtn");
   const searchInput = document.getElementById("searchInput");
   const mesinTableHead = document.getElementById("mesinTableHead");
+  const downloadAllBtn = document.getElementById("downloadAllBtn"); // NEW: Download All Button ref
 
   const modal = document.getElementById("mesinModal");
   const modalTitle = document.getElementById("modalTitle");
@@ -398,6 +400,7 @@ td, th {
 
   let editingId = null; // null => tambah, otherwise edit
   let allMesinData = []; // To store all fetched machines
+  let currentDisplayData = []; // NEW: To store data after filter/sort for rendering AND for export
   // State for current sorting (default: sort by createdAt descending)
   let sortState = { column: 'createdAt', direction: 'desc' };
 
@@ -433,7 +436,7 @@ td, th {
   function renderTable(machinesToRender) {
     tbody.innerHTML = ""; // Clear existing rows
     if (machinesToRender.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="muted">Belum ada mesin terdaftar atau tidak ditemukan.</td></tr>`; // Updated colspan
+      tbody.innerHTML = `<tr><td colspan="7" class="muted">Belum ada mesin terdaftar atau tidak ditemukan.</td></tr>`;
       return;
     }
 
@@ -504,8 +507,10 @@ td, th {
             }
 
             // Fallback for null/undefined values during comparison for non-timestamp fields
-            if (valA === null || valA === undefined) valA = sortState.direction === 'asc' ? '' : 'zzzzz'; // Empty/last for asc/desc
-            if (valB === null || valB === undefined) valB = sortState.direction === 'asc' ? '' : 'zzzzz';
+            // For strings, empty string comes first for 'asc', last for 'desc'
+            if (typeof valA === 'string' && (valA === null || valA === undefined || valA === '')) valA = sortState.direction === 'asc' ? '' : 'zzzzz';
+            if (typeof valB === 'string' && (valB === null || valB === undefined || valB === '')) valB = sortState.direction === 'asc' ? '' : 'zzzzz';
+            // For numbers/dates, 0 is a reasonable default for null/undefined, as handled above
 
             if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
             if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
@@ -513,7 +518,8 @@ td, th {
         });
     }
 
-    renderTable(dataToProcess); // Render the filtered and sorted data
+    currentDisplayData = dataToProcess; // Store the processed data for rendering AND export
+    renderTable(currentDisplayData); // Render the filtered and sorted data
     updateSortArrows(); // Update arrow icons on table headers
   }
 
@@ -536,9 +542,7 @@ td, th {
   async function loadMesin() {
     try {
       setStatus("Memuat data mesin...");
-      // Query to initially load data, ordered by createdAt.
-      // This initial order is good for fetching, but applySortAndFilter will then re-sort based on sortState.
-      const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc"));
+      const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc")); // Initial query is still ordered
       const snap = await getDocs(q);
 
       allMesinData = []; // Clear previous data
@@ -566,7 +570,7 @@ td, th {
     openModal();
   });
 
-  // NEW: Refresh button functionality
+  // Refresh button functionality
   refreshBtn.addEventListener("click", () => {
     searchInput.value = ""; // Clear search input on manual refresh
     sortState = { column: 'createdAt', direction: 'desc' }; // Reset sort to default on manual refresh
@@ -689,6 +693,7 @@ td, th {
 
       closeModal();
       await loadMesin(); // Reload all data after save/update. This will also re-apply filter/sort.
+      // searchInput.value = ""; // Tidak perlu kosongkan search input, biarkan filter/sort yang aktif tetap berlaku
     } catch (err) {
       console.error(err);
       alert("Gagal menyimpan: " + (err.message || err));
@@ -753,7 +758,7 @@ td, th {
           mesin_lama: before.mesin || "",
           ip_lama: before.ip || "",
           port_lama: before.port || "",
-          updatedname: deletedName, // 'updatedname' karena ini aksi oleh user
+          updatedname: deletedName,
           updatedBy: currentUser.uid,
           updatedAt: serverTimestamp()
         };
@@ -761,6 +766,7 @@ td, th {
 
         setStatus("Mesin berhasil dihapus.");
         await loadMesin(); // Reload all data after delete. This will also re-apply filter/sort.
+        // searchInput.value = ""; // Tidak perlu kosongkan search input
       } catch (err) {
         console.error(err);
         alert("Gagal menghapus mesin: " + (err.message || err));
@@ -791,6 +797,37 @@ mesinTableHead.addEventListener("click", (e) => {
         sortState.direction = 'asc';
     }
     applySortAndFilter(); // Re-apply sort and filter, then re-render
+});
+
+// NEW: Download All Machines button functionality
+downloadAllBtn.addEventListener("click", () => {
+  if (currentDisplayData.length === 0) {
+    alert("Tidak ada data mesin untuk diunduh.");
+    return;
+  }
+
+  const header = ["Nama Mesin", "IP Address", "Port", "Dibuat", "Terakhir Diperbarui"];
+  const data = currentDisplayData.map(machine => {
+    const d = machine.data;
+    const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
+    const created = createdDate ? createdDate.toLocaleString() : "-";
+
+    const updatedDate = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : (d.updatedAt instanceof Date ? d.updatedAt : null);
+    const updated = updatedDate ? updatedDate.toLocaleString() : "-";
+
+    return [
+      d.mesin || "",
+      d.ip || "",
+      d.port || "",
+      created,
+      updated
+    ];
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([header, ...data]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Daftar Mesin");
+  XLSX.writeFile(wb, "daftar_mesin_fingerprint.xlsx");
 });
 
 
@@ -874,8 +911,7 @@ excelFile.addEventListener("change", async (e) => {
     uploadReport.textContent = msg;
     setStatus("Upload selesai.");
     await loadMesin(); // Reload all data after upload
-    // searchInput.value = ""; // Tidak perlu kosongkan search input secara otomatis setelah upload
-                                // applySortAndFilter akan menjalankan filter yang aktif
+    // searchInput.value = ""; // Tidak perlu kosongkan search input
   } catch (err) {
     console.error(err);
     alert("Gagal memproses file Excel: " + err.message);
