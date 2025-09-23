@@ -293,8 +293,6 @@
             position: relative;
         }
                 /* --- Table specific styling --- */
-        /* ... (CSS yang sudah ada) ... */
-
         .sidik-jari-terdaftar {
             background-color: rgba(144, 238, 144, 0.1); /* Light green soft */
             color: #90ee90; /* Matching text color */
@@ -415,7 +413,7 @@
 
     <div class="main-content-wrapper">
         <div class="container" id="adminUploadContainer">
-            <h2>Kelola Data Karyawan</h2>
+            <h2>Kelola Data Karyawan Revisi</h2>
 
                  <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
@@ -477,6 +475,15 @@
     <div id="employeeModal" class="modal hidden" aria-hidden="true">
         <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalEmployeeTitle">
             <h3 id="modalEmployeeTitle">Tambah Karyawan</h3>
+            <!-- Existing fields -->
+            <div class="form-row">
+                <label for="inputIDMesin">ID Mesin</label>
+                <input id="inputIDMesin" type="text" placeholder="ID Mesin (mis: 1)">
+            </div>
+            <div class="form-row">
+                <label for="inputNIKSebelumnya">NIK Sebelumnya</label>
+                <input id="inputNIKSebelumnya" type="text" placeholder="NIK Sebelumnya (jika ada)">
+            </div>
             <div class="form-row">
                 <label for="inputNIK">NIK</label>
                 <input id="inputNIK" type="text" placeholder="Nomor Induk Karyawan">
@@ -486,17 +493,29 @@
                 <input id="inputNama" type="text" placeholder="Nama Lengkap Karyawan">
             </div>
             <div class="form-row">
-                <label for="inputJabatan">Jabatan</label>
-                <input id="inputJabatan" type="text" placeholder="Jabatan Karyawan">
+                <label for="inputStatus">Status</label>
+                <input id="inputStatus" type="text" placeholder="Status Karyawan (mis: Aktif, Cuti)">
+            </div>
+            <div class="form-row">
+                <label for="inputPerusahaan">Perusahaan</label>
+                <input id="inputPerusahaan" type="text" placeholder="Nama Perusahaan">
             </div>
             <div class="form-row">
                 <label for="inputDepartment">Department</label>
                 <input id="inputDepartment" type="text" placeholder="Department Karyawan">
             </div>
-            <!-- Tambahkan field lain sesuai kebutuhan dari excelData kamu -->
+            <div class="form-row">
+                <label for="inputJabatan">Jabatan</label>
+                <input id="inputJabatan" type="text" placeholder="Jabatan Karyawan">
+            </div>
+            <div class="form-row">
+                <label for="inputSidikJari">Sidik Jari</label>
+                <input id="inputSidikJari" type="text" placeholder="Data Sidik Jari (biarkan kosong jika Belum Terdaftar)">
+            </div>
+            <!-- End of new fields -->
 
             <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
-                <button id="cancelEmployeeBtn" class="btn btn-secondary small">Batal</button> <!-- DIUBAH MENJADI btn-secondary -->
+                <button id="cancelEmployeeBtn" class="btn btn-secondary small">Batal</button>
                 <button id="saveEmployeeBtn" class="btn btn-primary small">Simpan</button>
             </div>
         </div>
@@ -546,28 +565,30 @@
         const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
         const selectedCountSpan = document.getElementById("selectedCount");
 
-        // Modal elements
+        // Modal elements - UPDATED
         const employeeModal = document.getElementById("employeeModal");
         const modalEmployeeTitle = document.getElementById("modalEmployeeTitle");
+        const inputIDMesin = document.getElementById("inputIDMesin"); // NEW
+        const inputNIKSebelumnya = document.getElementById("inputNIKSebelumnya"); // NEW
         const inputNIK = document.getElementById("inputNIK");
         const inputNama = document.getElementById("inputNama");
-        const inputJabatan = document.getElementById("inputJabatan");
+        const inputStatus = document.getElementById("inputStatus"); // NEW
+        const inputPerusahaan = document.getElementById("inputPerusahaan"); // NEW
         const inputDepartment = document.getElementById("inputDepartment");
+        const inputJabatan = document.getElementById("inputJabatan");
+        const inputSidikJari = document.getElementById("inputSidikJari"); // NEW
         const cancelEmployeeBtn = document.getElementById("cancelEmployeeBtn");
         const saveEmployeeBtn = document.getElementById("saveEmployeeBtn");
 
         // Excel Upload Elements
-        const excelFile = document.getElementById('excelFile'); // <--- Pastikan hanya ada SATU deklarasi ini
+        const excelFile = document.getElementById('excelFile');
         const reportBox = document.getElementById("reportBox");
         const uploadReport = document.getElementById("uploadReport");
         const downloadReportBtn = document.getElementById("downloadReportBtn");
         const discardReportBtn = document.getElementById("discardReportBtn");
 
-        // --- Template Download Elements (ini sudah benar di bawahnya) ---
-        const downloadTemplateBtn = document.getElementById("downloadTemplateBtn"); 
-
-        // ... (Lanjutan kode Anda)
-
+        // --- Template Download Elements ---
+        const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
 
         // --- Global State Variables ---
         let allEmployeesData = []; // Semua data karyawan dari Firestore
@@ -626,14 +647,26 @@
                 logEntry.newData = newData;
             } else if (action === "update") {
                 const changes = {};
+                // Compare new data with old data, excluding special fields like updatedAt/By
                 for (const key in newData) {
-                    if (key !== 'updatedAt' && key !== 'updatedBy' && oldData[key] !== newData[key]) {
+                    if (key !== 'updatedAt' && key !== 'updatedBy' && String(oldData[key]) !== String(newData[key])) {
                         changes[key] = { old: oldData[key], new: newData[key] };
                     }
                 }
-                logEntry.changes = changes;
-                logEntry.oldData = oldData;
-                logEntry.newData = newData;
+                // Also check for fields present in oldData but not in newData (i.e., removed or set to null/empty)
+                for (const key in oldData) {
+                    if (key !== 'createdAt' && key !== 'createdBy' && !(key in newData)) { // If field was in oldData but not in newData
+                         changes[key] = { old: oldData[key], new: null };
+                    }
+                }
+
+                if (Object.keys(changes).length > 0) { // Only log if there were actual changes
+                    logEntry.changes = changes;
+                    logEntry.oldData = oldData;
+                    logEntry.newData = newData;
+                } else {
+                    return; // No actual changes, don't log
+                }
             } else if (action === "delete" || action === "delete_batch") {
                 logEntry.oldData = oldData;
             }
@@ -644,7 +677,7 @@
         function renderTable(employeesToRender) {
             employeesTbody.innerHTML = "";
             if (employeesToRender.length === 0) {
-                employeesTbody.innerHTML = `<tr><td colspan="9" class="muted">Belum ada karyawan terdaftar atau tidak ditemukan.</td></tr>`;
+                employeesTbody.innerHTML = `<tr><td colspan="14" class="muted">Belum ada karyawan terdaftar atau tidak ditemukan.</td></tr>`;
                 return;
             }
 
@@ -664,23 +697,19 @@
                 if (d.updatedAt) { // Untuk perbedaan warna baris terupdate
                     tr.classList.add("updated-row");
                 }
-                // Jika ada kondisi duplikat NIK, bisa tambahkan kelas 'duplicate-entry' di sini
-                // if (isDuplicateNIK(id)) { tr.classList.add("duplicate-entry"); tr.title = "NIK ini duplikat."; }
 
-
-                                // Logika untuk status sidik jari
+                // Logika untuk status sidik jari
                 const sidikJariValue = d['Sidik Jari'] || '';
                 let sidikJariDisplay = '';
                 let sidikJariClass = '';
 
-                if (sidikJariValue && sidikJariValue !== '') {
+                if (sidikJariValue && String(sidikJariValue).trim() !== '') {
                     sidikJariDisplay = 'Terdaftar';
-                    sidikJariClass = 'sidik-jari-terdaftar'; // Kita akan definisikan CSS ini
+                    sidikJariClass = 'sidik-jari-terdaftar';
                 } else {
                     sidikJariDisplay = 'Belum Terdaftar';
-                    sidikJariClass = 'sidik-jari-belum-terdaftar'; // Kita akan definisikan CSS ini
+                    sidikJariClass = 'sidik-jari-belum-terdaftar';
                 }
-
 
                 tr.innerHTML = `
                     <td><input type="checkbox" class="employee-checkbox" data-id="${id}" ${isSelected ? 'checked' : ''}></td>
@@ -693,7 +722,7 @@
                     <td>${esc(d.Perusahaan || '-')}</td>
                     <td>${esc(d.Department || '-')}</td>
                     <td>${esc(d.Jabatan || '-')}</td>
-                    <td class="${sidikJariClass}">${sidikJariDisplay}</td> <!-- Tampilkan status Sidik Jari -->
+                    <td class="${sidikJariClass}">${sidikJariDisplay}</td>
                     <td class="muted">${created}</td>
                     <td class="muted">${updated}</td>
                     <td>
@@ -701,7 +730,6 @@
                         <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
                     </td>
                 `;
-
                 employeesTbody.appendChild(tr);
             });
             updateSelectAllCheckboxState(); // Update status checkbox select all
@@ -736,7 +764,7 @@
             // 1. Apply filter
             const searchTerm = searchInput.value.toLowerCase().trim();
             if (searchTerm !== "") {
-                                dataToProcess = dataToProcess.filter(employee => {
+                dataToProcess = dataToProcess.filter(employee => {
                     const d = employee.data;
                     const idMesin = (d['ID Mesin'] || "").toLowerCase();
                     const nikSebelumnya = (d['NIK Sebelumnya'] || "").toLowerCase();
@@ -747,8 +775,7 @@
                     const Department = (d.Department || "").toLowerCase();
                     const jabatan = (d.Jabatan || "").toLowerCase();
                     // Untuk pencarian sidik jari, bisa cari 'terdaftar'/'belum terdaftar'
-                    const sidikJariStatus = (d['Sidik Jari'] && d['Sidik Jari'] !== '') ? 'terdaftar' : 'belum terdaftar';
-
+                    const sidikJariStatus = (d['Sidik Jari'] && String(d['Sidik Jari']).trim() !== '') ? 'terdaftar' : 'belum terdaftar';
 
                     return idMesin.includes(searchTerm) ||
                            nikSebelumnya.includes(searchTerm) ||
@@ -758,24 +785,20 @@
                            perusahaan.includes(searchTerm) ||
                            Department.includes(searchTerm) ||
                            jabatan.includes(searchTerm) ||
-                           sidikJariStatus.includes(searchTerm); // Tambahkan pencarian untuk status sidik jari
+                           sidikJariStatus.includes(searchTerm);
                 });
-
             }
 
             // 2. Apply sort
             if (sortState.column) {
                 dataToProcess.sort((a, b) => {
                     let valA, valB;
-                    if (['ID Mesin', 'NIK Sebelumnya', 'NIK', 'Nama', 'Status', 'Perusahaan', 'Department', 'Jabatan', 'Sidik Jari Status'].includes(sortState.column)) {
-                        // Khusus untuk 'Sidik Jari Status', kita perlu nilai boolean atau string untuk sorting
-                        if (sortState.column === 'Sidik Jari Status') {
-                            valA = (a.data['Sidik Jari'] && a.data['Sidik Jari'] !== '') ? 'terdaftar' : 'belum terdaftar';
-                            valB = (b.data['Sidik Jari'] && b.data['Sidik Jari'] !== '') ? 'terdaftar' : 'belum terdaftar';
-                        } else {
-                            valA = (a.data[sortState.column] || '').toLowerCase();
-                            valB = (b.data[sortState.column] || '').toLowerCase();
-                        }
+                    if (['ID Mesin', 'NIK Sebelumnya', 'NIK', 'Nama', 'Status', 'Perusahaan', 'Department', 'Jabatan'].includes(sortState.column)) {
+                        valA = (a.data[sortState.column] || '').toLowerCase();
+                        valB = (b.data[sortState.column] || '').toLowerCase();
+                    } else if (sortState.column === 'Sidik Jari Status') {
+                        valA = (a.data['Sidik Jari'] && String(a.data['Sidik Jari']).trim() !== '') ? 'terdaftar' : 'belum terdaftar';
+                        valB = (b.data['Sidik Jari'] && String(b.data['Sidik Jari']).trim() !== '') ? 'terdaftar' : 'belum terdaftar';
                     } else if (sortState.column === 'createdAt' || sortState.column === 'updatedAt') {
                         valA = a.data[sortState.column] ? (a.data[sortState.column].toDate ? a.data[sortState.column].toDate().getTime() : new Date(a.data[sortState.column]).getTime()) : 0;
                         valB = b.data[sortState.column] ? (b.data[sortState.column].toDate ? b.data[sortState.column].toDate().getTime() : new Date(b.data[sortState.column]).getTime()) : 0;
@@ -784,8 +807,10 @@
                         valB = b.data[sortState.column];
                     }
 
+                    // Handle null/undefined/empty string values for comparison
                     if (typeof valA === 'string' && (valA === null || valA === undefined || valA === '')) valA = sortState.direction === 'asc' ? '' : 'zzzzz';
                     if (typeof valB === 'string' && (valB === null || valB === undefined || valB === '')) valB = sortState.direction === 'asc' ? '' : 'zzzzz';
+
 
                     if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
                     if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
@@ -843,7 +868,7 @@
             } catch (err) {
                 console.error(err);
                 setStatus("Gagal memuat data karyawan. Cek konsol.", 'error');
-                employeesTbody.innerHTML = `<tr><td colspan="9" class="muted">Error saat memuat data.</td></tr>`;
+                employeesTbody.innerHTML = `<tr><td colspan="14" class="muted">Error saat memuat data.</td></tr>`;
             }
         }
 
@@ -857,42 +882,56 @@
             loadEmployees();
         });
 
-        // Add New Employee Button
+        // Add New Employee Button - UPDATED
         addEmployeeBtn.addEventListener("click", () => {
             editingEmployeeId = null;
             modalEmployeeTitle.textContent = "Tambah Karyawan Baru";
+            inputIDMesin.value = ""; // NEW
+            inputNIKSebelumnya.value = ""; // NEW
             inputNIK.value = "";
             inputNIK.disabled = false; // NIK bisa diisi saat tambah baru
             inputNama.value = "";
-            inputJabatan.value = "";
+            inputStatus.value = ""; // NEW
+            inputPerusahaan.value = ""; // NEW
             inputDepartment.value = "";
-            // ... clear any other fields
+            inputJabatan.value = "";
+            inputSidikJari.value = ""; // NEW
             openEmployeeModal();
         });
 
         // Cancel Employee Modal Button
         cancelEmployeeBtn.addEventListener("click", closeEmployeeModal);
 
-        // Save Employee (Add/Edit)
+        // Save Employee (Add/Edit) - UPDATED
         saveEmployeeBtn.addEventListener("click", async () => {
+            const idMesin = inputIDMesin.value.trim(); // NEW
+            const nikSebelumnya = inputNIKSebelumnya.value.trim(); // NEW
             const nik = inputNIK.value.trim();
             const nama = inputNama.value.trim();
+            const status = inputStatus.value.trim(); // NEW
+            const perusahaan = inputPerusahaan.value.trim(); // NEW
+            const department = inputDepartment.value.trim();
             const jabatan = inputJabatan.value.trim();
-            const Department = inputDepartment.value.trim();
+            const sidikJari = inputSidikJari.value.trim(); // NEW
 
             if (!nik || !nama) {
                 alert("NIK dan Nama Karyawan wajib diisi.");
+                saveEmployeeBtn.disabled = false; // Enable button again
                 return;
             }
 
             saveEmployeeBtn.disabled = true;
             try {
                 const employeeData = {
+                    'ID Mesin': idMesin || null, // Use null for empty strings
+                    'NIK Sebelumnya': nikSebelumnya || null, // Use null for empty strings
                     NIK: nik,
                     Nama: nama,
-                    Jabatan: jabatan,
-                    Department: Department,
-                    // ... tambahkan field lain yang relevan
+                    Status: status || null, // Use null for empty strings
+                    Perusahaan: perusahaan || null, // Use null for empty strings
+                    Department: department || null, // Use null for empty strings
+                    Jabatan: jabatan || null, // Use null for empty strings
+                    'Sidik Jari': sidikJari || null, // Use null for empty strings
                 };
 
                 if (editingEmployeeId) { // Edit Existing
@@ -938,7 +977,7 @@
             }
         });
 
-        // Table Body Click Listener (for Edit/Delete single item)
+        // Table Body Click Listener (for Edit/Delete single item) - UPDATED
         employeesTbody.addEventListener("click", async (ev) => {
             const btn = ev.target.closest("button");
             if (!btn) return;
@@ -956,12 +995,16 @@
                     const d = snap.data();
                     editingEmployeeId = id;
                     modalEmployeeTitle.textContent = "Edit Karyawan";
+                    inputIDMesin.value = d['ID Mesin'] || ""; // NEW
+                    inputNIKSebelumnya.value = d['NIK Sebelumnya'] || ""; // NEW
                     inputNIK.value = d.NIK || "";
                     inputNIK.disabled = true; // NIK tidak bisa diedit setelah dibuat
                     inputNama.value = d.Nama || "";
-                    inputJabatan.value = d.Jabatan || "";
+                    inputStatus.value = d.Status || ""; // NEW
+                    inputPerusahaan.value = d.Perusahaan || ""; // NEW
                     inputDepartment.value = d.Department || "";
-                    // ... fill other fields
+                    inputJabatan.value = d.Jabatan || "";
+                    inputSidikJari.value = d['Sidik Jari'] || ""; // NEW
                     openEmployeeModal();
                 } catch (err) {
                     console.error(err);
@@ -1079,18 +1122,8 @@
             }
             applySortAndFilter();
         });
- // ... (Kode yang sudah ada di bagian Excel Upload Elements)
-        const excelFile = document.getElementById('excelFile');
-        // const templateBtn = document.getElementById('templateBtn'); // DIHILANGKAN - ini dulu, sekarang kita punya id baru
-        const reportBox = document.getElementById("reportBox");
-        const uploadReport = document.getElementById("uploadReport");
-        const downloadReportBtn = document.getElementById("downloadReportBtn");
-        const discardReportBtn = document.getElementById("discardReportBtn");
 
-        // --- New: Template Download Elements ---
-        const downloadTemplateBtn = document.getElementById("downloadTemplateBtn"); // Referensi tombol baru
-
-        // --- New: Template Download Listener ---
+        // --- Template Download Listener ---
         downloadTemplateBtn.addEventListener("click", () => {
             if (typeof XLSX === 'undefined') {
                 setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
@@ -1104,7 +1137,7 @@
                 "Nama",
                 "Status",
                 "Perusahaan",
-                "Department", // Perbaiki menjadi "Department" agar konsisten dengan field lain
+                "Department",
                 "Jabatan",
                 "Sidik Jari"
             ];
@@ -1117,10 +1150,7 @@
             setStatus("Template Excel berhasil diunduh.", 'success');
         });
 
-        // excelFile.addEventListener sekarang berfungsi untuk langsung memproses dan mengupload data
-        // ... (Sisa kode JS Anda)
         // --- Excel Upload Functions ---
-        // excelFile.addEventListener sekarang berfungsi untuk langsung memproses dan mengupload data
         excelFile.addEventListener("change", async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -1149,7 +1179,21 @@
                         return;
                     }
 
-                    const headers = rawExcelData[0].map(h => String(h).trim()); // Trim headers
+                    // Define expected headers for strict mapping and reordering if needed
+                    const expectedHeaders = [
+                        "ID Mesin", "NIK Sebelumnya", "NIK", "Nama", "Status",
+                        "Perusahaan", "Department", "Jabatan", "Sidik Jari"
+                    ];
+                    const fileHeaders = rawExcelData[0].map(h => String(h).trim());
+
+                    // Validate headers
+                    const missingHeaders = expectedHeaders.filter(h => !fileHeaders.includes(h));
+                    if (missingHeaders.length > 0) {
+                        setStatus(`Error: File Excel harus memiliki kolom berikut: ${missingHeaders.join(', ')}.`, 'error');
+                        excelFile.value = "";
+                        return;
+                    }
+
                     const rows = rawExcelData.slice(1);
 
                     let newAddedCount = 0;
@@ -1166,21 +1210,22 @@
 
                     const batch = writeBatch(db);
                     let currentBatchOps = 0;
-                    const BATCH_MAX_OPS = 400; // Firestore limit 500 ops per batch, save some for log
+                    const BATCH_MAX_OPS = 400; // Firestore limit 500 ops per batch, save some for logging
 
                     for (let i = 0; i < rows.length; i++) {
                         const row = rows[i];
                         let obj = {};
                         let isEmptyRow = true;
-                        headers.forEach((header, index) => {
+                        fileHeaders.forEach((header, index) => {
                             let value = row[index];
                             if (typeof value === 'string') {
                                 value = value.trim();
                             }
-                            if (value !== undefined && value !== null && value !== '') {
+                            // Store values as null if they are empty strings
+                            obj[header] = (value === undefined || value === null || value === '') ? null : value;
+                            if (obj[header] !== null) {
                                 isEmptyRow = false;
                             }
-                            obj[header] = value;
                         });
 
                         if (isEmptyRow) {
@@ -1204,13 +1249,13 @@
                             continue;
                         }
 
+                        // Prepare data for Firestore, ensuring only expected fields are saved
                         const dataToSave = {};
-                        // Filter out undefined/null/empty string values for Firestore
-                        for (const key in obj) {
-                            if (obj.hasOwnProperty(key) && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') {
-                                dataToSave[key] = obj[key];
+                        expectedHeaders.forEach(header => {
+                            if (obj[header] !== undefined) {
+                                dataToSave[header] = obj[header];
                             }
-                        }
+                        });
 
                         // Add common metadata fields
                         const commonMetadata = {
@@ -1239,14 +1284,8 @@
                             await batch.commit();
                             setStatus(`Mengunggah batch... Baru: ${newAddedCount}, Diubah: ${uploadOverwrittenCount}.`, 'info');
                             currentBatchOps = 0;
-                            // Start a new batch
-                            // Note: `batch` diinisialisasi di awal dan di-commit di dalam loop.
-                            // Untuk memulai batch baru, kita perlu membuat instance `writeBatch(db)` baru di sini.
-                            // Atau, struktur ulang agar commit terjadi di luar loop for dan hanya commit sekali.
-                            // Untuk kasus ini, karena `writeBatch` tidak bisa di-reassign,
-                            // kita akan commit sisa operasi setelah loop selesai.
-                            // Opsinya adalah membuat array batch, lalu commit satu per satu.
-                            // Tapi untuk sekarang, biarkan logic ini dan commit sisa di akhir.
+                            // Re-initialize batch for the next set of operations
+                            batch = writeBatch(db); // Create a new batch instance
                         }
                     } // End of for loop
 
@@ -1285,7 +1324,7 @@
             };
             reader.readAsArrayBuffer(file);
         });
-    
+
         // Download Skipped/Overwritten Report
         downloadReportBtn.addEventListener("click", () => {
             const reportList = JSON.parse(downloadReportBtn.dataset.skipped || "[]");
@@ -1316,7 +1355,3 @@
     </script>
 </body>
 </html>
-
-
-
-
