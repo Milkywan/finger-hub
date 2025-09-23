@@ -257,6 +257,7 @@
         .status-message.success { background-color: #10b981; color: white; }
         .status-message.error { background-color: #ef4444; color: white; }
         .status-message.info { background-color: #60a5fa; color: white; }
+        .status-message.warning { background-color: #fbbf24; color: #111827; } /* Styling for warning message */
 
         /* --- Footer Styles (Diadaptasi dari skrip pertama untuk konsistensi) --- */
         footer {
@@ -367,7 +368,6 @@
 
                 <div class="controls">
                     <button class="btn btn-danger" onclick="window.updateMachineDateTime()">Update Waktu Mesin (Terpilih)</button>
-                    <!-- NEW: Tombol untuk update semua mesin -->
                     <button class="btn btn-danger" onclick="window.updateAllMachinesDateTime()">Update Waktu Semua Mesin</button>
                     <button class="btn btn-info" onclick="window.viewMachineAbsensi()">Lihat Absensi Mesin (Terpilih)</button>
                     <button class="btn btn-success" onclick="window.downloadAllMachinesAbsensi()">Download Semua Absensi</button>
@@ -494,14 +494,26 @@
         window.loadMachinesFromFirestore = async function() {
             setStatus(machineStatusMessage, "Memuat daftar mesin dari Firestore...", 'info');
             globalMesinList = {}; // Clear previous list
+            let actualDocCount = 0; // NEW: To count the actual number of documents
+            let duplicateNamesFound = new Set(); // NEW: To track duplicate machine names
+
             try {
                 const querySnapshot = await getDocs(collection(db, "mesin_fp"));
+                actualDocCount = querySnapshot.size; // Get the actual number of documents
+
                 if (querySnapshot.empty) {
                     setStatus(machineStatusMessage, "Tidak ada mesin ditemukan di Firestore.", 'info');
                 } else {
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
-                        // Store full machine data, keyed by machine name
+                        // Check if the machine name already exists as a key in globalMesinList
+                        // This indicates a duplicate 'mesin' field value in Firestore documents
+                        if (globalMesinList[data.mesin]) {
+                            duplicateNamesFound.add(data.mesin); // Add to the set of duplicate names
+                            console.warn(`Peringatan: Nama mesin duplikat '${data.mesin}' ditemukan. Data sebelumnya akan ditimpa.`);
+                        }
+                        // Store full machine data, keyed by machine name.
+                        // If there are duplicates, the last document processed for that name will "win".
                         globalMesinList[data.mesin] = {
                             id: doc.id,
                             mesin: data.mesin,
@@ -510,7 +522,14 @@
                         };
                     });
                     populateDatalistMesin();
-                    setStatus(machineStatusMessage, `Daftar mesin berhasil dimuat dari Firestore! (${Object.keys(globalMesinList).length} mesin)`, 'success');
+
+                    let message = `Daftar mesin berhasil dimuat dari Firestore! (${Object.keys(globalMesinList).length} unik dari ${actualDocCount} dokumen).`;
+                    if (duplicateNamesFound.size > 0) {
+                        message += ` ${duplicateNamesFound.size} nama mesin duplikat ditemukan: ${Array.from(duplicateNamesFound).join(', ')}. Ini mungkin menyebabkan perbedaan jumlah.`;
+                        setStatus(machineStatusMessage, message, 'error'); // Using 'error' type for a clearer warning
+                    } else {
+                        setStatus(machineStatusMessage, message, 'success');
+                    }
                 }
             } catch (e) {
                 setStatus(machineStatusMessage, `Gagal memuat mesin dari Firestore: ${e.message}`, 'error');
