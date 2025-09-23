@@ -236,6 +236,32 @@ td, th {
       .container { padding: 12px; }
       table { min-width: 640px; }
   }
+
+  /* --- NEW: Styling for updated rows and search input --- */
+  .updated-row {
+    background-color: rgba(255, 255, 0, 0.08); /* A subtle yellow tint */
+  }
+  .updated-row:hover {
+      background-color: rgba(255, 255, 0, 0.15); /* Slightly darker on hover */
+  }
+  /* Search input styling */
+  #searchInput {
+      flex-grow: 1;
+      min-width: 180px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
+      color: white;
+  }
+  #searchInput::placeholder {
+      color: rgba(255,255,255,0.6);
+  }
+  #searchInput:focus {
+      outline: none;
+      border-color: #a5b4fc;
+      box-shadow: 0 0 0 2px rgba(165, 180, 252, 0.3);
+  }
 </style>
 </head>
 <body>
@@ -244,14 +270,16 @@ td, th {
 
   <div class="main-content-wrapper">
     <div class="container" id="mainContainer">
-      <h2>Kelola Mesin Fingerprint REV GEM</h2>
+      <h2>Kelola Mesin Fingerprint</h2>
 
       <div class="actions">
         <button id="addMesinBtn" class="btn btn-primary">➕ Tambah Mesin</button>
         <div class="status" id="pageStatus">Memuat data...</div>
+        <!-- NEW: Search Input -->
+        <input type="text" id="searchInput" placeholder="Cari Nama/IP Mesin...">
         <button id="uploadBtn" class="btn btn-ghost">⬆️ Upload Excel</button>
-<input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none">
-<button id="templateBtn" class="btn btn-ghost">⬇️ Download Template</button>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none">
+        <button id="templateBtn" class="btn btn-ghost">⬇️ Download Template</button>
       </div>
 
 <div class="table-wrap">
@@ -263,6 +291,7 @@ td, th {
         <th>IP Address</th>
         <th>Port</th>
         <th>Dibuat</th>
+        <th>Terakhir Diperbarui</th> <!-- NEW: Added column for Updated At -->
         <th style="width:150px">Aksi</th>
       </tr>
     </thead>
@@ -332,6 +361,7 @@ td, th {
   const pageStatus = document.getElementById("pageStatus");
   const tbody = document.getElementById("mesinTbody");
   const addBtn = document.getElementById("addMesinBtn");
+  const searchInput = document.getElementById("searchInput"); // NEW: Search input DOM ref
 
   const modal = document.getElementById("mesinModal");
   const modalTitle = document.getElementById("modalTitle");
@@ -342,15 +372,16 @@ td, th {
   const saveBtn = document.getElementById("saveBtn");
 
   let editingId = null; // null => tambah, otherwise edit
+  let allMesinData = []; // NEW: To store all fetched machines for searching and filtering
 
-  // **Fungsi `esc` dipindahkan ke sini agar bisa diakses secara global di dalam modul**
+  // Fungsi `esc` dipindahkan ke sini agar bisa diakses secara global di dalam modul
   // Fungsi ini menangani nilai null/undefined menjadi string kosong, lalu melakukan HTML escaping.
   function esc(str) {
     if (str === undefined || str === null) return "";
     return String(str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
+      .replace(/>/g, "&gt;") // Memperbaiki bug sebelumnya
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
@@ -371,47 +402,68 @@ td, th {
     modal.setAttribute("aria-hidden", "true");
   }
 
-  // load mesin list
+  // NEW: Function to render the table based on provided data
+  function renderTable(machinesToRender) {
+    tbody.innerHTML = ""; // Clear existing rows
+    if (machinesToRender.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="muted">Belum ada mesin terdaftar atau tidak ditemukan.</td></tr>`; // Updated colspan
+      return;
+    }
+
+    let index = 0;
+    machinesToRender.forEach(machine => {
+      index++;
+      const d = machine.data; // The original data object
+      const id = machine.id;
+      const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
+      const created = createdDate ? createdDate.toLocaleString() : "-";
+
+      // NEW: Get updated date
+      const updatedDate = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : (d.updatedAt instanceof Date ? d.updatedAt : null);
+      const updated = updatedDate ? updatedDate.toLocaleString() : "-";
+
+      const tr = document.createElement("tr");
+      // NEW: Add class if updatedAt exists
+      if (d.updatedAt) {
+          tr.classList.add("updated-row");
+      }
+
+      tr.innerHTML = `
+        <td>${index}</td>
+        <td>${esc(d.mesin)}</td>
+        <td>${esc(d.ip)}</td>
+        <td>${esc(d.port)}</td>
+        <td class="muted">${created}</td>
+        <td class="muted">${updated}</td> <!-- NEW: Display updated timestamp -->
+        <td>
+          <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
+          <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+
+  // load mesin list (modified to use renderTable)
   async function loadMesin() {
     try {
       setStatus("Memuat data mesin...");
-      tbody.innerHTML = "";
-      // ambil semua mesin ordered by createdAt desc
       const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
-      if (snap.empty) {
-        tbody.innerHTML = `<tr><td colspan="6" class="muted">Belum ada mesin terdaftar.</td></tr>`;
-      } else {
-        let index = 0;
+
+      allMesinData = []; // Clear previous data
+      if (!snap.empty) {
         snap.forEach(docSnap => {
-          index++;
-          const d = docSnap.data();
-          const id = docSnap.id;
-          const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
-          const created = createdDate ? createdDate.toLocaleString() : "-";
-
-          const tr = document.createElement("tr");
-
-          // Gunakan fungsi esc yang sudah didefinisikan secara global
-          tr.innerHTML = `
-            <td>${index}</td>
-            <td>${esc(d.mesin)}</td>
-            <td>${esc(d.ip)}</td>
-            <td>${esc(d.port)}</td>
-            <td class="muted">${created}</td>
-            <td>
-              <button class="icon-btn" data-action="edit" data-id="${id}">✏️ Edit</button>
-              <button class="icon-btn" data-action="delete" data-id="${id}">🗑️ Hapus</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
+          allMesinData.push({ id: docSnap.id, data: docSnap.data() });
         });
       }
-      setStatus(`Selesai memuat (${snap.size} mesin).`);
+      renderTable(allMesinData); // Render all data initially
+      setStatus(`Selesai memuat (${allMesinData.length} mesin).`);
     } catch (err) {
       console.error(err);
       setStatus("Gagal memuat data mesin. Cek konsol.", true);
-      tbody.innerHTML = `<tr><td colspan="5" class="muted">Error saat memuat data.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="muted">Error saat memuat data.</td></tr>`; // Updated colspan
     }
   }
 
@@ -498,9 +550,9 @@ td, th {
         for (const ch of changes) {
           const log = {
             mesin_id: editingId,
+            mesin_nama: nama, // NEW: Add machine name to update log
             action: "update",
             field: ch.field,
-            // dynamic lama/baru fields (ip_lama/ip_baru etc)
             [`${ch.field}_lama`]: ch.old,
             [`${ch.field}_baru`]: ch.neu,
             updatedname: updatedName,
@@ -525,6 +577,7 @@ td, th {
         // log create action (single log document)
         const log = {
           mesin_id: newRef.id,
+          mesin_nama: nama, // NEW: Add machine name to create log
           action: "create",
           mesin_baru: nama,
           ip_baru: ip,
@@ -539,7 +592,8 @@ td, th {
       }
 
       closeModal();
-      await loadMesin();
+      await loadMesin(); // Reload data after save
+      searchInput.value = ""; // Clear search after successful save/update, showing all machines
     } catch (err) {
       console.error(err);
       alert("Gagal menyimpan: " + (err.message || err));
@@ -599,6 +653,7 @@ td, th {
         // create single delete log (contains old values)
         const log = {
           mesin_id: id,
+          mesin_nama: before.mesin || "", // NEW: Add machine name to delete log
           action: "delete",
           mesin_lama: before.mesin || "",
           ip_lama: before.ip || "",
@@ -610,7 +665,8 @@ td, th {
         await addDoc(collection(db, "mesin_logs"), log);
 
         setStatus("Mesin berhasil dihapus.");
-        await loadMesin();
+        await loadMesin(); // Reload data after delete
+        searchInput.value = ""; // Clear search after successful delete, showing all machines
       } catch (err) {
         console.error(err);
         alert("Gagal menghapus mesin: " + (err.message || err));
@@ -620,6 +676,23 @@ td, th {
       }
     }
   });
+
+// NEW: Search functionality
+searchInput.addEventListener("input", () => {
+  const searchTerm = searchInput.value.toLowerCase().trim();
+  if (searchTerm === "") {
+    renderTable(allMesinData); // If search is empty, show all original data
+  } else {
+    const filteredData = allMesinData.filter(machine => {
+      const mesinName = (machine.data.mesin || "").toLowerCase();
+      const ipAddress = (machine.data.ip || "").toLowerCase();
+      return mesinName.includes(searchTerm) || ipAddress.includes(searchTerm);
+    });
+    renderTable(filteredData); // Render filtered data
+  }
+});
+
+
 const uploadBtn = document.getElementById("uploadBtn");
 const excelFile = document.getElementById("excelFile");
 const templateBtn = document.getElementById("templateBtn");
@@ -699,7 +772,8 @@ excelFile.addEventListener("change", async (e) => {
 
     uploadReport.textContent = msg;
     setStatus("Upload selesai.");
-    loadMesin();
+    await loadMesin(); // Reload data after upload
+    searchInput.value = ""; // Clear search after successful upload, showing all machines
 
   } catch (err) {
     console.error(err);
@@ -738,6 +812,9 @@ discardReportBtn.addEventListener("click", () => {
     uploadReport.textContent = "";
   }
 });
+
+
+
 
   // initial load (call after small delay to let initPage render header)
   setTimeout(() => {
