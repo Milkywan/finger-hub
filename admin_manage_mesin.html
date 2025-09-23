@@ -237,7 +237,7 @@ td, th {
       table { min-width: 640px; }
   }
 
-  /* --- NEW: Styling for updated rows and search input --- */
+  /* --- NEW: Styling for updated rows, search input, and sortable headers --- */
   .updated-row {
     background-color: rgba(255, 255, 0, 0.08); /* A subtle yellow tint */
   }
@@ -262,6 +262,29 @@ td, th {
       border-color: #a5b4fc;
       box-shadow: 0 0 0 2px rgba(165, 180, 252, 0.3);
   }
+
+  /* Sortable table headers */
+  th[data-sort-by] {
+      cursor: pointer;
+      user-select: none;
+      position: relative; /* Untuk positioning arrow */
+  }
+  .sort-arrow {
+      margin-left: 5px;
+      font-size: 0.8em;
+      vertical-align: middle;
+      opacity: 0.5; /* Default less visible */
+      transition: opacity 0.2s ease-in-out;
+  }
+  .sort-arrow.active {
+      opacity: 1; /* More visible when active */
+  }
+  .sort-arrow.asc::after {
+      content: ' ▲'; /* Up arrow for ascending */
+  }
+  .sort-arrow.desc::after {
+      content: ' ▼'; /* Down arrow for descending */
+  }
 </style>
 </head>
 <body>
@@ -284,14 +307,14 @@ td, th {
 
 <div class="table-wrap">
   <table aria-describedby="Daftar mesin">
-    <thead>
+    <thead id="mesinTableHead"> <!-- NEW: Added ID for event listener -->
       <tr>
         <th style="width:50px">No</th>
-        <th>Nama Mesin</th>
-        <th>IP Address</th>
-        <th>Port</th>
-        <th>Dibuat</th>
-        <th>Terakhir Diperbarui</th> <!-- NEW: Added column for Updated At -->
+        <th data-sort-by="mesin">Nama Mesin <span class="sort-arrow"></span></th>
+        <th data-sort-by="ip">IP Address <span class="sort-arrow"></span></th>
+        <th data-sort-by="port">Port <span class="sort-arrow"></span></th>
+        <th data-sort-by="createdAt">Dibuat <span class="sort-arrow"></span></th>
+        <th data-sort-by="updatedAt">Terakhir Diperbarui <span class="sort-arrow"></span></th>
         <th style="width:150px">Aksi</th>
       </tr>
     </thead>
@@ -361,7 +384,8 @@ td, th {
   const pageStatus = document.getElementById("pageStatus");
   const tbody = document.getElementById("mesinTbody");
   const addBtn = document.getElementById("addMesinBtn");
-  const searchInput = document.getElementById("searchInput"); // NEW: Search input DOM ref
+  const searchInput = document.getElementById("searchInput");
+  const mesinTableHead = document.getElementById("mesinTableHead"); // NEW: Ref to table head
 
   const modal = document.getElementById("mesinModal");
   const modalTitle = document.getElementById("modalTitle");
@@ -372,7 +396,10 @@ td, th {
   const saveBtn = document.getElementById("saveBtn");
 
   let editingId = null; // null => tambah, otherwise edit
-  let allMesinData = []; // NEW: To store all fetched machines for searching and filtering
+  let allMesinData = []; // To store all fetched machines
+  let currentDisplayData = []; // To store data after filter/sort for rendering
+  // NEW: State for current sorting (default: sort by createdAt descending)
+  let sortState = { column: 'createdAt', direction: 'desc' };
 
   // Fungsi `esc` dipindahkan ke sini agar bisa diakses secara global di dalam modul
   // Fungsi ini menangani nilai null/undefined menjadi string kosong, lalu melakukan HTML escaping.
@@ -381,7 +408,7 @@ td, th {
     return String(str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;") // Memperbaiki bug sebelumnya
+      .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
@@ -444,12 +471,72 @@ td, th {
     });
   }
 
+  // NEW: Function to apply filtering and sorting, then render the table
+  function applySortAndFilter() {
+    let dataToProcess = [...allMesinData]; // Start with a copy of all data
 
-  // load mesin list (modified to use renderTable)
+    // 1. Apply filter (if search term exists)
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm !== "") {
+        dataToProcess = dataToProcess.filter(machine => {
+            const mesinName = (machine.data.mesin || "").toLowerCase();
+            const ipAddress = (machine.data.ip || "").toLowerCase();
+            return mesinName.includes(searchTerm) || ipAddress.includes(searchTerm);
+        });
+    }
+
+    // 2. Apply sort
+    if (sortState.column) {
+        dataToProcess.sort((a, b) => {
+            let valA, valB;
+            // Handle nested properties and different data types for sorting
+            if (sortState.column === 'mesin' || sortState.column === 'ip') {
+                valA = (a.data[sortState.column] || '').toLowerCase();
+                valB = (b.data[sortState.column] || '').toLowerCase();
+            } else if (sortState.column === 'port') {
+                valA = parseInt(a.data[sortState.column]) || 0;
+                valB = parseInt(b.data[sortState.column]) || 0;
+            } else if (sortState.column === 'createdAt' || sortState.column === 'updatedAt') {
+                // Convert Firestore Timestamp to Date objects for comparison (get milliseconds)
+                valA = a.data[sortState.column] ? (a.data[sortState.column].toDate ? a.data[sortState.column].toDate().getTime() : a.data[sortState.column].getTime()) : 0;
+                valB = b.data[sortState.column] ? (b.data[sortState.column].toDate ? b.data[sortState.column].toDate().getTime() : b.data[sortState.column].getTime()) : 0;
+            } else {
+                valA = a.data[sortState.column];
+                valB = b.data[sortState.column];
+            }
+
+            if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    currentDisplayData = dataToProcess; // Update the data that will be rendered
+    renderTable(currentDisplayData); // Render the filtered and sorted data
+    updateSortArrows(); // Update arrow icons on table headers
+  }
+
+  // NEW: Function to update sort arrow indicators in the table header
+  function updateSortArrows() {
+    mesinTableHead.querySelectorAll('.sort-arrow').forEach(arrow => {
+        arrow.classList.remove('active', 'asc', 'desc');
+    });
+
+    const activeTh = mesinTableHead.querySelector(`th[data-sort-by="${sortState.column}"]`);
+    if (activeTh) {
+        const activeArrow = activeTh.querySelector('.sort-arrow');
+        if (activeArrow) {
+            activeArrow.classList.add('active', sortState.direction);
+        }
+    }
+  }
+
+
+  // load mesin list (modified to use applySortAndFilter)
   async function loadMesin() {
     try {
       setStatus("Memuat data mesin...");
-      const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc"));
+      const q = query(collection(db, "mesin_fp"), orderBy("createdAt", "desc")); // Initial query is still ordered
       const snap = await getDocs(q);
 
       allMesinData = []; // Clear previous data
@@ -458,7 +545,7 @@ td, th {
           allMesinData.push({ id: docSnap.id, data: docSnap.data() });
         });
       }
-      renderTable(allMesinData); // Render all data initially
+      applySortAndFilter(); // Apply initial sort (createdAt desc) and render
       setStatus(`Selesai memuat (${allMesinData.length} mesin).`);
     } catch (err) {
       console.error(err);
@@ -592,7 +679,7 @@ td, th {
       }
 
       closeModal();
-      await loadMesin(); // Reload data after save
+      await loadMesin(); // Reload all data after save/update
       searchInput.value = ""; // Clear search after successful save/update, showing all machines
     } catch (err) {
       console.error(err);
@@ -665,7 +752,7 @@ td, th {
         await addDoc(collection(db, "mesin_logs"), log);
 
         setStatus("Mesin berhasil dihapus.");
-        await loadMesin(); // Reload data after delete
+        await loadMesin(); // Reload all data after delete
         searchInput.value = ""; // Clear search after successful delete, showing all machines
       } catch (err) {
         console.error(err);
@@ -677,19 +764,26 @@ td, th {
     }
   });
 
-// NEW: Search functionality
+// NEW: Search functionality (now calls applySortAndFilter)
 searchInput.addEventListener("input", () => {
-  const searchTerm = searchInput.value.toLowerCase().trim();
-  if (searchTerm === "") {
-    renderTable(allMesinData); // If search is empty, show all original data
-  } else {
-    const filteredData = allMesinData.filter(machine => {
-      const mesinName = (machine.data.mesin || "").toLowerCase();
-      const ipAddress = (machine.data.ip || "").toLowerCase();
-      return mesinName.includes(searchTerm) || ipAddress.includes(searchTerm);
-    });
-    renderTable(filteredData); // Render filtered data
-  }
+  applySortAndFilter();
+});
+
+// NEW: Sortable table headers
+mesinTableHead.addEventListener("click", (e) => {
+    const targetTh = e.target.closest("th[data-sort-by]");
+    if (!targetTh) return;
+
+    const column = targetTh.dataset.sortBy;
+    if (sortState.column === column) {
+        // If clicking the same column, toggle direction
+        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        // If clicking a new column, set it as active and default to ascending
+        sortState.column = column;
+        sortState.direction = 'asc';
+    }
+    applySortAndFilter(); // Re-apply sort and filter, then re-render
 });
 
 
@@ -772,7 +866,7 @@ excelFile.addEventListener("change", async (e) => {
 
     uploadReport.textContent = msg;
     setStatus("Upload selesai.");
-    await loadMesin(); // Reload data after upload
+    await loadMesin(); // Reload all data after upload
     searchInput.value = ""; // Clear search after successful upload, showing all machines
 
   } catch (err) {
@@ -812,8 +906,6 @@ discardReportBtn.addEventListener("click", () => {
     uploadReport.textContent = "";
   }
 });
-
-
 
 
   // initial load (call after small delay to let initPage render header)
