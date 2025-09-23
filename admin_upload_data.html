@@ -292,7 +292,7 @@
             user-select: none;
             position: relative;
         }
-                /* --- Table specific styling --- */
+        /* --- Table specific styling --- */
         .sidik-jari-terdaftar {
             background-color: rgba(144, 238, 144, 0.1); /* Light green soft */
             color: #90ee90; /* Matching text color */
@@ -413,7 +413,7 @@
 
     <div class="main-content-wrapper">
         <div class="container" id="adminUploadContainer">
-            <h2>Kelola Data Karyawan</h2>
+            <h2>Kelola Data Karyawan Rev</h2>
 
                  <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
@@ -541,8 +541,8 @@
                     currentUserData = userDocSnap.exists() ? userDocSnap.data() : { username: user.email || user.uid };
                 } else {
                     currentUserData = null;
-                    // Redirect ke login jika tidak ada user
-                    // window.location.href = "/login.html"; // Sesuaikan path login
+                    // Redirect ke login jika tidak ada user (opsional)
+                    // window.location.href = "/login.html"; 
                 }
             });
             loadEmployees(); // Muat data karyawan saat halaman pertama kali dibuka
@@ -645,7 +645,7 @@
 
             if (action === "create" || action === "create_from_excel") {
                 logEntry.newData = newData;
-            } else if (action === "update") {
+            } else if (action === "update" || action === "update_from_excel") {
                 const changes = {};
                 // Compare new data with old data, excluding special fields like updatedAt/By
                 for (const key in newData) {
@@ -655,7 +655,7 @@
                 }
                 // Also check for fields present in oldData but not in newData (i.e., removed or set to null/empty)
                 for (const key in oldData) {
-                    if (key !== 'createdAt' && key !== 'createdBy' && !(key in newData)) { // If field was in oldData but not in newData
+                    if (key !== 'createdAt' && key !== 'createdBy' && !(key in newData) && oldData[key] !== null) { // If field was in oldData but not in newData
                          changes[key] = { old: oldData[key], new: null };
                     }
                 }
@@ -689,6 +689,7 @@
 
                 const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
                 const created = createdDate ? createdDate.toLocaleString() : "-";
+                // Untuk updatedDate/By, cek apakah ada. Jika tidak, tampilkan '-'
                 const updatedDate = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : (d.updatedAt instanceof Date ? d.updatedAt : null);
                 const updated = updatedDate ? updatedDate.toLocaleString() : "-";
 
@@ -811,7 +812,6 @@
                     if (typeof valA === 'string' && (valA === null || valA === undefined || valA === '')) valA = sortState.direction === 'asc' ? '' : 'zzzzz';
                     if (typeof valB === 'string' && (valB === null || valB === undefined || valB === '')) valB = sortState.direction === 'asc' ? '' : 'zzzzz';
 
-
                     if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
                     if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
                     return 0;
@@ -922,16 +922,17 @@
 
             saveEmployeeBtn.disabled = true;
             try {
+                // Prepare data from modal fields, setting empty strings to null
                 const employeeData = {
-                    'ID Mesin': idMesin || null, // Use null for empty strings
-                    'NIK Sebelumnya': nikSebelumnya || null, // Use null for empty strings
+                    'ID Mesin': idMesin || null,
+                    'NIK Sebelumnya': nikSebelumnya || null,
                     NIK: nik,
                     Nama: nama,
-                    Status: status || null, // Use null for empty strings
-                    Perusahaan: perusahaan || null, // Use null for empty strings
-                    Department: department || null, // Use null for empty strings
-                    Jabatan: jabatan || null, // Use null for empty strings
-                    'Sidik Jari': sidikJari || null, // Use null for empty strings
+                    Status: status || null,
+                    Perusahaan: perusahaan || null,
+                    Department: department || null,
+                    Jabatan: jabatan || null,
+                    'Sidik Jari': sidikJari || null,
                 };
 
                 if (editingEmployeeId) { // Edit Existing
@@ -940,7 +941,7 @@
                     const beforeData = beforeSnap.exists() ? beforeSnap.data() : {};
 
                     await updateDoc(ref, {
-                        ...employeeData,
+                        ...employeeData, // Existing data is overwritten by new employeeData
                         updatedAt: serverTimestamp(),
                         updatedBy: currentUserData?.username || auth.currentUser.uid
                     });
@@ -961,6 +962,8 @@
                         ...employeeData,
                         createdAt: serverTimestamp(),
                         createdBy: currentUserData?.username || auth.currentUser.uid
+                        // updatedAt dan updatedBy sengaja TIDAK ditambahkan di sini
+                        // karena ini adalah data baru, belum pernah diupdate.
                     });
                     await logEmployeeAction("create", nik, null, employeeData);
 
@@ -1075,7 +1078,7 @@
 
             setStatus(`Menghapus ${currentSelectedEmployeeIds.size} karyawan terpilih...`, 'info');
             deleteSelectedBtn.disabled = true;
-            const batch = writeBatch(db);
+            let batch = writeBatch(db); // Deklarasi batch di sini
             let deletedCount = 0;
 
             try {
@@ -1097,7 +1100,7 @@
             } catch (err) {
                 console.error(err);
                 alert("Gagal menghapus karyawan terpilih: " + (err.message || err));
-                setStatus("Gagal menghapus beberapa karyawan.", 'error');
+                setStatus("Gagal menghapus.", 'error');
             } finally {
                 deleteSelectedBtn.disabled = false;
             }
@@ -1208,9 +1211,11 @@
                         existingNIKsMap.set(doc.id, doc.data()); // Assuming NIK is doc.id
                     });
 
-                    const batch = writeBatch(db);
+                    let batch = writeBatch(db); // Deklarasikan batch di sini
                     let currentBatchOps = 0;
                     const BATCH_MAX_OPS = 400; // Firestore limit 500 ops per batch, save some for logging
+
+                    const userName = currentUserData?.username || auth.currentUser.uid;
 
                     for (let i = 0; i < rows.length; i++) {
                         const row = rows[i];
@@ -1256,25 +1261,14 @@
                                 dataToSave[header] = obj[header];
                             }
                         });
-
-                        // Tentukan siapa yang melakukan operasi
-                        const userName = currentUserData?.username || auth.currentUser.uid;
-
-                        // Data fields dari Excel
-                        const dataToSave = {};
-                        expectedHeaders.forEach(header => {
-                            if (obj[header] !== undefined) {
-                                dataToSave[header] = obj[header];
-                            }
-                        });
-
+                        
                         if (existingNIKsMap.has(nik)) {
                             // NIK sudah ada, ini adalah pembaruan/penimpaan
                             const oldData = existingNIKsMap.get(nik);
                             const updateMetadata = {
                                 updatedAt: serverTimestamp(),
                                 updatedBy: userName,
-                                source: "excel_upload" // Masih bagus untuk log sumbernya
+                                source: "excel_upload"
                             };
                             const updatedData = { ...oldData, ...dataToSave, ...updateMetadata };
                             batch.set(doc(collection(db, "employees_mapping"), nik), updatedData);
@@ -1285,22 +1279,20 @@
                             const creationMetadata = {
                                 createdAt: serverTimestamp(),
                                 createdBy: userName,
-                                source: "excel_upload" // Masih bagus untuk log sumbernya
+                                source: "excel_upload"
                             };
                             const newData = { ...dataToSave, ...creationMetadata }; // Hanya tambahkan createdAt, createdBy, dan source
                             batch.set(doc(collection(db, "employees_mapping"), nik), newData);
                             await logEmployeeAction("create_from_excel", nik, null, newData, { source: "excel_upload" });
                             newAddedCount++;
                         }
-
                         currentBatchOps++;
 
                         if (currentBatchOps >= BATCH_MAX_OPS) {
                             await batch.commit();
                             setStatus(`Mengunggah batch... Baru: ${newAddedCount}, Diubah: ${uploadOverwrittenCount}.`, 'info');
                             currentBatchOps = 0;
-                            // Re-initialize batch for the next set of operations
-                            batch = writeBatch(db); // Create a new batch instance
+                            batch = writeBatch(db); // Create a new batch instance for subsequent operations
                         }
                     } // End of for loop
 
@@ -1370,4 +1362,3 @@
     </script>
 </body>
 </html>
-
