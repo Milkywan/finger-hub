@@ -1012,7 +1012,46 @@
             }
             applySortAndFilter();
         });
+ // ... (Kode yang sudah ada di bagian Excel Upload Elements)
+        const excelFile = document.getElementById('excelFile');
+        // const templateBtn = document.getElementById('templateBtn'); // DIHILANGKAN - ini dulu, sekarang kita punya id baru
+        const reportBox = document.getElementById("reportBox");
+        const uploadReport = document.getElementById("uploadReport");
+        const downloadReportBtn = document.getElementById("downloadReportBtn");
+        const discardReportBtn = document.getElementById("discardReportBtn");
 
+        // --- New: Template Download Elements ---
+        const downloadTemplateBtn = document.getElementById("downloadTemplateBtn"); // Referensi tombol baru
+
+        // --- New: Template Download Listener ---
+        downloadTemplateBtn.addEventListener("click", () => {
+            if (typeof XLSX === 'undefined') {
+                setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
+                return;
+            }
+
+            const headers = [
+                "ID Mesin",
+                "NIK Sebelumnya",
+                "NIK",
+                "Nama",
+                "Status",
+                "Perusahaan",
+                "Department", // Perbaiki menjadi "Department" agar konsisten dengan field lain
+                "Jabatan",
+                "Sidik Jari"
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet([headers]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template Karyawan");
+            XLSX.writeFile(wb, "template_data_karyawan.xlsx");
+
+            setStatus("Template Excel berhasil diunduh.", 'success');
+        });
+
+        // excelFile.addEventListener sekarang berfungsi untuk langsung memproses dan mengupload data
+        // ... (Sisa kode JS Anda)
         // --- Excel Upload Functions ---
         // excelFile.addEventListener sekarang berfungsi untuk langsung memproses dan mengupload data
         excelFile.addEventListener("change", async (e) => {
@@ -1179,48 +1218,7 @@
             };
             reader.readAsArrayBuffer(file);
         });
-        // ... (Kode yang sudah ada di bagian Excel Upload Elements)
-        const excelFile = document.getElementById('excelFile');
-        // const templateBtn = document.getElementById('templateBtn'); // DIHILANGKAN - ini dulu, sekarang kita punya id baru
-        const reportBox = document.getElementById("reportBox");
-        const uploadReport = document.getElementById("uploadReport");
-        const downloadReportBtn = document.getElementById("downloadReportBtn");
-        const discardReportBtn = document.getElementById("discardReportBtn");
-
-        // --- New: Template Download Elements ---
-        const downloadTemplateBtn = document.getElementById("downloadTemplateBtn"); // Referensi tombol baru
-
-        // --- New: Template Download Listener ---
-        downloadTemplateBtn.addEventListener("click", () => {
-            if (typeof XLSX === 'undefined') {
-                setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
-                return;
-            }
-
-            const headers = [
-                "ID Mesin",
-                "NIK Sebelumnya",
-                "NIK",
-                "Nama",
-                "Status",
-                "Perusahaan",
-                "Department", // Perbaiki menjadi "Department" agar konsisten dengan field lain
-                "Jabatan",
-                "Sidik Jari"
-            ];
-
-            const ws = XLSX.utils.aoa_to_sheet([headers]);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template Karyawan");
-            XLSX.writeFile(wb, "template_data_karyawan.xlsx");
-
-            setStatus("Template Excel berhasil diunduh.", 'success');
-        });
-
-        // excelFile.addEventListener sekarang berfungsi untuk langsung memproses dan mengupload data
-        // ... (Sisa kode JS Anda)
-
-
+    
         // Download Skipped/Overwritten Report
         downloadReportBtn.addEventListener("click", () => {
             const reportList = JSON.parse(downloadReportBtn.dataset.skipped || "[]");
@@ -1251,4 +1249,5 @@
     </script>
 </body>
 </html>
+
 
