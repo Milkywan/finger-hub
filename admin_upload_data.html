@@ -413,7 +413,7 @@
 
     <div class="main-content-wrapper">
         <div class="container" id="adminUploadContainer">
-            <h2>Kelola Data Karyawan Revisi</h2>
+            <h2>Kelola Data Karyawan</h2>
 
                  <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
@@ -1257,27 +1257,42 @@
                             }
                         });
 
-                        // Add common metadata fields
-                        const commonMetadata = {
-                            updatedAt: serverTimestamp(),
-                            updatedBy: currentUserData?.username || auth.currentUser.uid,
-                            source: "excel_upload"
-                        };
+                        // Tentukan siapa yang melakukan operasi
+                        const userName = currentUserData?.username || auth.currentUser.uid;
+
+                        // Data fields dari Excel
+                        const dataToSave = {};
+                        expectedHeaders.forEach(header => {
+                            if (obj[header] !== undefined) {
+                                dataToSave[header] = obj[header];
+                            }
+                        });
 
                         if (existingNIKsMap.has(nik)) {
-                            // NIK already exists, this is an update/overwrite
+                            // NIK sudah ada, ini adalah pembaruan/penimpaan
                             const oldData = existingNIKsMap.get(nik);
-                            const updatedData = { ...oldData, ...dataToSave, ...commonMetadata }; // Merge new data with old
+                            const updateMetadata = {
+                                updatedAt: serverTimestamp(),
+                                updatedBy: userName,
+                                source: "excel_upload" // Masih bagus untuk log sumbernya
+                            };
+                            const updatedData = { ...oldData, ...dataToSave, ...updateMetadata };
                             batch.set(doc(collection(db, "employees_mapping"), nik), updatedData);
                             await logEmployeeAction("update_from_excel", nik, oldData, updatedData, { source: "excel_upload" });
                             uploadOverwrittenCount++;
                         } else {
-                            // New NIK, this is a creation
-                            const newData = { ...dataToSave, createdAt: serverTimestamp(), createdBy: commonMetadata.updatedBy, ...commonMetadata };
+                            // NIK baru, ini adalah pembuatan
+                            const creationMetadata = {
+                                createdAt: serverTimestamp(),
+                                createdBy: userName,
+                                source: "excel_upload" // Masih bagus untuk log sumbernya
+                            };
+                            const newData = { ...dataToSave, ...creationMetadata }; // Hanya tambahkan createdAt, createdBy, dan source
                             batch.set(doc(collection(db, "employees_mapping"), nik), newData);
                             await logEmployeeAction("create_from_excel", nik, null, newData, { source: "excel_upload" });
                             newAddedCount++;
                         }
+
                         currentBatchOps++;
 
                         if (currentBatchOps >= BATCH_MAX_OPS) {
@@ -1355,3 +1370,4 @@
     </script>
 </body>
 </html>
+
