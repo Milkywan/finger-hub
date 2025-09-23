@@ -409,6 +409,7 @@ td, th {
   let allMesinData = [];
   let sortState = { column: 'createdAt', direction: 'desc' };
   let duplicateMesinIds = new Set(); // NEW: Set to store IDs of duplicate entries
+  let currentDisplayData = []; // DIPINDAHKAN KE SINI UNTUK MEMPERBAIKI REFERENCE ERROR
 
   function esc(str) {
     if (str === undefined || str === null) return "";
@@ -1011,7 +1012,7 @@ downloadReportBtn.addEventListener("click", () => {
       return [item, "", ""]; // Fallback for unparsed items
     })
   ]);
-  XLSX.utils.book_append_append(wbReport, wsReport, "Skipped Report");
+  XLSX.utils.book_append_sheet(wbReport, wsReport, "Skipped Report"); // Gunakan book_append_sheet, bukan book_append_append
   XLSX.writeFile(wbReport, "report_skipped.xlsx");
 
   reportBox.style.display = "none";
