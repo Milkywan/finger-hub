@@ -240,7 +240,7 @@
             width: 100%;
             border-collapse: collapse;
             color: white;
-            min-width: 900px; /* Minimum width for the table */
+            min-width: 1300px; /* Minimal width for the table with many columns */
         }
         th, td {
             border: 1px solid rgba(255,255,255,0.15); /* Border lebih halus */
@@ -292,7 +292,7 @@
             user-select: none;
             position: relative;
         }
-        /* --- Table specific styling --- */
+        /* --- Table specific styling for Sidik Jari Status --- */
         .sidik-jari-terdaftar {
             background-color: rgba(144, 238, 144, 0.1); /* Light green soft */
             color: #90ee90; /* Matching text color */
@@ -413,7 +413,7 @@
 
     <div class="main-content-wrapper">
         <div class="container" id="adminUploadContainer">
-            <h2>Kelola Data Karyawan Rev</h2>
+            <h2>Kelola Data Karyawan</h2>
 
                  <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
@@ -647,19 +647,20 @@
                 logEntry.newData = newData;
             } else if (action === "update" || action === "update_from_excel") {
                 const changes = {};
-                // Compare new data with old data, excluding special fields like updatedAt/By
-                for (const key in newData) {
-                    if (key !== 'updatedAt' && key !== 'updatedBy' && String(oldData[key]) !== String(newData[key])) {
+                // Compare new data with old data, excluding special fields like createdAt/By, updatedAt/By
+                // Also ensures comparison is always string to string (trimming whitespace)
+                const fieldsToCompare = Object.keys({ ...oldData, ...newData })
+                                            .filter(key => !['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'source'].includes(key));
+
+                for (const key of fieldsToCompare) {
+                    const oldVal = (oldData[key] !== null && oldData[key] !== undefined) ? String(oldData[key]).trim() : null;
+                    const newVal = (newData[key] !== null && newData[key] !== undefined) ? String(newData[key]).trim() : null;
+
+                    if (oldVal !== newVal) {
                         changes[key] = { old: oldData[key], new: newData[key] };
                     }
                 }
-                // Also check for fields present in oldData but not in newData (i.e., removed or set to null/empty)
-                for (const key in oldData) {
-                    if (key !== 'createdAt' && key !== 'createdBy' && !(key in newData) && oldData[key] !== null) { // If field was in oldData but not in newData
-                         changes[key] = { old: oldData[key], new: null };
-                    }
-                }
-
+                
                 if (Object.keys(changes).length > 0) { // Only log if there were actual changes
                     logEntry.changes = changes;
                     logEntry.oldData = oldData;
@@ -677,6 +678,7 @@
         function renderTable(employeesToRender) {
             employeesTbody.innerHTML = "";
             if (employeesToRender.length === 0) {
+                // Perbarui colspan sesuai jumlah kolom
                 employeesTbody.innerHTML = `<tr><td colspan="14" class="muted">Belum ada karyawan terdaftar atau tidak ditemukan.</td></tr>`;
                 return;
             }
@@ -689,15 +691,15 @@
 
                 const createdDate = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt instanceof Date ? d.createdAt : null);
                 const created = createdDate ? createdDate.toLocaleString() : "-";
-                // Untuk updatedDate/By, cek apakah ada. Jika tidak, tampilkan '-'
+                // UpdatedAt dan UpdatedBy hanya ditampilkan jika ada
                 const updatedDate = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : (d.updatedAt instanceof Date ? d.updatedAt : null);
                 const updated = updatedDate ? updatedDate.toLocaleString() : "-";
 
                 const isSelected = currentSelectedEmployeeIds.has(id);
                 const tr = document.createElement("tr");
-                if (d.updatedAt) { // Untuk perbedaan warna baris terupdate
-                    tr.classList.add("updated-row");
-                }
+                // if (d.updatedAt) { // Hanya tandai jika updatedBy memang ada
+                //     tr.classList.add("updated-row");
+                // }
 
                 // Logika untuk status sidik jari
                 const sidikJariValue = d['Sidik Jari'] || '';
@@ -886,16 +888,16 @@
         addEmployeeBtn.addEventListener("click", () => {
             editingEmployeeId = null;
             modalEmployeeTitle.textContent = "Tambah Karyawan Baru";
-            inputIDMesin.value = ""; // NEW
-            inputNIKSebelumnya.value = ""; // NEW
+            inputIDMesin.value = ""; 
+            inputNIKSebelumnya.value = ""; 
             inputNIK.value = "";
             inputNIK.disabled = false; // NIK bisa diisi saat tambah baru
             inputNama.value = "";
-            inputStatus.value = ""; // NEW
-            inputPerusahaan.value = ""; // NEW
+            inputStatus.value = ""; 
+            inputPerusahaan.value = ""; 
             inputDepartment.value = "";
             inputJabatan.value = "";
-            inputSidikJari.value = ""; // NEW
+            inputSidikJari.value = ""; 
             openEmployeeModal();
         });
 
@@ -904,15 +906,15 @@
 
         // Save Employee (Add/Edit) - UPDATED
         saveEmployeeBtn.addEventListener("click", async () => {
-            const idMesin = inputIDMesin.value.trim(); // NEW
-            const nikSebelumnya = inputNIKSebelumnya.value.trim(); // NEW
+            const idMesin = inputIDMesin.value.trim(); 
+            const nikSebelumnya = inputNIKSebelumnya.value.trim(); 
             const nik = inputNIK.value.trim();
             const nama = inputNama.value.trim();
-            const status = inputStatus.value.trim(); // NEW
-            const perusahaan = inputPerusahaan.value.trim(); // NEW
+            const status = inputStatus.value.trim(); 
+            const perusahaan = inputPerusahaan.value.trim(); 
             const department = inputDepartment.value.trim();
             const jabatan = inputJabatan.value.trim();
-            const sidikJari = inputSidikJari.value.trim(); // NEW
+            const sidikJari = inputSidikJari.value.trim(); 
 
             if (!nik || !nama) {
                 alert("NIK dan Nama Karyawan wajib diisi.");
@@ -998,16 +1000,16 @@
                     const d = snap.data();
                     editingEmployeeId = id;
                     modalEmployeeTitle.textContent = "Edit Karyawan";
-                    inputIDMesin.value = d['ID Mesin'] || ""; // NEW
-                    inputNIKSebelumnya.value = d['NIK Sebelumnya'] || ""; // NEW
+                    inputIDMesin.value = d['ID Mesin'] || ""; 
+                    inputNIKSebelumnya.value = d['NIK Sebelumnya'] || ""; 
                     inputNIK.value = d.NIK || "";
                     inputNIK.disabled = true; // NIK tidak bisa diedit setelah dibuat
                     inputNama.value = d.Nama || "";
-                    inputStatus.value = d.Status || ""; // NEW
-                    inputPerusahaan.value = d.Perusahaan || ""; // NEW
+                    inputStatus.value = d.Status || ""; 
+                    inputPerusahaan.value = d.Perusahaan || ""; 
                     inputDepartment.value = d.Department || "";
                     inputJabatan.value = d.Jabatan || "";
-                    inputSidikJari.value = d['Sidik Jari'] || ""; // NEW
+                    inputSidikJari.value = d['Sidik Jari'] || ""; 
                     openEmployeeModal();
                 } catch (err) {
                     console.error(err);
@@ -1176,7 +1178,7 @@
                     // Convert to JSON with header row as keys
                     const rawExcelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
 
-                    if (rawExcelData.length < 2) { // Minimum 1 header + 1 data row
+                    if (rawExcelData.length < 2) { // Minimum 1 header + 1 data row (header + one data row)
                         setStatus("File Excel kosong atau hanya berisi header.", 'error');
                         excelFile.value = ""; // Reset file input
                         return;
@@ -1200,8 +1202,8 @@
                     const rows = rawExcelData.slice(1);
 
                     let newAddedCount = 0;
-                    let uploadSkippedCount = 0;
-                    let uploadOverwrittenCount = 0;
+                    let uploadSkippedCount = 0; // For no changes
+                    let uploadOverwrittenCount = 0; // For actual changes
                     uploadExcelReportData = []; // Reset report data
 
                     // Fetch existing NIKs for conflict checking
@@ -1255,22 +1257,43 @@
                         }
 
                         // Prepare data for Firestore, ensuring only expected fields are saved
-                        const dataToSave = {};
+                        const dataToProcessFromExcel = {};
                         expectedHeaders.forEach(header => {
                             if (obj[header] !== undefined) {
-                                dataToSave[header] = obj[header];
+                                dataToProcessFromExcel[header] = obj[header];
                             }
                         });
                         
                         if (existingNIKsMap.has(nik)) {
-                            // NIK sudah ada, ini adalah pembaruan/penimpaan
+                            // NIK sudah ada, ini adalah pembaruan
                             const oldData = existingNIKsMap.get(nik);
+
+                            // Cek apakah ada perubahan data yang sebenarnya (diluar metadata)
+                            let hasActualDataChanges = false;
+                            for (const key of expectedHeaders) {
+                                const oldValue = (oldData[key] !== null && oldData[key] !== undefined) ? String(oldData[key]).trim() : null;
+                                const newValue = (dataToProcessFromExcel[key] !== null && dataToProcessFromExcel[key] !== undefined) ? String(dataToProcessFromExcel[key]).trim() : null;
+                                
+                                if (oldValue !== newValue) {
+                                    hasActualDataChanges = true;
+                                    break;
+                                }
+                            }
+
+                            if (!hasActualDataChanges) {
+                                // Data sama, tidak perlu update. Lewati baris ini.
+                                uploadSkippedCount++;
+                                uploadExcelReportData.push({ NIK: nik, Nama: oldData.Nama || '-', Reason: "Data sama, tidak ada perubahan" });
+                                continue; 
+                            }
+
+                            // Jika ada perubahan, update updatedAt/updatedBy
                             const updateMetadata = {
                                 updatedAt: serverTimestamp(),
                                 updatedBy: userName,
                                 source: "excel_upload"
                             };
-                            const updatedData = { ...oldData, ...dataToSave, ...updateMetadata };
+                            const updatedData = { ...oldData, ...dataToProcessFromExcel, ...updateMetadata };
                             batch.set(doc(collection(db, "employees_mapping"), nik), updatedData);
                             await logEmployeeAction("update_from_excel", nik, oldData, updatedData, { source: "excel_upload" });
                             uploadOverwrittenCount++;
@@ -1281,7 +1304,7 @@
                                 createdBy: userName,
                                 source: "excel_upload"
                             };
-                            const newData = { ...dataToSave, ...creationMetadata }; // Hanya tambahkan createdAt, createdBy, dan source
+                            const newData = { ...dataToProcessFromExcel, ...creationMetadata }; 
                             batch.set(doc(collection(db, "employees_mapping"), nik), newData);
                             await logEmployeeAction("create_from_excel", nik, null, newData, { source: "excel_upload" });
                             newAddedCount++;
@@ -1290,7 +1313,7 @@
 
                         if (currentBatchOps >= BATCH_MAX_OPS) {
                             await batch.commit();
-                            setStatus(`Mengunggah batch... Baru: ${newAddedCount}, Diubah: ${uploadOverwrittenCount}.`, 'info');
+                            setStatus(`Mengunggah batch... Baru: ${newAddedCount}, Diubah: ${uploadOverwrittenCount}, Dilewati: ${uploadSkippedCount}.`, 'info');
                             currentBatchOps = 0;
                             batch = writeBatch(db); // Create a new batch instance for subsequent operations
                         }
@@ -1304,7 +1327,7 @@
                     let msg = `Unggah Excel selesai.\n`;
                     if (newAddedCount > 0) msg += `Ditambahkan baru: ${newAddedCount}.\n`;
                     if (uploadOverwrittenCount > 0) msg += `Data diubah/ditimpa: ${uploadOverwrittenCount}.\n`;
-                    if (uploadSkippedCount > 0) msg += `Baris dilewati: ${uploadSkippedCount}.`;
+                    if (uploadSkippedCount > 0) msg += `Baris dilewati: ${uploadSkippedCount}.`; // Including no-change skips
 
                     if (uploadExcelReportData.length > 0) {
                         msg += `\n\nBeberapa baris dilewati atau diubah. Lihat detail di Report Box.`;
