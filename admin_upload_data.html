@@ -442,12 +442,13 @@
         <div class="container" id="adminUploadContainer">
             <h2>Kelola Data Karyawan Rev</h2>
 
-                 <div class="controls">
+            <div class="controls">
                 <label for="excelFile" class="file-input-label">⬆️ Unggah Excel</label>
                 <input type="file" id="excelFile" accept=".xlsx, .xls">
                 <button class="btn btn-secondary" id="downloadTemplateBtn">⬇️ Download Template</button>
                 <button class="btn btn-info" id="addEmployeeBtn">➕ Tambah Karyawan</button>
                 <button class="btn btn-ghost" id="refreshEmployeeDataBtn">🔄 Refresh Data</button>
+                <button class="btn btn-primary" id="downloadAllDataBtn">💾 Download Semua Data</button> <!-- TOMBOL BARU DI SINI -->
                 <input type="text" id="searchInput" placeholder="Cari NIK/Nama Karyawan...">
                 <button class="btn btn-primary" id="deleteSelectedBtn" style="display:none;">🗑️ Hapus Terpilih (<span id="selectedCount">0</span>)</button>
             </div>
@@ -602,8 +603,9 @@
         const selectAllCheckbox = document.getElementById("selectAllCheckbox");
         const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
         const selectedCountSpan = document.getElementById("selectedCount");
+        const downloadAllDataBtn = document.getElementById("downloadAllDataBtn"); // BARU
 
-        // Modal elements - UPDATED
+        // Modal elements
         const employeeModal = document.getElementById("employeeModal");
         const modalEmployeeTitle = document.getElementById("modalEmployeeTitle");
         const inputIDMesin = document.getElementById("inputIDMesin");
@@ -628,7 +630,7 @@
         // Template Download Elements
         const downloadTemplateBtn = document.getElementById("downloadTemplateBtn");
 
-        // Summary Report Elements (BARU)
+        // Summary Report Elements
         const summaryReport = document.getElementById("summaryReport");
         const activeEmployeeSummaryList = document.getElementById("activeEmployeeSummaryList");
 
@@ -720,7 +722,7 @@
             await addDoc(collection(db, "employees_logs"), logEntry);
         }
 
-        // --- Fungsi BARU: Generate Ringkasan Karyawan Aktif ---
+        // --- Fungsi Generate Ringkasan Karyawan Aktif ---
         function generateActiveEmployeeSummary() {
             const activeEmployeesByCompany = {};
 
@@ -952,13 +954,13 @@
                 });
 
                 applySortAndFilter(); // Terapkan sorting dan filter awal
-                generateActiveEmployeeSummary(); // Panggil fungsi ringkasan di sini (BARU)
+                generateActiveEmployeeSummary(); // Panggil fungsi ringkasan di sini
                 setStatus(`Selesai memuat (${allEmployeesData.length} karyawan).`, 'success');
             } catch (err) {
                 console.error(err);
                 setStatus("Gagal memuat data karyawan. Cek konsol.", 'error');
                 employeesTbody.innerHTML = `<tr><td colspan="14" class="muted">Error saat memuat data.</td></tr>`;
-                summaryReport.style.display = 'none'; // Sembunyikan summary jika ada error (BARU)
+                summaryReport.style.display = 'none'; // Sembunyikan summary jika ada error
             }
         }
 
@@ -974,7 +976,7 @@
             loadEmployees();
         });
 
-        // Add New Employee Button - UPDATED
+        // Add New Employee Button
         addEmployeeBtn.addEventListener("click", () => {
             editingEmployeeId = null;
             modalEmployeeTitle.textContent = "Tambah Karyawan Baru";
@@ -994,7 +996,7 @@
         // Cancel Employee Modal Button
         cancelEmployeeBtn.addEventListener("click", closeEmployeeModal);
 
-        // Save Employee (Add/Edit) - UPDATED
+        // Save Employee (Add/Edit)
         saveEmployeeBtn.addEventListener("click", async () => {
             const idMesin = inputIDMesin.value.trim();
             const nikSebelumnya = inputNIKSebelumnya.value.trim();
@@ -1072,7 +1074,7 @@
             }
         });
 
-        // Table Body Click Listener (for Edit/Delete single item) - UPDATED
+        // Table Body Click Listener (for Edit/Delete single item)
         employeesTbody.addEventListener("click", async (ev) => {
             const btn = ev.target.closest("button");
             if (!btn) return;
@@ -1244,6 +1246,58 @@
 
             setStatus("Template Excel berhasil diunduh.", 'success');
         });
+
+        // --- Fungsi BARU: Download Semua Data ke Excel ---
+        downloadAllDataBtn.addEventListener("click", () => {
+            if (typeof XLSX === 'undefined') {
+                setStatus("Kesalahan: Library Excel tidak dimuat. Cek konsol browser Anda.", 'error');
+                return;
+            }
+            if (currentDisplayData.length === 0) {
+                setStatus("Tidak ada data untuk diunduh.", 'info');
+                return;
+            }
+
+            setStatus("Mempersiapkan data untuk diunduh...", 'info');
+
+            const headers = [
+                "ID Mesin", "NIK Sebelumnya", "NIK", "Nama", "Status",
+                "Perusahaan", "Department", "Jabatan", "Sidik Jari",
+                "Sidik Jari Status", // Tambahkan kolom status sidik jari yang sudah diolah
+                "Dibuat Pada", "Dibuat Oleh", "Diperbarui Pada", "Diperbarui Oleh"
+            ];
+
+            const dataToExport = currentDisplayData.map(employee => {
+                const d = employee.data;
+                const sidikJariValue = d['Sidik Jari'] || '';
+                const sidikJariStatusText = (sidikJariValue && String(sidikJariValue).trim() !== '') ? 'Terdaftar' : 'Belum Terdaftar';
+
+                return [
+                    d['ID Mesin'] || '',
+                    d['NIK Sebelumnya'] || '',
+                    d.NIK || '',
+                    d.Nama || '',
+                    d.Status || '',
+                    d.Perusahaan || '',
+                    d.Department || '',
+                    d.Jabatan || '',
+                    d['Sidik Jari'] || '',
+                    sidikJariStatusText, // Nilai status sidik jari
+                    d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleString() : '',
+                    d.createdBy || '',
+                    d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate().toLocaleString() : '',
+                    d.updatedBy || ''
+                ];
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet([headers, ...dataToExport]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Data Karyawan");
+            XLSX.writeFile(wb, "data_karyawan_lengkap.xlsx");
+
+            setStatus(`Berhasil mengunduh ${dataToExport.length} baris data karyawan.`, 'success');
+        });
+
 
         // --- Excel Upload Functions ---
         excelFile.addEventListener("change", async (e) => {
