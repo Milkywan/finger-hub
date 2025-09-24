@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="icon" type="image/png" href="images/icon.png">
-    <title>Super Admin: Pengaturan Mesin</title> <!-- Judul halaman diubah -->
+    <title>Admin: Pengaturan Mesin</title> <!-- Judul halaman diubah -->
 
     <style>
 
@@ -327,7 +327,7 @@
             <!-- BAGIAN PENGATURAN SISTEM DIHAPUS SESUAI PERMINTAAN -->
 
             <div class="container" id="machineSettingsContainer">
-                <h2>Pengaturan & Download Mesin</h2>
+                <h2>Pengaturan Mesin</h2>
 
                 <div class="form-group">
                     <label for="mesinManualInput">Nama Mesin:</label>
@@ -388,7 +388,7 @@
             initPage(
                 "Pengaturan Mesin", // Judul halaman diubah
                 "machineSettingsContainer", // ID container utama halaman diubah
-                "super_admin"
+                "admin"
             );
             // loadSettings(); // Tidak lagi diperlukan karena bagian pengaturan sistem dihapus
             loadMachinesFromFirestore();
