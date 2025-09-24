@@ -502,19 +502,20 @@
             return;
         }
 
-        const machineData = mesinList[selectedMesinName];
-        if (!machineData || !machineData.ip) {
-            setStatus(downloadStatusMessage, `IP Address untuk mesin '${selectedMesinName}' tidak ditemukan.`, 'error');
-            return;
-        }
-        const ipAddress = machineData.ip;
+        // --- UBAH INI: Gunakan nama mesin, bukan IP ---
+        // const machineData = mesinList[selectedMesinName];
+        // const ipAddress = machineData.ip; // Ini tidak lagi dibutuhkan untuk parameter 'mesin' di URL
+        // let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(ipAddress)}`;
+
+        // BARIS YANG BENAR: Menggunakan NAMA mesin
+        let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(selectedMesinName)}`; 
+        // --- AKHIR UBAH ---
 
         if (!baseUrl) {
             setStatus(downloadStatusMessage, "Base URL harus diisi!", 'error');
             return;
         }
-        setStatus(downloadStatusMessage, `Membuka tab baru untuk absensi mesin ${selectedMesinName} (${ipAddress})...`, 'info');
-        let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(ipAddress)}`;
+        setStatus(downloadStatusMessage, `Membuka tab baru untuk absensi mesin ${selectedMesinName}.`, 'info');
         window.openNewWindow(url);
         setStatus(downloadStatusMessage, `Permintaan download untuk ${selectedMesinName} dikirim. Periksa tab baru di browser Anda.`, 'success');
     };
@@ -532,7 +533,11 @@
         setStatus(downloadStatusMessage, "Membuka tab baru untuk setiap mesin yang akan di-download...", 'info');
         
         Object.values(mesinList).forEach(machineData => {
-            let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.ip)}`;
+            // --- UBAH INI: Gunakan nama mesin, bukan IP ---
+            // let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.ip)}`;
+            // BARIS YANG BENAR: Menggunakan NAMA mesin dari data Firestore (field 'mesin')
+            let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.mesin)}`; 
+            // --- AKHIR UBAH ---
             window.openNewWindow(url);
         });
         setStatus(downloadStatusMessage, "Permintaan download semua absensi dikirim. Periksa tab baru di browser Anda.", 'success');
