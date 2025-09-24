@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" type="image/png" href="images/icon.png">
+    <title>Super Admin: Pengaturan Mesin</title> <!-- Judul halaman diubah -->
+
+    <style>
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- Navigation Styles (Diadaptasi dari skrip pertama untuk konsep menu ikon) --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1); /* Ditambahkan untuk konsistensi */
+        }
+        nav .brand {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white; /* Pastikan teks brand putih */
+        }
+
+        nav .menu {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            justify-content: center;
+            gap: 8px; /* Spasi antar ikon menu */
+        }
+
+        .menu-icon-link {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            text-decoration: none;
+            color: white;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .menu-icon-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: #a5b4fc;
+        }
+
+        .menu-icon-link .menu-icon {
+            width: 33px;
+            height: 33px;
+            object-fit: contain;
+        }
+
+        .menu-icon-link .menu-text {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            z-index: 1000;
+            top: calc(100% + 5px);
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+        }
+
+        .menu-icon-link:hover .menu-text {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .menu-icon-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: #a5b4fc;
+        }
+
+        .right-nav-items {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-info {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+        }
+        nav .menu2 {
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.3s, transform 0.2s;
+            font-weight: bold;
+            font-size: 0.9em; /* Ukuran font disamakan */
+        }
+        nav .menu2:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        /* --- End Navigation Styles --- */
+
+
+        .main-content-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+
+        .settings-grid {
+            display: flex; /* Pertahankan ini jika ada lebih dari satu container yang akan ditambahkan lagi di masa depan */
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 500px; /* Batasan lebar */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            animation: fadeIn .8s ease;
+            flex: 1; /* Pastikan mengambil ruang yang tersedia */
+            min-width: 300px; /* Lebar minimum untuk responsif */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 26px;
+        }
+
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .form-group input[type="date"],
+        .form-group input[type="text"],
+        .form-group input[type="file"],
+        .form-group input[type="datetime-local"],
+        .form-group select {
+            width: 100%;
+            padding: .75rem;
+            border: none;
+            border-radius: .5rem;
+            font-size: 14px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            box-sizing: border-box;
+        }
+
+        input[type="date"]::-webkit-inner-spin-button,
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="datetime-local"]::-webkit-inner-spin-button,
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+        input[type="date"], input[type="datetime-local"] {
+            color-scheme: dark;
+        }
+        input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        select option {
+            background: #4f46e5;
+            color: white;
+        }
+
+
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn {
+            width: auto;
+            padding: .75rem;
+            border: none;
+            border-radius: .5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            font-size: 15px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .btn-primary { background: #4f46e5; color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-info { background: #3b82f6; color: #fff; }
+        .btn-info:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-success:hover { background: #0e9f73; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-danger:hover { background: #d73a3a; }
+        .btn-warning { background: #a855f7; color: #fff; }
+        .btn-warning:hover { background: #903ed7; }
+
+
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+            /* Default display: block; jika ingin selalu terlihat. Jika tidak, controlled by JS. */
+        }
+        .status-message.success { background-color: #10b981; color: white; }
+        .status-message.error { background-color: #ef4444; color: white; }
+        .status-message.info { background-color: #60a5fa; color: white; }
+        .status-message.warning { background-color: #fbbf24; color: #111827; } /* Styling for warning message */
+
+        /* --- Footer Styles (Diadaptasi dari skrip pertama untuk konsistensi) --- */
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: .9rem;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 -2px 3px rgba(0,0,0,0.1); /* Ditambahkan untuk konsistensi */
+        }
+        footer a { color: white; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* --- Media Queries (Diadaptasi dari skrip pertama untuk navigasi) --- */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            nav .brand { margin-bottom: 10px; }
+            nav .menu {
+                width: 100%;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                margin-bottom: 10px;
+                gap: 5px; /* Spasi disesuaikan untuk layar kecil */
+            }
+            .menu-icon-link { /* Padding disesuaikan untuk layar kecil */
+                padding: 5px 8px;
+            }
+            .right-nav-items {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 10px;
+            }
+            .user-info {
+                font-size: 0.8em;
+            }
+            nav .menu2 {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8em;
+            }
+            .settings-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="header-placeholder"></div>
+
+
+    <div class="main-content-wrapper">
+
+        <div class="settings-grid">
+
+            <!-- BAGIAN PENGATURAN SISTEM DIHAPUS SESUAI PERMINTAAN -->
+
+            <div class="container" id="machineSettingsContainer">
+                <h2>Pengaturan & Download Mesin</h2>
+
+                <div class="form-group">
+                    <label for="mesinManualInput">Nama Mesin:</label>
+                    <input type="text" id="mesinManualInput" list="mesinDatalist" placeholder="Ketik atau pilih mesin">
+                    <datalist id="mesinDatalist"></datalist>
+                    <small id="selectedMachineIp" style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">IP Mesin: -</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="baseUrlMachine">Base URL API Mesin:</label>
+                    <input type="text" id="baseUrlMachine" value="http://10.30.32.16:5000/">
+                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">URL API untuk komunikasi dengan mesin fingerprint.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="machineSetDateTime">Tanggal & Waktu Mesin:</label>
+                    <input type="datetime-local" id="machineSetDateTime">
+                    <button class="btn btn-warning" onclick="window.setMachineCurrentDateTime()">Gunakan Waktu Sekarang</button>
+                    <small style="color: rgba(255,255,255,0.7); display: block; margin-top: 5px;">Atur tanggal dan waktu mesin fingerprint.</small>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-danger" onclick="window.updateMachineDateTime()">Update Waktu Mesin (Terpilih)</button>
+                    <button class="btn btn-danger" onclick="window.updateAllMachinesDateTime()">Update Waktu Semua Mesin</button>
+                    <button class="btn btn-info" onclick="window.viewMachineAbsensi()">Lihat Absensi Mesin (Terpilih)</button>
+                    <button class="btn btn-success" onclick="window.downloadAllMachinesAbsensi()">Download Semua Absensi</button>
+                    <!-- TOMBOL BARU: Hapus Absensi Mesin -->
+                    <button class="btn btn-danger" onclick="window.deleteMachineAbsensi()">🗑️ Hapus Data Absensi Mesin (Terpilih)</button>
+                </div>
+
+                <div class="status-message" id="machineStatusMessage"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="footer-placeholder"></div>
+
+    <script type="module">
+
+        import { initPage } from "./common-ui.js";
+
+        import {
+            db
+        } from "./firebase-config.js";
+        import {
+            doc,
+            getDoc,
+            setDoc,
+            collection,
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+
+        let globalMesinList = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initPage(
+                "Pengaturan Mesin", // Judul halaman diubah
+                "machineSettingsContainer", // ID container utama halaman diubah
+                "super_admin"
+            );
+            // loadSettings(); // Tidak lagi diperlukan karena bagian pengaturan sistem dihapus
+            loadMachinesFromFirestore();
+        });
+
+
+        // const offlineExpiryDateInput = document.getElementById('offlineExpiryDateInput'); // Dihapus
+        // const saveSettingsBtn = document.getElementById('saveSettingsBtn');             // Dihapus
+        // const systemStatusMessage = document.getElementById('systemStatusMessage');     // Dihapus
+
+        const mesinManualInput = document.getElementById('mesinManualInput');
+        const mesinDatalist = document.getElementById('mesinDatalist');
+        const baseUrlMachineInput = document.getElementById('baseUrlMachine');
+        const machineSetDateTimeInput = document.getElementById('machineSetDateTime');
+        const machineStatusMessage = document.getElementById('machineStatusMessage');
+        const selectedMachineIpDisplay = document.getElementById('selectedMachineIp');
+
+
+        // const SETTINGS_DOC_REF = doc(db, "settings", "app_config"); // Dihapus
+
+        function setStatus(messageElement, message, type = 'info') {
+            messageElement.textContent = message;
+            messageElement.className = `status-message ${type}`;
+        }
+
+        function openNewWindow(url) {
+            window.open(url, '_blank', 'width=800,height=600');
+        }
+
+        /*
+        // loadSettings dan saveSettingsBtn.addEventListener dihapus karena bagian pengaturan sistem dihapus
+        async function loadSettings() {
+            setStatus(systemStatusMessage, "Memuat pengaturan sistem...", 'info');
+            try {
+                const settingsSnap = await getDoc(SETTINGS_DOC_REF);
+                if (settingsSnap.exists()) {
+                    const settings = settingsSnap.data();
+
+                    if (settings.OFFLINE_EXPIRY_DATE) {
+                        offlineExpiryDateInput.value = settings.OFFLINE_EXPIRY_DATE;
+                    }
+                    setStatus(systemStatusMessage, "Pengaturan sistem berhasil dimuat.", 'success');
+                } else {
+                    setStatus(systemStatusMessage, "Dokumen pengaturan sistem belum ada. Menggunakan nilai default.", 'info');
+                    offlineExpiryDateInput.value = '';
+                }
+            } catch (error) {
+                setStatus(systemStatusMessage, `Gagal memuat pengaturan sistem: ${error.message}`, 'error');
+                console.error("Error loading settings:", error);
+            }
+        }
+
+
+        saveSettingsBtn.addEventListener('click', async () => {
+            const newOfflineExpiryDate = offlineExpiryDateInput.value;
+
+            if (!newOfflineExpiryDate) {
+                setStatus(systemStatusMessage, "Tanggal kedaluwarsa offline tidak boleh kosong.", 'error');
+                return;
+            }
+
+
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(newOfflineExpiryDate)) {
+                setStatus(systemStatusMessage, "Format tanggal tidak valid. Gunakan YYYY-MM-DD.", 'error');
+                return;
+            }
+
+            setStatus(systemStatusMessage, "Menyimpan pengaturan sistem...", 'info');
+            saveSettingsBtn.disabled = true;
+
+            try {
+                await setDoc(SETTINGS_DOC_REF, {
+                    OFFLINE_EXPIRY_DATE: newOfflineExpiryDate,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+
+                setStatus(systemStatusMessage, "Pengaturan sistem berhasil disimpan!", 'success');
+            } catch (error) {
+                setStatus(systemStatusMessage, `Gagal menyimpan pengaturan sistem: ${error.message}`, 'error');
+                console.error("Error saving settings:", error);
+            } finally {
+                saveSettingsBtn.disabled = false;
+            }
+        });
+        */
+
+
+        window.loadMachinesFromFirestore = async function() {
+            setStatus(machineStatusMessage, "Memuat daftar mesin dari Firestore...", 'info');
+            globalMesinList = {}; // Clear previous list
+            let actualDocCount = 0; // NEW: To count the actual number of documents
+            let duplicateNamesFound = new Set(); // NEW: To track duplicate machine names
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "mesin_fp"));
+                actualDocCount = querySnapshot.size; // Get the actual number of documents
+
+                if (querySnapshot.empty) {
+                    setStatus(machineStatusMessage, "Tidak ada mesin ditemukan di Firestore.", 'info');
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        // Check if the machine name already exists as a key in globalMesinList
+                        // This indicates a duplicate 'mesin' field value in Firestore documents
+                        if (globalMesinList[data.mesin]) {
+                            duplicateNamesFound.add(data.mesin); // Add to the set of duplicate names
+                            console.warn(`Peringatan: Nama mesin duplikat '${data.mesin}' ditemukan. Data sebelumnya akan ditimpa.`);
+                        }
+                        // Store full machine data, keyed by machine name.
+                        // If there are duplicates, the last document processed for that name will "win".
+                        globalMesinList[data.mesin] = {
+                            id: doc.id,
+                            mesin: data.mesin, // Pastikan field 'mesin' ada di Firestore
+                            ip: data.ip,
+                            port: data.port
+                        };
+                    });
+                    populateDatalistMesin();
+
+                    let message = `Daftar mesin berhasil dimuat dari Firestore! (${Object.keys(globalMesinList).length} unik dari ${actualDocCount} dokumen).`;
+                    if (duplicateNamesFound.size > 0) {
+                        message += ` ${duplicateNamesFound.size} nama mesin duplikat ditemukan: ${Array.from(duplicateNamesFound).join(', ')}. Ini mungkin menyebabkan perbedaan jumlah.`;
+                        setStatus(machineStatusMessage, message, 'error'); // Using 'error' type for a clearer warning
+                    } else {
+                        setStatus(machineStatusMessage, message, 'success');
+                    }
+                }
+            } catch (e) {
+                setStatus(machineStatusMessage, `Gagal memuat mesin dari Firestore: ${e.message}`, 'error');
+                console.error("Gagal memuat mesin dari Firestore:", e);
+                globalMesinList = {};
+                populateDatalistMesin(); // Clear datalist if error
+            }
+        };
+
+
+        function populateDatalistMesin() {
+            mesinDatalist.innerHTML = "";
+            Object.keys(globalMesinList).forEach(mesinName => {
+                const opt = document.createElement("option");
+                opt.value = mesinName;
+                mesinDatalist.appendChild(opt);
+            });
+            // Clear IP display when datalist is repopulated
+            selectedMachineIpDisplay.textContent = "IP Mesin: -";
+        }
+
+
+        mesinManualInput.addEventListener('input', () => {
+            const selectedMesinName = mesinManualInput.value.trim();
+            const machineData = globalMesinList[selectedMesinName];
+            if (machineData && machineData.ip) {
+                selectedMachineIpDisplay.textContent = `IP Mesin: ${machineData.ip}`;
+            } else {
+                selectedMachineIpDisplay.textContent = "IP Mesin: -";
+            }
+        });
+
+        window.setMachineCurrentDateTime = function() {
+            const now = new Date();
+
+            const formattedDateTime = now.getFullYear() + "-" +
+                String(now.getMonth() + 1).padStart(2, '0') + "-" +
+                String(now.getDate()).padStart(2, '0') + "T" +
+                String(now.getHours()).padStart(2, '0') + ":" +
+                String(now.getMinutes()).padStart(2, '0');
+            machineSetDateTimeInput.value = formattedDateTime;
+            setStatus(machineStatusMessage, "Waktu saat ini berhasil diatur.", 'info');
+        };
+
+
+        window.updateMachineDateTime = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            const mesinName = mesinManualInput.value.trim(); // Nama mesin
+            const datetimeRaw = machineSetDateTimeInput.value;
+
+            if (!mesinName) {
+                setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Update Waktu!", 'error');
+                return;
+            }
+            if (!globalMesinList[mesinName]) { // Periksa apakah nama mesin valid
+                setStatus(machineStatusMessage, `Mesin '${mesinName}' tidak ditemukan dalam daftar.`, 'error');
+                return;
+            }
+            
+            if (!datetimeRaw) {
+                setStatus(machineStatusMessage, "Tanggal & Waktu harus diisi!", 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+
+            const datetime = datetimeRaw.replace('T', ' ') + ':00';
+            // Gunakan nama mesin (mesinName) sebagai parameter 'mesin'
+            let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(mesinName)}&datetime=${encodeURIComponent(datetime)}`;
+            setStatus(machineStatusMessage, `Mengirim permintaan update waktu ke mesin ${mesinName}.`, 'info');
+            openNewWindow(url);
+        };
+
+        // Fungsi untuk update waktu semua mesin
+        window.updateAllMachinesDateTime = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            const datetimeRaw = machineSetDateTimeInput.value;
+
+            if (!datetimeRaw) {
+                setStatus(machineStatusMessage, "Tanggal & Waktu harus diisi untuk Update Waktu Semua Mesin!", 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+            if (Object.keys(globalMesinList).length === 0) {
+                setStatus(machineStatusMessage, "Tidak ada mesin yang terdaftar untuk diupdate waktunya.", 'error');
+                return;
+            }
+
+            const confirmation = confirm(
+                `Anda akan mengupdate waktu semua ${Object.keys(globalMesinList).length} mesin ke:\n` +
+                `${new Date(datetimeRaw).toLocaleString()}\n\n` +
+                `Tindakan ini akan membuka ${Object.keys(globalMesinList).length} tab baru di browser Anda.\nLanjutkan?`
+            );
+
+            if (!confirmation) {
+                setStatus(machineStatusMessage, "Pembatalan update waktu semua mesin.", 'info');
+                return;
+            }
+
+            setStatus(machineStatusMessage, `Mengirim permintaan update waktu ke semua ${Object.keys(globalMesinList).length} mesin...`, 'info');
+            const datetime = datetimeRaw.replace('T', ' ') + ':00';
+
+            Object.values(globalMesinList).forEach(machineData => {
+                // Gunakan nama mesin (machineData.mesin) sebagai parameter 'mesin'
+                let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(machineData.mesin)}&datetime=${encodeURIComponent(datetime)}`;
+                openNewWindow(url);
+            });
+            setStatus(machineStatusMessage, "Permintaan update waktu ke semua mesin dikirim. Periksa tab baru di browser Anda.", 'success');
+        };
+
+
+        window.viewMachineAbsensi = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            const mesinName = mesinManualInput.value.trim(); // Nama mesin
+
+            if (!mesinName) {
+                setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Lihat Absensi!", 'error');
+                return;
+            }
+            if (!globalMesinList[mesinName]) { // Periksa apakah nama mesin valid
+                setStatus(machineStatusMessage, `Mesin '${mesinName}' tidak ditemukan dalam daftar.`, 'error');
+                return;
+            }
+            
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+
+            // Gunakan nama mesin (mesinName) sebagai parameter 'mesin'
+            let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(mesinName)}`;
+            setStatus(machineStatusMessage, `Membuka absensi untuk mesin ${mesinName}.`, 'info');
+            openNewWindow(url);
+        };
+
+
+        window.downloadAllMachinesAbsensi = function() {
+            const baseUrl = baseUrlMachineInput.value;
+            if (Object.keys(globalMesinList).length === 0) {
+                setStatus(machineStatusMessage, "Belum ada data mesin untuk Download Semua!", 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+
+            const confirmation = confirm(
+                `Anda akan mendownload absensi dari semua ${Object.keys(globalMesinList).length} mesin.\n` +
+                `Tindakan ini akan membuka ${Object.keys(globalMesinList).length} tab baru di browser Anda.\nLanjutkan?`
+            );
+
+            if (!confirmation) {
+                setStatus(machineStatusMessage, "Pembatalan download semua absensi.", 'info');
+                return;
+            }
+
+            setStatus(machineStatusMessage, "Membuka tab baru untuk setiap mesin yang akan didownload...", 'info');
+            Object.values(globalMesinList).forEach(machineData => {
+                // Gunakan nama mesin (machineData.mesin) sebagai parameter 'mesin'
+                let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.mesin)}`;
+                openNewWindow(url);
+            });
+            setStatus(machineStatusMessage, "Permintaan download semua absensi dikirim. Periksa tab baru di browser Anda.", 'success');
+        };
+
+        // --- FUNGSI BARU: Hapus Absensi Mesin ---
+        window.deleteMachineAbsensi = async function() {
+            const baseUrl = baseUrlMachineInput.value;
+            const mesinName = mesinManualInput.value.trim(); // Nama mesin
+
+            if (!mesinName) {
+                setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Menghapus Data Absensi!", 'error');
+                return;
+            }
+            if (!globalMesinList[mesinName]) {
+                setStatus(machineStatusMessage, `Mesin '${mesinName}' tidak ditemukan dalam daftar.`, 'error');
+                return;
+            }
+            if (!baseUrl) {
+                setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
+                return;
+            }
+
+            const confirmation = confirm(
+                `ANDA YAKIN INGIN MENGHAPUS SEMUA DATA ABSENSI DARI MESIN:\n\n` +
+                `"${mesinName}"\n\n` +
+                `Tindakan ini TIDAK DAPAT DIURUNGKAN. Lanjutkan?`
+            );
+
+            if (!confirmation) {
+                setStatus(machineStatusMessage, "Penghapusan data absensi dibatalkan.", 'info');
+                return;
+            }
+
+            setStatus(machineStatusMessage, `Mengirim permintaan penghapusan data absensi ke mesin ${mesinName}...`, 'info');
+
+            try {
+                const response = await fetch(`${baseUrl}/hapus_absensi`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ mesin: mesinName }), // Mengirim nama mesin di body JSON
+                });
+
+                const data = await response.json(); // Mengasumsikan server Flask mengembalikan JSON
+
+                if (response.ok) { // response.ok adalah true jika status HTTP 2xx
+                    setStatus(machineStatusMessage, `Data absensi dari mesin ${mesinName} berhasil dihapus! Pesan server: ${data.message || 'Berhasil'}`, 'success');
+                } else {
+                    setStatus(machineStatusMessage, `Gagal menghapus data absensi dari mesin ${mesinName}: ${data.message || response.statusText}`, 'error');
+                    console.error("Error deleting machine absensi:", data);
+                }
+            } catch (error) {
+                setStatus(machineStatusMessage, `Terjadi kesalahan jaringan saat menghapus data: ${error.message}`, 'error');
+                console.error("Network error deleting machine absensi:", error);
+            }
+        };
+        // --- AKHIR FUNGSI BARU ---
+     </script>
+</body>
+</html>
