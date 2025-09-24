@@ -210,15 +210,15 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
                     localStorage.setItem('userRole', 'user');
                 }
 
-                // --- BAGIAN OTOISASI YANG DIPERBAIKI ---
+                // --- BAGIAN OTOISASI YANG TELAH DIUBAH UNTUK HIERARKI ---
                 let authorized = false;
 
                 // Jika tidak ada peran yang spesifik diminta, atau diminta "all_authenticated", izinkan semua yang login
                 if (!requiredRole || requiredRole === "all_authenticated") { 
                     authorized = true;
                 } 
-                // Jika peran "user" diminta, izinkan hanya jika userRole adalah "user"
-                else if (requiredRole === "user" && userRole === "user") { 
+                // Jika peran "user" diminta, izinkan jika userRole adalah "user", "admin", atau "super_admin"
+                else if (requiredRole === "user" && (userRole === "user" || userRole === "admin" || userRole === "super_admin")) { 
                     authorized = true;
                 } 
                 // Jika peran "admin" diminta, izinkan jika userRole adalah "admin" atau "super_admin"
@@ -229,7 +229,7 @@ export async function initPage(pageTitle, mainContentId, requiredRole, homeMenuG
                 else if (requiredRole === "super_admin" && userRole === "super_admin") { 
                     authorized = true;
                 }
-                // --- AKHIR BAGIAN OTOISASI YANG DIPERBAIKI ---
+                // --- AKHIR BAGIAN OTOISASI YANG TELAH DIUBAH ---
 
 
                 if (authorized) {
