@@ -255,21 +255,6 @@
             top: 0;
             z-index: 2; /* Pastikan header sticky di atas konten lain saat scroll */
         }
-        /* Biar kolom checkbox (paling kiri) selalu kelihatan */
-th:first-child, td:first-child {
-  position: sticky;
-  left: 0;
-  background: rgba(79, 70, 229, 0.9); /* Warna sama kayak header/table */
-  z-index: 3; /* lebih tinggi dari header biasa */
-}
-
-/* Biar kolom "No" juga nempel */
-th:nth-child(2), td:nth-child(2) {
-  position: sticky;
-  left: 40px; /* lebar kolom pertama (checkbox) */
-  background: rgba(79, 70, 229, 0.9);
-  z-index: 3;
-}
 
         tbody tr:nth-child(odd) { background: rgba(255, 255, 255, 0.04); }
         tbody tr:hover { background: rgba(255, 255, 255, 0.08); }
@@ -1545,4 +1530,5 @@ th:nth-child(2), td:nth-child(2) {
     </script>
 </body>
 </html>
+
 
