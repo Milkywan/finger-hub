@@ -516,7 +516,7 @@
                         // If there are duplicates, the last document processed for that name will "win".
                         globalMesinList[data.mesin] = {
                             id: doc.id,
-                            mesin: data.mesin,
+                            mesin: data.mesin, // Pastikan field 'mesin' ada di Firestore
                             ip: data.ip,
                             port: data.port
                         };
@@ -577,19 +577,21 @@
 
         window.updateMachineDateTime = function() {
             const baseUrl = baseUrlMachineInput.value;
-            const mesinName = mesinManualInput.value.trim();
+            const mesinName = mesinManualInput.value.trim(); // Nama mesin
             const datetimeRaw = machineSetDateTimeInput.value;
 
             if (!mesinName) {
                 setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Update Waktu!", 'error');
                 return;
             }
-            const machineData = globalMesinList[mesinName];
-            if (!machineData || !machineData.ip) {
-                setStatus(machineStatusMessage, `IP Address untuk mesin '${mesinName}' tidak ditemukan. Silakan pilih mesin yang valid dari daftar.`, 'error');
+            if (!globalMesinList[mesinName]) { // Periksa apakah nama mesin valid
+                setStatus(machineStatusMessage, `Mesin '${mesinName}' tidak ditemukan dalam daftar.`, 'error');
                 return;
             }
-            const ipAddress = machineData.ip;
+            
+            // machineData.ip tidak lagi digunakan untuk parameter 'mesin', tapi tetap bisa dipakai jika server Flask butuh
+            // const machineData = globalMesinList[mesinName];
+            // const ipAddress = machineData.ip; 
 
             if (!datetimeRaw) {
                 setStatus(machineStatusMessage, "Tanggal & Waktu harus diisi!", 'error');
@@ -600,10 +602,10 @@
                 return;
             }
 
-
             const datetime = datetimeRaw.replace('T', ' ') + ':00';
-            let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(ipAddress)}&datetime=${encodeURIComponent(datetime)}`;
-            setStatus(machineStatusMessage, `Mengirim permintaan update waktu ke mesin ${mesinName} (${ipAddress})...`, 'info');
+            // UBAH INI: Gunakan nama mesin (mesinName) sebagai parameter 'mesin'
+            let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(mesinName)}&datetime=${encodeURIComponent(datetime)}`;
+            setStatus(machineStatusMessage, `Mengirim permintaan update waktu ke mesin ${mesinName}.`, 'info');
             openNewWindow(url);
         };
 
@@ -640,7 +642,8 @@
             const datetime = datetimeRaw.replace('T', ' ') + ':00';
 
             Object.values(globalMesinList).forEach(machineData => {
-                let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(machineData.ip)}&datetime=${encodeURIComponent(datetime)}`;
+                // UBAH INI: Gunakan nama mesin (machineData.mesin) sebagai parameter 'mesin'
+                let url = `${baseUrl}/ubah_waktu?mesin=${encodeURIComponent(machineData.mesin)}&datetime=${encodeURIComponent(datetime)}`;
                 openNewWindow(url);
             });
             setStatus(machineStatusMessage, "Permintaan update waktu ke semua mesin dikirim. Periksa tab baru di browser Anda.", 'success');
@@ -649,26 +652,28 @@
 
         window.viewMachineAbsensi = function() {
             const baseUrl = baseUrlMachineInput.value;
-            const mesinName = mesinManualInput.value.trim();
+            const mesinName = mesinManualInput.value.trim(); // Nama mesin
 
             if (!mesinName) {
                 setStatus(machineStatusMessage, "Nama mesin harus diisi untuk Lihat Absensi!", 'error');
                 return;
             }
-            const machineData = globalMesinList[mesinName];
-            if (!machineData || !machineData.ip) {
-                setStatus(machineStatusMessage, `IP Address untuk mesin '${mesinName}' tidak ditemukan. Silakan pilih mesin yang valid dari daftar.`, 'error');
+            if (!globalMesinList[mesinName]) { // Periksa apakah nama mesin valid
+                setStatus(machineStatusMessage, `Mesin '${mesinName}' tidak ditemukan dalam daftar.`, 'error');
                 return;
             }
-            const ipAddress = machineData.ip;
+            
+            // const machineData = globalMesinList[mesinName];
+            // const ipAddress = machineData.ip; // Tidak lagi digunakan untuk parameter 'mesin'
 
             if (!baseUrl) {
                 setStatus(machineStatusMessage, "Base URL API Mesin harus diisi!", 'error');
                 return;
             }
 
-            let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(ipAddress)}`;
-            setStatus(machineStatusMessage, `Membuka absensi untuk mesin ${mesinName} (${ipAddress})...`, 'info');
+            // UBAH INI: Gunakan nama mesin (mesinName) sebagai parameter 'mesin'
+            let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(mesinName)}`;
+            setStatus(machineStatusMessage, `Membuka absensi untuk mesin ${mesinName}.`, 'info');
             openNewWindow(url);
         };
 
@@ -696,7 +701,8 @@
 
             setStatus(machineStatusMessage, "Membuka tab baru untuk setiap mesin yang akan didownload...", 'info');
             Object.values(globalMesinList).forEach(machineData => {
-                let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.ip)}`;
+                // UBAH INI: Gunakan nama mesin (machineData.mesin) sebagai parameter 'mesin'
+                let url = `${baseUrl}/lihat_absensi?mesin=${encodeURIComponent(machineData.mesin)}`;
                 openNewWindow(url);
             });
             setStatus(machineStatusMessage, "Permintaan download semua absensi dikirim. Periksa tab baru di browser Anda.", 'success');
